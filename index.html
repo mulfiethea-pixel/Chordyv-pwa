@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>ChordyV — Editor • Library • Performance (SPA)</title>
+<style>
+    /* =================== GLOBAL THEME (default WHITE) =================== */
+    :root{
+      --bg:#ffffff; --fg:#0f172a; --card:#ffffff; --muted:#475569; --border:#e5e7eb;
+      --accent:#3B82F6; --accent-fg:#ffffff; --chip:#eef2ff;
+      --radius:14px; --pad:10px;
+
+      --font-perf:28px;
+    }
+    body{margin:0;background:var(--bg);color:var(--fg);
+      font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Inter,"Noto Sans",sans-serif}
+    body.theme-navy{
+      --bg:#0e1a38; --fg:#e5ecff; --card:#0f1f45; --muted:#94a3b8; --border:#1e2b57;
+      --chip:#0b1324;
+    }
+
+    /* Buttons */
+    button,.btn,.ghost,.primary{
+      font-size:13.5px;padding:6px 10px;border-radius:10px;
+      border:1px solid var(--border);background:var(--chip);color:var(--fg);cursor:pointer
+    }
+    .btn.tiny{font-size:12.5px;padding:6px 10px;border-radius:10px;line-height:1}
+    .primary{background:var(--accent);color:var(--accent-fg);border-color:transparent}
+    .ghost{background:var(--chip)}
+    .seg{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+    .seg > .btn{border:0;border-right:1px solid var(--border)}
+    .seg > .btn:last-child{border-right:0}
+    .btn.active{background:var(--accent);color:var(--accent-fg);border-color:transparent}
+    .label{font-size:12px;color:var(--muted)}
+
+    /* Inputs */
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    input,select,textarea{
+      border:1px solid var(--border);background:var(--chip);color:var(--fg);
+      border-radius:12px;padding:10px 12px;font:inherit
+    }
+    select{padding-right:34px}
+    .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+    /* Layout & cards */
+    .wrap{max-width:980px;margin:16px auto;padding:0 16px}
+    .view{display:none}
+    .view.active{display:block}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+
+    /* Header (only in Editor) — SS#2 style */
+    header{position:sticky;top:0;z-index:10;display:none;
+      background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);
+      box-shadow:0 4px 18px rgba(0,0,0,.06)}
+    body.theme-navy header{background:rgba(14,26,56,.9)}
+    .head{max-width:980px;margin:auto;display:flex;align-items:center;gap:12px;padding:12px 16px}
+    .logo{width:30px;height:30px;border-radius:10px;background:#0b2558;display:grid;place-items:center;
+      color:#fff;font-weight:700;text-transform:lowercase;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+    h1#titleBar{margin:0;font-size:18px;font-weight:700;color:#0f172a}
+    body.theme-navy h1#titleBar{color:#dbeafe}
+    .gear{display:inline-flex;align-items:center;justify-content:center;
+      width:36px;height:36px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+    .grow{flex:1}
+
+    /* Settings panel */
+    .settings{position:relative}
+    .settings-panel{
+      position:absolute; right:0; top:calc(100% + 10px);
+      width:360px; max-width:90vw; max-height:75vh; overflow:auto;
+      background:var(--card); border:1px solid var(--border); border-radius:16px; padding:14px;
+      display:none; z-index:20; box-shadow:0 24px 60px rgba(0,0,0,.35)
+    }
+    .settings.open .settings-panel{display:block}
+    .settings-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .settings-head b{font-size:18px}
+    .closex{width:32px;height:32px;border-radius:10px}
+    .sec{border-top:1px solid var(--border);padding-top:10px;margin-top:10px}
+    .help{font-size:12px;color:var(--muted)}
+
+    /* Editor */
+    .form-grid{display:grid;gap:12px}
+    @media(min-width:720px){.form-grid{grid-template-columns:1fr 180px 1fr}}
+    .shortcut-bar button,[data-beat],select#ed_key{font-size:13px;padding:6px 8px;border-radius:8px;min-width:38px}
+    #ed_content{width:100%;min-height:48vh;resize:both;white-space:pre;overflow:auto}
+    /* Beat preset highlight */
+    button[data-beat].primary,
+    button[data-beat][aria-pressed="true"]{
+      background:var(--accent)!important;color:var(--accent-fg)!important;border-color:transparent!important;
+    }
+
+    /* Library: 1 kolom, font 13px, highlight judul */
+    #libraryView .list{margin-top:6px;max-height:52vh;overflow:auto;border:1px solid var(--border);border-radius:12px}
+    #libraryView .item{padding:10px 12px;border-top:1px solid var(--border);background:var(--card);cursor:pointer}
+    #libraryView .item:first-child{border-top:0;border-top-left-radius:12px;border-top-right-radius:12px}
+    #libraryView .item:last-child{border-bottom-left-radius:12px;border-bottom-right-radius:12px}
+    #libraryView .item h3{margin:0;font-size:13px;line-height:1.35}
+    #libraryView .item .sub{display:none}
+    #libraryView .item.active{background:var(--accent);color:var(--accent-fg)}
+    #libraryView .item.active h3{color:var(--accent-fg)}
+    #libraryView .counter{font-size:12px;color:var(--muted)}
+    .inline{display:flex;gap:10px;align-items:flex-end;flex-wrap:nowrap}
+    .inline .grow{flex:1;min-width:180px}
+    @media (max-width:520px){.inline{flex-wrap:wrap}.inline .grow{min-width:unset;flex:1 1 100%}}
+
+    /* Performance view background ikut var(--bg) global (sesuai tema app) */
+    #performanceView{background:var(--bg)}
+    #perf_area{
+      white-space:pre-wrap;          /* wrap baris panjang */
+      word-wrap:break-word;
+      overflow-wrap:anywhere;
+      line-height:2.1;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      font-size:var(--font-perf,28px);
+      min-height:80vh;
+      color:var(--fg);               /* chord & melodi mengikuti tema */
+    }
+
+    /* Span styling */
+    #perf_area .chord     { color:var(--fg) !important; font-weight:700 }
+    #perf_area .melodi    { color:var(--fg) !important; font-style:italic }
+    #perf_area .teks,
+    #perf_area .teks-line { color:#dc2626 !important }   /* hanya teks yang merah */
+    #perf_area .bar       { color:var(--muted) !important }
+
+    /* Immersive */
+    body.onlyText #perf_toolbar{display:none}
+    #perf_exitImm{position:fixed;inset:10px 10px auto auto;z-index:10;display:none;
+      background:rgba(15,23,42,.6);color:#fff;border:0;border-radius:10px;padding:8px 12px}
+    body.onlyText #perf_exitImm{display:inline-flex}
+ #perf_toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+} 
+</style>
+<script>
+  /* =================== CORE STORAGE & UTIL =================== */
+  (()=> {
+    const DB_KEY='cv_songs', FOLD_KEY='cv_folders';
+    window.cv_loadDB = ()=>{ try{return JSON.parse(localStorage.getItem(DB_KEY)||'{}')}catch{return{}} };
+    window.cv_saveDB = db => localStorage.setItem(DB_KEY, JSON.stringify(db));
+    window.cv_loadFolders = ()=>{ try{return JSON.parse(localStorage.getItem(FOLD_KEY)||'[]')}catch{return[]} };
+    window.cv_saveFolders = f => localStorage.setItem(FOLD_KEY, JSON.stringify(f));
+    window.cv_escapeHtml = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  })();
+  </script>
+
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#111827">
+<!-- ===== iOS PWA Support (minimal) ===== -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ChordyV">
+
+<!-- iOS Icons -->
+<link rel="apple-touch-icon" sizes="83x83"  href="localstorage/chordyv/chordyv-pwa-bundle/chordyv-pwa/icons/ios-83x83.png">
+<link rel="apple-touch-icon" sizes="1024x1024" href="localstorage/chordyv/chordyv-pwa-bundle/chordyv-pwa/icons/ios-1024x1024.png">
+
+<!-- iOS Splash -->
+<link rel="apple-touch-startup-image" href="localstorage/chordyv/chordyv-pwa-bundle/chordyv-pwa/images/iossplash.png">
+</head>
+<body>
+<!-- =================== HEADER (Editor only) + SETTINGS =================== -->
+  <header id="cv_header">
+    <div class="head">
+      <div class="logo">cv</div>
+      <h1 id="titleBar">ChordyV — Editor</h1>
+      <div class="grow"></div>
+
+      <div class="settings" id="cv_settings">
+        <button id="cv_btnSettings" class="ghost gear" title="Settings">⚙️</button>
+        <div class="settings-panel" id="cv_settingsPanel" role="dialog" aria-label="Settings">
+          <div class="settings-head">
+            <b>Settings</b>
+            <button id="cv_btnCloseSettings" class="ghost closex">✕</button>
+          </div>
+
+          <!-- Account -->
+          <div class="sec" id="cv_accountSec">
+            <label>Account</label>
+            <div class="help" id="cv_accStatus">not logged in.</div>
+            <div class="row" style="margin-top:8px;gap:8px">
+              <input id="cv_accName" type="text" placeholder="Name" style="flex:1 1 160px">
+              <input id="cv_accEmail" type="email" placeholder="Email" style="flex:1 1 200px">
+              <button id="cv_btnLogin"  class="primary">Login</button>
+              <button id="cv_btnLogout" class="ghost">Logout</button>
+            </div>
+          </div>
+
+          <!-- Theme (Global for Editor/Library/Performance) -->
+          <div class="sec">
+            <label>Theme (Global)</label>
+            <div class="row">
+              <label><input type="radio" name="cv_theme" value="white"> White</label>
+              <label><input type="radio" name="cv_theme" value="navy"> Navy</label>
+            </div>
+            <div class="help">Global theme applies to Editor, Library, and Performance.</div>
+          </div>
+
+          <!-- Quick Guide -->
+          <div class="sec">
+            <details>
+              <summary style="cursor:pointer">Quick Guide</summary>
+              <div class="help" style="margin-top:8px">
+                <ul style="margin:6px 0 0 18px;padding:0">
+                  <li><b>|</b> — barline</li>
+                  <li><b>Bar</b> — fill 1 bar with“.” then close with <b>|</b> (follows preset beat)</li>
+                  <li><b>-</b> — rest</li>
+                  <li><b>%</b> — repeat previous bar</li>
+                  <li><b>#</b> / <b>♭</b> — quick insert</li>
+                </ul>
+              </div>
+            </details>
+          </div>
+
+          <!-- About -->
+          <div class="sec">
+            <details open>
+              <summary style="cursor:pointer">About</summary>
+              <div class="help" style="margin-top:8px">
+                <b>ChordyV</b> — simple chord bank & performance tool.<br/>
+                Version <span id="cv_aboutVer">v1.0.0</span>
+<div class="legal-links" style="margin-top:12px; font-size:12px; text-align:center;">
+  <a href="./privacy.html" 
+     style="color:#0EA5E9; text-decoration:none;">Privacy Policy</a>
+  <span style="color:#9CA3AF;"> • </span>
+  <a href="./terms.html" 
+     style="color:#0EA5E9; text-decoration:none;">Terms of Use</a>
+</div>
+              </div>
+            </details>
+          </div>
+
+          <!-- Data -->
+          <div class="sec">
+            <label>Data</label>
+            <div class="row" style="gap:8px">
+              <button id="cv_btnExport" class="ghost">Export Songs</button>
+              <button id="cv_btnImport" class="ghost">Import Songs</button>
+              <input id="cv_importFile" type="file" accept="application/json" style="display:none"/>
+            </div>
+            <div class="help">Backup/restore songs & folders.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+<!-- =================== VIEWS =================== -->
+  <div id="editorView" class="wrap view active"></div>
+  <div id="libraryView" class="wrap view"></div>
+  <div id="performanceView" class="wrap view"></div>
+<!-- =================== GLOBAL THEME / SETTINGS JS =================== -->
+  <script>
+  (()=> {
+    const THEME_KEY='cv_theme';
+
+    function applyTheme(t){ document.body.classList.toggle('theme-navy', t==='navy'); }
+    function initTheme(){
+      const current = localStorage.getItem(THEME_KEY) || 'white';
+      applyTheme(current);
+      document.querySelectorAll('input[name="cv_theme"]').forEach(r=>{
+        r.checked = (r.value===current);
+        r.addEventListener('change', ()=>{
+          const val = r.value==='navy' ? 'navy' : 'white';
+          localStorage.setItem(THEME_KEY, val);
+          applyTheme(val);
+        });
+      });
+    }
+    function initSettingsPanel(){
+      const box=document.getElementById('cv_settings');
+      const btn=document.getElementById('cv_btnSettings');
+      const close=document.getElementById('cv_btnCloseSettings');
+      btn?.addEventListener('click', ()=> box.classList.toggle('open'));
+      close?.addEventListener('click', ()=> box.classList.remove('open'));
+      document.addEventListener('click', e=>{ if(!box.contains(e.target)) box.classList.remove('open'); });
+    }
+    function initDataIO(){
+      const btnEx = document.getElementById('cv_btnExport');
+      const btnIm = document.getElementById('cv_btnImport');
+      const file  = document.getElementById('cv_importFile');
+      btnEx?.addEventListener('click', ()=>{
+        const payload={songs:cv_loadDB(),folders:cv_loadFolders()};
+        const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+        const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='chordyv_backup.json';
+        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+      });
+      btnIm?.addEventListener('click', ()=> file?.click());
+      file?.addEventListener('change', async ()=>{
+        const f=file.files?.[0]; if(!f) return;
+        try{
+          const txt=await f.text(); const obj=JSON.parse(txt);
+          const db=cv_loadDB(), folders=cv_loadFolders();
+          const inSongs=obj.songs||{}, inFolders=obj.folders||[];
+          inFolders.forEach(name=>{ if(name && !folders.includes(name)) folders.push(name); });
+          for(const [id,song] of Object.entries(inSongs)){
+            if(!db[id]) db[id]=song;
+            else{
+              const action=prompt(`Conflict: "${song.title||'(Untitled)'}"\nType: o=overwrite, k=keep both, s=skip`,'k');
+              if(action==='o') db[id]=song;
+              else if(action==='k') db['s_'+Math.random().toString(36).slice(2,9)]=song;
+            }
+          }
+          cv_saveDB(db); cv_saveFolders(folders); cvToast('Import completed.');
+        }catch(e){ cvToast('Import failed.'); }
+        finally{ file.value=''; }
+      });
+    }
+    // Account mock
+    const ACC_KEY='cv_user';
+    const loadUser=()=>{try{return JSON.parse(localStorage.getItem(ACC_KEY)||'null')}catch{return null}};
+    const saveUser=u=>{u?localStorage.setItem(ACC_KEY,JSON.stringify(u)):localStorage.removeItem(ACC_KEY)};
+    function renderAccount(){
+      const s=document.getElementById('cv_accStatus');
+      const nm=document.getElementById('cv_accName');
+      const em=document.getElementById('cv_accEmail');
+      const u=loadUser();
+      if(u){ s.textContent=`Login sebagai ${u.name||'(no name)'} — ${u.email||'-'}`; if(nm) nm.value=u.name||''; if(em) em.value=u.email||''; }
+      else { s.textContent='not logged in.'; if(nm) nm.value=''; if(em) em.value=''; }
+    }
+    function initAccount(){
+      const btnLogin=document.getElementById('cv_btnLogin');
+      const btnLogout=document.getElementById('cv_btnLogout');
+      const nm=document.getElementById('cv_accName');
+      const em=document.getElementById('cv_accEmail');
+      btnLogin?.addEventListener('click', ()=>{
+        const user={name:(nm?.value||'').trim(), email:(em?.value||'').trim()};
+        if(!user.name||!user.email){ cvToast('Enter name & email.'); return; }
+        saveUser(user); renderAccount(); cvToast('Logged in (local only).');
+      });
+      btnLogout?.addEventListener('click', ()=>{ saveUser(null); renderAccount(); cvToast('Logged out.'); });
+      renderAccount();
+    }
+
+    if(document.readyState==='loading'){
+      document.addEventListener('DOMContentLoaded', ()=>{ initTheme(); initSettingsPanel(); initDataIO(); initAccount(); });
+    }else{
+      initTheme(); initSettingsPanel(); initDataIO(); initAccount();
+    }
+  })();
+  </script>
+<!-- =================== ROUTER (landing = Editor) =================== -->
+  <script>
+  (()=> {
+    const header = document.getElementById('cv_header');
+    const titleBar = document.getElementById('titleBar');
+    const views={ed:document.getElementById('editorView'), lib:document.getElementById('libraryView'), perf:document.getElementById('performanceView')};
+    const initializers={ed:null,lib:null,perf:null}, initialized={ed:false,lib:false,perf:false};
+
+    function setTitle(name){
+      if(name==='ed')   titleBar.textContent='ChordyV — Editor';
+      if(name==='lib')  titleBar.textContent='ChordyV — Library';
+      if(name==='perf') titleBar.textContent='ChordyV — Performance';
+    }
+  function toggleHeader(name){ header.style.display = (name==='lib') ? 'block' : 'none'; }
+    function switchView(name){
+      Object.values(views).forEach(v=>v.classList.remove('active'));
+      views[name]?.classList.add('active');
+      setTitle(name); toggleHeader(name);
+
+      if(!initialized[name] && typeof initializers[name]==='function'){ try{ initializers[name](); }catch(e){ console.error(e);} initialized[name]=true; }
+      window.dispatchEvent(new CustomEvent('cv:view', {detail:{name}}));
+      window.scrollTo({top:0,behavior:'instant'});
+    }
+    window.cv_onViewInit=(name,fn)=>{ initializers[name]=fn; };
+    window.cv_switchView=switchView;
+
+   if(document.readyState==='loading')
+  document.addEventListener('DOMContentLoaded', ()=>switchView('lib'));
+else
+  switchView('lib');
+  })();
+  </script>
+<!-- =================== EDITOR VIEW + MODULE =================== -->
+  <script>
+  cv_onViewInit('ed', ()=>{
+    const wrap=document.getElementById('editorView');
+    wrap.innerHTML = `
+      <div class="card">
+        <div class="form-grid">
+          <div>
+            <label>song title</label>
+            <input id="ed_title" type="text" placeholder="Song title"/>
+          </div>
+          <div>
+            <label>Key</label>
+            <select id="ed_key"></select>
+          </div>
+          <div>
+            <label>Preset Beat</label>
+            <div class="row">
+              <button class="ghost" data-beat="2">2/4</button>
+              <button class="ghost" data-beat="3">3/4</button>
+              <button class="ghost primary" data-beat="4">4/4</button>
+              <button class="ghost" data-beat="6">6/8</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="shortcut-bar">
+          <button id="ed_btnPipe">|</button>
+          <button id="ed_btnBar">Bar</button>
+          <button id="ed_btnRest">-</button>
+          <button id="ed_btnRepeat">%</button>
+          <button id="ed_btnSharp">#</button>
+          <button id="ed_btnFlat">♭</button>
+          <button id="ed_btnSlash">/</button>
+        </div>
+
+        <label>content (Chords / Melody / Text)</label>
+        <textarea id="ed_content" spellcheck="false" placeholder="Write chords / melody / text..."></textarea>
+
+        <div class="row" style="margin-top:10px">
+          <button id="ed_btnNew" class="ghost">New</button>
+          <button id="ed_btnSave" class="primary">Save</button>
+          <div class="grow"></div>
+          <button id="ed_btnLibrary" class="ghost">Library</button>
+          <button id="ed_btnPerf" class="ghost">Open (Performance)</button>
+        </div>
+      </div>
+    `;
+
+    let db=cv_loadDB();
+    let currentId=localStorage.getItem('cv_edit_id')||null;
+    let beatPreset=4;
+
+    const titleEl=document.getElementById('ed_title');
+    const keyEl=document.getElementById('ed_key');
+    const contentEl=document.getElementById('ed_content');
+
+    const NAT_KEYS=["C","G","D","A","E","B","F#","C#","F","Bb","Eb","Ab","Db","Gb","Cb"];
+    keyEl.innerHTML=NAT_KEYS.map(k=>`<option>${k}</option>`).join(''); keyEl.value='C';
+
+    function loadByIdIfAny(){
+      db=cv_loadDB();
+      if(currentId && db[currentId]){
+        const s=db[currentId];
+        titleEl.value=s.title||''; keyEl.value=s.key||'C'; contentEl.value=s.raw||'';
+      }
+    }
+    loadByIdIfAny();
+
+    // Beat preset highlight
+    const beatButtons=[...document.querySelectorAll('[data-beat]')];
+    beatButtons.forEach(b=>{
+      const isDef=b.dataset.beat==='4';
+      b.classList.toggle('primary',isDef);
+      b.setAttribute('aria-pressed',isDef?'true':'false');
+      b.addEventListener('click', ()=>{
+        beatPreset=parseInt(b.dataset.beat,10)||4;
+        beatButtons.forEach(x=>{x.classList.remove('primary');x.setAttribute('aria-pressed','false');});
+        b.classList.add('primary'); b.setAttribute('aria-pressed','true');
+      });
+    });
+
+function insertAt(txt){
+  // Kalau ada cvInsert, pakai itu (lebih pintar)
+  if (typeof window.cvInsert === 'function') {
+    window.cvInsert(txt);
+    return;
+  }
+  // Cadangan kalau cvInsert belum ada
+  const el = contentEl;
+  const isFocused = document.activeElement === el;
+  if(isFocused){
+    const s = el.selectionStart ?? el.value.length;
+    const e = el.selectionEnd ?? el.value.length;
+    el.value = el.value.slice(0,s)+txt+el.value.slice(e);
+    el.setSelectionRange(s+txt.length,s+txt.length);
+  }else{
+    el.value = (el.value||'')+txt;
+  }
+}
+
+    /* === REVISI: Logika tombol Bar untuk SEMUA preset === */
+    function makeBar(){
+      const active = document.querySelector('[data-beat][aria-pressed="true"]');
+      const n = parseInt(active?.dataset.beat || beatPreset || 4, 10) || 4;
+
+      // Ambil konteks sebelum kursor di baris aktif
+      const el = contentEl;
+      const s  = el.selectionStart ?? el.value.length;
+      const left = el.value.slice(0, s);
+      const lineStart = left.lastIndexOf('\n') + 1;
+      const before = left.slice(lineStart);
+
+      // Deteksi chord tepat di ujung sebelum kursor (toleran)
+      const CHORD_AT_END = /(^|\s)([A-G](?:#|b|♯|♭)?(?:[^/\s.,…]*)(?:\/[A-G](?:#|b|♯|♭)?)?)\s*$/u;
+
+      if (CHORD_AT_END.test(before)) {
+        // Setelah chord: chord = beat-1 → isi sisa (n−1) titik + barline
+        return ' ' + ('. '.repeat(Math.max(0, n-1)).trimEnd()) + ' | ';
+      }
+      // Tanpa chord: bar kosong penuh (n titik) + barline
+      return ' ' + ('. '.repeat(Math.max(1, n)).trimEnd()) + ' | ';
+    }
+
+    document.getElementById('ed_btnPipe').addEventListener('click',()=>insertAt(' | '));
+    document.getElementById('ed_btnBar').addEventListener('click',()=>insertAt(makeBar()));
+    document.getElementById('ed_btnRest').addEventListener('click',()=>insertAt(' - '));
+    document.getElementById('ed_btnRepeat').addEventListener('click',()=>insertAt(' % '));
+    document.getElementById('ed_btnSharp').addEventListener('click',()=>insertAt('#'));
+    document.getElementById('ed_btnFlat').addEventListener('click',()=>insertAt('♭'));
+    document.getElementById('ed_btnSlash').addEventListener('click',()=>insertAt(' / '));
+
+    document.getElementById('ed_btnNew').addEventListener('click', ()=>{
+      if((titleEl.value.trim()||contentEl.value.trim()) && !confirm('Clear the editor?')) return;
+      currentId=null; localStorage.removeItem('cv_edit_id');
+      titleEl.value=''; keyEl.value='C'; contentEl.value='';
+    });
+    document.getElementById('ed_btnSave').addEventListener('click', ()=>{
+      const title=(titleEl.value||'').trim(); 
+      if(!title){cvToast('Title is empty');return;}
+      db=cv_loadDB();
+      const id=currentId||('s_'+Math.random().toString(36).slice(2,9));
+      db[id]={title,key:keyEl.value||'C',folder:(db[id]?.folder||''),raw:contentEl.value||''};
+      cv_saveDB(db); currentId=id; localStorage.setItem('cv_edit_id',id);
+      cvToast(`Saved: ${title}`);
+    });
+    document.getElementById('ed_btnLibrary').addEventListener('click', ()=>cv_switchView('lib'));
+    document.getElementById('ed_btnPerf').addEventListener('click', ()=>{
+      const raw=(contentEl.value||'').trim();
+      localStorage.setItem('cv_perf_raw',raw);
+      if(currentId) localStorage.setItem('cv_perf_id',currentId);
+      cv_switchView('perf');
+    });
+
+    window.addEventListener('cv:view', e=>{
+      if(e.detail?.name==='ed'){
+        const id=localStorage.getItem('cv_edit_id');
+        if(id && id!==currentId){ currentId=id; loadByIdIfAny(); }
+      }
+    });
+  });
+  </script>
+<!-- =================== LIBRARY VIEW + MODULE =================== -->
+  <script>
+  cv_onViewInit('lib', ()=>{
+    const wrap=document.getElementById('libraryView');
+    wrap.innerHTML = `
+      <div class="card">
+        <div class="row">
+          <div class="grow">
+            <label>Search songs</label>
+            <input id="lib_search" type="text" placeholder="Search songs..."/>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div class="grow inline">
+            <div class="grow">
+              <label>Folder</label>
+              <select id="lib_folder"></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button id="lib_btnAddFolder" class="ghost">+ Add Folder</button>
+          <button id="lib_btnRenameFolder" class="ghost">Rename Folder</button>
+          <button id="lib_btnDeleteFolder" class="ghost">Delete Folder</button>
+          <div class="grow"></div>
+          <div id="lib_counter" class="counter">0 songs • 0 folders</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div id="list" class="list"></div>
+
+        <div class="actions" style="margin-top:10px; display:flex; gap:10px; align-items:center">
+          <button id="lib_btnOpen"   class="primary" disabled>Open</button>
+          <button id="lib_btnEdit"   class="ghost"   disabled>Edit</button>
+          <button id="lib_btnMove"   class="ghost"   disabled>Move</button>
+          <button id="lib_btnDelete" class="ghost"   disabled>Delete</button>
+          <div class="grow"></div>
+        </div>
+
+        <div class="tip" style="margin-top:8px;font-size:12px;color:var(--muted)">Tip: double-tap a song to Open (Performance).</div>
+      </div>
+    `;
+
+    let db=cv_loadDB(), folders=cv_loadFolders();
+    let selectedId=null, filterText='', filterFolder='All Folders', lastTap=0, tappedId=null;
+
+    const searchEl=document.getElementById('lib_search');
+    const folderEl=document.getElementById('lib_folder');
+    const listEl=document.getElementById('list');
+    const counterEl=document.getElementById('lib_counter');
+
+    const btnAddFolder=document.getElementById('lib_btnAddFolder');
+    const btnRenameFolder=document.getElementById('lib_btnRenameFolder');
+    const btnDeleteFolder=document.getElementById('lib_btnDeleteFolder');
+
+    const btnOpen=document.getElementById('lib_btnOpen');
+    const btnEdit=document.getElementById('lib_btnEdit');
+    const btnMove=document.getElementById('lib_btnMove');
+    const btnDelete=document.getElementById('lib_btnDelete');
+
+    function renderFolders(){
+      const opts=['All Folders',...folders];
+      folderEl.innerHTML=opts.map(n=>`<option>${cv_escapeHtml(n)}</option>`).join('');
+      folderEl.value=filterFolder;
+    }
+
+    function renderList(){
+      listEl.innerHTML='';
+      const items=Object.entries(db).map(([id,s])=>({...s,id}))
+        .filter(s => (!filterText || (s.title||'').toLowerCase().includes(filterText))
+                  && (filterFolder==='All Folders' || (s.folder||'')===filterFolder))
+        .sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+
+      let stillValid=false;
+      items.forEach(song=>{
+        const el=document.createElement('div');
+        el.className='item'; el.dataset.id=song.id;
+        el.innerHTML=`<h3>${cv_escapeHtml(song.title||'(Untitled)')}</h3><div class="sub"></div>`;
+
+        el.addEventListener('click', ()=>{
+          const now=Date.now();
+          if(now-lastTap<320 && tappedId===song.id){ // double-tap pada item sama
+            openSong(song.id); lastTap=0; tappedId=null; return;
+          }
+          lastTap=now; tappedId=song.id;
+          select(song.id, el);
+        });
+
+        if(song.id===selectedId){ el.classList.add('active'); stillValid=true; }
+        listEl.appendChild(el);
+      });
+if(items.length === 0){
+  const hint = document.createElement('div');
+  hint.style.padding = "16px";
+  hint.style.textAlign = "center";
+  hint.style.color = "var(--muted)";
+  hint.style.cursor = "pointer";
+  hint.style.textDecoration = "underline";
+  hint.style.fontStyle = "italic";
+  hint.textContent = "No songs yet. Click here to open the Editor.";
+
+  hint.addEventListener("mouseover", ()=> hint.style.color = "var(--accent)");
+  hint.addEventListener("mouseout",  ()=> hint.style.color = "var(--muted)");
+
+  hint.addEventListener('click', ()=> cv_switchView('ed'));
+  listEl.appendChild(hint);
+}
+      if(!stillValid){ selectedId=null; }
+      updateActions(items.length);
+      counterEl.textContent=`${Object.keys(db).length} songs • ${folders.length} folders`;
+    }
+
+    function select(id, el){
+      [...listEl.children].forEach(x=>x.classList.remove('active'));
+      el.classList.add('active'); selectedId=id; updateActions(1);
+    }
+
+    function updateActions(){
+      const on = !!selectedId;
+      btnOpen.disabled = !on;
+      [btnEdit,btnMove,btnDelete].forEach(b=>b.disabled=!on);
+    }
+
+    // Folder ops
+    btnAddFolder.addEventListener('click', ()=>{
+      const name=prompt('Folder name?',''); if(!name) return;
+      if(folders.includes(name)){ cvToast('Folder already exists.'); return; }
+      folders.push(name); cv_saveFolders(folders); renderFolders();
+    });
+    btnRenameFolder.addEventListener('click', ()=>{
+      if(filterFolder==='All Folders'){ cvToast('Select a folder to rename.'); return; }
+      const newName=prompt('New folder name?', filterFolder);
+      if(!newName||newName===filterFolder) return;
+      if(folders.includes(newName)){ cvToast('A folder with that name already exists.'); return; }
+      folders=folders.map(f=>f===filterFolder?newName:f); cv_saveFolders(folders);
+      const db0=cv_loadDB(); Object.values(db0).forEach(s=>{ if((s.folder||'')===filterFolder) s.folder=newName; });
+      cv_saveDB(db0); db=db0; filterFolder=newName; renderFolders(); renderList();
+    });
+    btnDeleteFolder.addEventListener('click', ()=>{
+      if(filterFolder==='All Folders'){ cvToast('Select a folder to delete.'); return; }
+      const hasSongs=Object.values(db).some(s=>(s.folder||'')===filterFolder);
+      const msg=`Delete folder "${filterFolder}"?`+(hasSongs?`\nSongs inside will be moved to (no folder).`:``);
+      if(!confirm(msg)) return;
+      Object.values(db).forEach(s=>{ if((s.folder||'')===filterFolder) s.folder=''; });
+      cv_saveDB(db); folders=folders.filter(f=>f!==filterFolder); cv_saveFolders(folders);
+      filterFolder='All Folders'; renderFolders(); renderList();
+    });
+
+    // List actions
+    function openSong(id){
+      if(!db[id]) return;
+      localStorage.setItem('cv_perf_raw',(db[id].raw||'').trim());
+      localStorage.setItem('cv_perf_id',id);
+      cv_switchView('perf');
+    }
+    btnOpen.addEventListener('click', ()=>{
+      if(!selectedId){ cvToast('Select a song first.'); return; }
+      openSong(selectedId);
+    });
+    btnEdit.addEventListener('click', ()=>{
+      if(!selectedId){ cvToast('Select a song first.'); return; }
+      localStorage.setItem('cv_edit_id',selectedId); cv_switchView('ed');
+    });
+    btnMove.addEventListener('click', ()=>{
+      if(!selectedId) return;
+      const choices=['(no folder)',...folders].join(', ');
+      const ans=prompt(`Move to which folder?\nOptions: ${choices}\n(Type exact name, or leave blank for no folder)`,'');
+      if(ans===null) return; const target=(ans||'').trim();
+      if(target && !folders.includes(target) && target!=='(no folder)'){
+        if(!confirm(`Folder "${target}" does not exist. Create it?`)) return;
+        folders.push(target); cv_saveFolders(folders);
+      }
+      db[selectedId].folder=(target && target!=='(no folder)')?target:'';
+      cv_saveDB(db); renderFolders(); renderList();
+    });
+    btnDelete.addEventListener('click', ()=>{
+      if(!selectedId) return;
+      const t=db[selectedId]?.title || '(Untitled)';
+      if(!confirm(`Delete "${t}"? This cannot be undone.`)) return;
+      delete db[selectedId]; cv_saveDB(db); selectedId=null; renderList();
+    });
+
+    // Search & filter
+    const applySearch=()=>{ filterText=searchEl.value.trim().toLowerCase(); renderList(); };
+    searchEl.addEventListener('input', applySearch);
+    folderEl.addEventListener('change', ()=>{ filterFolder=folderEl.value; renderList(); });
+
+    renderFolders(); renderList();
+// --- Revisi Poin 1: Library selalu sinkron dengan storage ---
+// Tempel di AKHIR modul Library (setelah renderFolders(); renderList();)
+window.addEventListener('cv:view', (e) => {
+  if (e.detail?.name === 'lib') {
+    db = cv_loadDB();            // reload songs dari localStorage
+    folders = cv_loadFolders();  // reload folders dari localStorage
+    renderFolders();
+    renderList();
+  }
+});
+  });
+  </script>
+<!-- =================== PERFORMANCE VIEW + MODULE =================== -->
+  <script>
+  cv_onViewInit('perf', ()=>{
+    const wrap=document.getElementById('performanceView');
+    wrap.innerHTML = `
+      <button id="perf_exitImm">↩︎ Exit</button>
+      <div id="perf_toolbar" class="card" style="margin-bottom:12px">
+        <div class="row" style="gap:8px">
+          <button id="perf_backLib" class="btn tiny">← Library</button>
+          <button id="perf_backEd"  class="btn tiny">← Editor</button>
+
+          <div class="seg">
+            <button class="btn tiny" id="perf_tDown">−</button>
+            <button class="btn tiny" id="perf_tSteps" disabled>0</button>
+            <button class="btn tiny" id="perf_tUp">＋</button>
+          </div>
+
+          <div class="seg">
+            <button id="perf_accSharp" class="btn tiny">#</button>
+            <button id="perf_accFlat"  class="btn tiny">♭</button>
+          </div>
+
+          <div class="seg">
+            <button class="btn tiny" id="perf_fDown">A−</button>
+            <button class="btn tiny" id="perf_fUp">A＋</button>
+            <button class="btn tiny" id="perf_fReset">Reset</button>
+          </div>
+
+          <div class="grow"></div>
+
+          <button class="btn tiny" id="perf_btnImm">⛶ Full Screen</button>
+        </div>
+      </div>
+
+      <div id="perf_stage" class="card">
+        <pre id="perf_area"></pre>
+      </div>
+    `;
+
+    const perf=document.getElementById('perf_area');
+    const tDown=document.getElementById('perf_tDown');
+    const tUp=document.getElementById('perf_tUp');
+    const tSteps=document.getElementById('perf_tSteps');
+    const fDown=document.getElementById('perf_fDown');
+    const fUp=document.getElementById('perf_fUp');
+    const fReset=document.getElementById('perf_fReset');
+    const accSharp=document.getElementById('perf_accSharp');
+    const accFlat=document.getElementById('perf_accFlat');
+    const btnImm=document.getElementById('perf_btnImm');
+    const exitImm=document.getElementById('perf_exitImm');
+    const backLib=document.getElementById('perf_backLib');
+    const backEd=document.getElementById('perf_backEd');
+
+    /* Theory helpers */
+    const SHARP=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+    const FLAT =["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+    const NAME_TO_SEMI = new Map();
+    SHARP.forEach((n,i)=>NAME_TO_SEMI.set(n,i));
+    FLAT.forEach((n,i)=>NAME_TO_SEMI.set(n,i));
+    const mod = (n,m)=>((n%m)+m)%m;
+
+    const semiToName = (s, useSharps = true) => {
+      const name = (useSharps ? SHARP : FLAT)[mod(s,12)];
+      return useSharps ? name : name.replace(/b/g, '♭');
+    };
+
+    // --- SANITIZER ---
+    function sanitizeRaw(raw) {
+      return String(raw)
+        .replace(/[\u2044\u2215]/g, '/')      
+        .replace(/[¦|︱︲｜]/g, '|')           
+        .replace(/[–—−]/g, '-')               
+        .replace(/…/g, '...')                 
+        .replace(/♯/g, '#').replace(/♭/g, 'b')
+        .replace(/\u00A0/g, ' ')              
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .replace(/[\uFF21-\uFF3A]/g, c => String.fromCharCode(c.charCodeAt(0)-0xFEE0))
+        .replace(/[\uFF41-\uFF5A]/g, c => String.fromCharCode(c.charCodeAt(0)-0xFEE0))
+        .replace(/[ \t]+/g, ' ')
+        .replace(/\r\n?/g, '\n');
+    }
+
+    const normalizeNote = s => (s ? s.replace(/♯/g, '#').replace(/♭/g, 'b').toUpperCase() : s);
+
+    function parseChordToken(tok){
+      if(!tok) return null;
+      const mTrail = tok.match(/^(.+?)([.,…]+)?$/);
+      const core  = mTrail ? mTrail[1] : tok;
+      const trail = (mTrail && mTrail[2]) ? mTrail[2] : '';
+      const m = core.match(/^([A-G](?:#|b|♯|♭)?)([^/\s]*)(?:\/([A-G](?:#|b|♯|♭)?))?$/);
+      if(!m) return null;
+      const root = normalizeNote(m[1]);
+      const rest = m[2] || '';
+      const bass = m[3] ? normalizeNote(m[3]) : null;
+      return { root, rest, bass, trail };
+    }
+
+    const isBarSym  = s => (s==='|' || s==='.' || s==='-' || s==='%');
+    const isMelody  = s => /^\d[\d.\-]*$/.test(s);
+
+    let useSharps=(localStorage.getItem('cv_perf_acc')||'sharp')==='sharp';
+    let steps=parseInt(localStorage.getItem('cv_perf_steps')||'0')||0;
+    let fontPerf=parseInt(localStorage.getItem('cv_perf_font')||'28')||28;
+
+   // === DEFINISI CHORD YANG LEBIH KETAT ===
+const CH_NAME = String.raw`[A-G](?:#|b|♯|♭)?`;                           
+const CH_EXT  = String.raw`(?:maj|min|dim|aug|sus|add|m|M|maj7|min7|m7|M7|°|ø|Δ)?`;
+const CH_ALTER= String.raw`(?:[#b+\-]?\d+|no\d+|add\d+|sus[24]|b5|#5|b9|#9|b11|#11|b13|#13)*`;
+const CH_QUAL = String.raw`${CH_EXT}${CH_ALTER}`;
+
+const CHORD_G = new RegExp(
+  `(^|[\\s|.%-])(${CH_NAME}${CH_QUAL}(?:/${CH_NAME})?)([.,…]*)(?=$|[\\s|.%-])`,
+  'ug'
+);
+
+    function replaceChordMatch(_full, prefix, chordTok, trail){
+      const m = chordTok.match(/^([A-G](?:#|b|♯|♭)?)([^/\s.,…]*)(?:\/([A-G](?:#|b|♯|♭)?))?$/);
+      if(!m) return prefix + chordTok + (trail||'');
+      const r = normalizeNote(m[1]);
+      const rest = m[2] || '';
+      const b = m[3] ? normalizeNote(m[3]) : null;
+
+      const semiR = NAME_TO_SEMI.get(r);
+      if(semiR == null) return prefix + chordTok + (trail||'');
+
+      const root2 = semiToName(semiR + steps, useSharps);
+      const bass2 = b!=null ? semiToName(NAME_TO_SEMI.get(b) + steps, useSharps) : null;
+
+      return prefix + root2 + rest + (bass2 ? '/'+bass2 : '') + (trail||'');
+    }
+
+    function perfRender(raw){
+      const srcRaw = (raw && raw.trim()) ? raw : (localStorage.getItem('cv_perf_raw')||'').trim();
+      const src = sanitizeRaw(srcRaw);
+      const lines = src.split(/\r?\n/);
+
+      const out = lines.map(line=>{
+        if(!line.trim()) return '';
+        let s = line.replace(CHORD_G, replaceChordMatch);
+        const hasMusic =
+  /[|.%\-]|\d/.test(s) ||
+  new RegExp(`${CH_NAME}${CH_QUAL}(?:/${CH_NAME})?`, 'u').test(s);
+        if(!hasMusic){
+          return `<span class="teks-line">${cv_escapeHtml(s)}</span>`;
+        }
+        s = s
+          .replace(/(\|)/g, '<span class="bar">$1</span>')
+          .replace(/(\%)/g, '<span class="bar">$1</span>')
+          .replace(/(^|\s)(\.+)(?=\s|$)/g, '$1<span class="bar">$2</span>')
+          .replace(/(^|\s)(-+)(?=\s|$)/g, '$1<span class="bar">$2</span>')
+          .replace(/(^|\s)(\d[\d.\-]*)(?=\s|$)/g, '$1<span class="melodi">$2</span>');
+        return s;
+      }).join('\n');
+
+      perf.innerHTML=out;
+      document.documentElement.style.setProperty('--font-perf', fontPerf+'px');
+      tSteps.textContent=String(steps);
+      syncAccUI();
+    }
+
+    function savePerfState(){
+      localStorage.setItem('cv_perf_steps', String(steps));
+      localStorage.setItem('cv_perf_acc', useSharps ? 'sharp' : 'flat');
+      localStorage.setItem('cv_perf_font', String(fontPerf));
+    }
+    function syncAccUI(){
+      accSharp.classList.toggle('active', useSharps);
+      accFlat.classList.toggle('active', !useSharps);
+    }
+
+    // Controls
+    tDown.addEventListener('click', ()=>{ steps--; perfRender(); savePerfState(); });
+    tUp.addEventListener('click',   ()=>{ steps++; perfRender(); savePerfState(); });
+
+    accSharp.addEventListener('click', ()=>{ useSharps=true; syncAccUI(); perfRender(); savePerfState(); });
+    accFlat .addEventListener('click', ()=>{ useSharps=false; syncAccUI(); perfRender(); savePerfState(); });
+
+    fDown.addEventListener('click', ()=>{ fontPerf=Math.max(10,fontPerf-2); perfRender(); savePerfState(); });
+    fUp  .addEventListener('click', ()=>{ fontPerf=Math.min(72,fontPerf+2); perfRender(); savePerfState(); });
+    fReset.addEventListener('click', ()=>{ fontPerf=28; steps=0; useSharps=true; syncAccUI(); perfRender(); savePerfState(); });
+
+    btnImm.addEventListener('click', ()=>{ document.body.classList.add('onlyText'); document.documentElement.requestFullscreen?.(); });
+    exitImm.addEventListener('click', ()=>{ document.body.classList.remove('onlyText'); if(document.fullscreenElement) document.exitFullscreen(); });
+
+    backLib.addEventListener('click', ()=> cv_switchView('lib'));
+    backEd .addEventListener('click', ()=> cv_switchView('ed'));
+
+    perfRender();
+
+    window.addEventListener('cv:view', (e) => {
+      if (e.detail?.name === 'perf') {
+        perfRender();
+      }
+    });
+  });
+  </script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    
+  });
+}
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Kamu bisa memicu prompt dengan tombol sendiri kalau mau:
+  // deferredPrompt.prompt(); deferredPrompt = null;
+});
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    if (!navigator.serviceWorker.controller) {
+      navigator.serviceWorker.register('./sw.js').catch(console.error);
+    }
+  });
+}
+</script>
+<script>
+window.CV_FLAGS = { premiumEnabled:false, hardLimit:false, maxFreeSongs:5 };
+</script>
+<script>
+(function(){
+  const ALLOW = new Set(['SPAN','BR','#text']);
+  function sanitizeNode(node){
+    if (node.nodeType === 1 && (node.tagName === 'SCRIPT' || node.tagName === 'STYLE')) {
+      node.remove(); return true;
+    }
+    if (node.nodeType === 1 && !ALLOW.has(node.tagName)) {
+      const txt = document.createTextNode(node.textContent);
+      node.replaceWith(txt);
+      return true;
+    }
+    return false;
+  }
+  function sweep(root){
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null);
+    const toSanitize = [];
+    let n = walker.nextNode();
+    while(n){ toSanitize.push(n); n = walker.nextNode(); }
+    for(const el of toSanitize){ sanitizeNode(el); }
+  }
+  function guard(el){
+    if (!el) return;
+    sweep(el);
+    const mo = new MutationObserver(muts => {
+      for (const m of muts){
+        m.addedNodes && m.addedNodes.forEach(n => {
+          if (n.nodeType === 1) {
+            if (!sanitizeNode(n)) sweep(n);
+          }
+        });
+      }
+    });
+    mo.observe(el, {childList:true, subtree:true});
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => guard(document.getElementById('perf_area')));
+  } else {
+    guard(document.getElementById('perf_area'));
+  }
+})();
+</script>
+
+<!-- Toast (non-blocking) -->
+<style>
+  .cv-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(6px);
+    background:#121826;color:#fff;padding:10px 14px;border-radius:12px;font-size:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;z-index:9999;
+    transition:opacity .18s ease, transform .18s ease}
+  .cv-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+<div id="cv_toast" class="cv-toast" aria-live="polite" aria-atomic="true"></div>
+<script>
+  function cvToast(msg, dur=1600){
+    const el=document.getElementById('cv_toast'); if(!el) return;
+    el.textContent=msg; el.classList.add('show');
+    clearTimeout(window.__cvtt); window.__cvtt=setTimeout(()=>el.classList.remove('show'), dur);
+  }
+</script>
+
+
+
+
+
+<script>
+/* Caret memory + cvInsert (no toolbar interception) */
+(function(){
+  function getEditor(){
+    return (typeof contentEl!=='undefined' && contentEl)
+        || document.getElementById('ed_content')
+        || document.querySelector('#cv_editor, #cv_content, [data-section="editor"] textarea, textarea');
+  }
+  var caret={s:0,e:0,scroll:0};
+  function remember(ed){
+    ed=ed||getEditor(); if(!ed) return;
+    if(typeof ed.selectionStart==='number'){ caret.s=ed.selectionStart; caret.e=ed.selectionEnd; }
+    caret.scroll=ed.scrollTop||0;
+  }
+  document.addEventListener('selectionchange', function(){
+    if(document.activeElement && document.activeElement.tagName==='TEXTAREA') remember(document.activeElement);
+  });
+  ['input','keyup','click','touchend','focus'].forEach(function(ev){
+    document.addEventListener(ev, function(e){
+      if(e.target && e.target.tagName==='TEXTAREA') remember(e.target);
+    }, true);
+  });
+  window.cvInsert=function(text){
+    var ed=getEditor(); if(!ed) return;
+    ed.focus({preventScroll:true});
+    var s=(typeof ed.selectionStart==='number')?ed.selectionStart:caret.s;
+    var e=(typeof ed.selectionEnd  ==='number')?ed.selectionEnd  :caret.e;
+    var before=ed.value.slice(0,s), after=ed.value.slice(e);
+    ed.value=before+String(text)+after;
+    var pos=s+String(text).length;
+    try{ ed.setSelectionRange(pos,pos); }catch(_){}
+    ed.scrollTop=caret.scroll||ed.scrollTop;
+    ed.dispatchEvent(new Event('input',{bubbles:true}));
+    caret.s=caret.e=pos;
+  };
+})();
+</script>
+
+
+<script>
+/* Shim: insertAt -> cvInsert */
+(function(){
+  var _orig = window.insertAt;
+  window.insertAt = function(text){
+    if (typeof window.cvInsert === 'function') return window.cvInsert(text);
+    if (typeof _orig === 'function') return _orig(text);
+  };
+})();
+</script>
+
+</body>
+</html>
