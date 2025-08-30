@@ -159,15 +159,43 @@
 <link rel="apple-touch-icon" sizes="1024x1024" href="ios-1024x1024.png">
 <!-- iPad Air 2 — Portrait -->
 <link rel="apple-touch-startup-image"
-      href="splash-1536x2048.png"
+      href="splash-1536x2048.png?v=1"
       media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
 
 <!-- iPad Air 2 — Landscape -->
 <link rel="apple-touch-startup-image"
-      href="splash-2048x1536.png"
+      href="splash-2048x1536.png?v=1"
       media="(device-width: 1024px) and (device-height: 768px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+
+<!-- Overlay style -->
+<style>
+  html,body{background:#111827;margin:0}
+  #boot{position:fixed;inset:0;background:#111827 no-repeat center/cover;z-index:9999}
+
+  @media (orientation:portrait){
+    #boot{ background-image:url('splash-1536x2048.png?v=1'); }
+  }
+
+  @media (orientation:landscape){
+    #boot{ background-image:url('splash-2048x1536.png?v=1'); }
+  }
+
+  .loaded #boot{
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+  }
+</style>
 </head>
+
 <body>
+  <!-- Overlay element -->
+  <div id="boot"></div>
+  <script>
+    document.addEventListener('DOMContentLoaded', ()=> {
+      document.documentElement.classList.add('loaded');
+    });
+  </script>
 <!-- =================== HEADER (Editor only) + SETTINGS =================== -->
   <header id="cv_header">
     <div class="head">
