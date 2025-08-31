@@ -273,7 +273,7 @@ textarea
       applyTheme(current);
       document.querySelectorAll('input[name="cv_theme"]').forEach(r=>{
         r.checked = (r.value===current);
-        r.addEventListener('change', ()=>{
+        r.addEventListener('change', async ()=>{
           const val = r.value==='navy' ? 'navy' : 'white';
           localStorage.setItem(THEME_KEY, val);
           applyTheme(val);
@@ -292,7 +292,7 @@ textarea
       const btnEx = document.getElementById('cv_btnExport');
       const btnIm = document.getElementById('cv_btnImport');
       const file  = document.getElementById('cv_importFile');
-      btnEx?.addEventListener('click', ()=>{
+      btnEx?.addEventListener('click', async ()=>{
         const payload={songs:cv_loadDB(),folders:cv_loadFolders()};
         const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
         const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='chordyv_backup.json';
@@ -309,7 +309,7 @@ textarea
           for(const [id,song] of Object.entries(inSongs)){
             if(!db[id]) db[id]=song;
             else{
-              const action=prompt(`Conflict: "${song.title||'(Untitled)'}"\nType: o=overwrite, k=keep both, s=skip`,'k');
+              const action=await cvPrompt(`Conflict: "${song.title||'(Untitled)'}"\nType: o=overwrite, k=keep both, s=skip`,'k');
               if(action==='o') db[id]=song;
               else if(action==='k') db['s_'+Math.random().toString(36).slice(2,9)]=song;
             }
@@ -336,12 +336,12 @@ textarea
       const btnLogout=document.getElementById('cv_btnLogout');
       const nm=document.getElementById('cv_accName');
       const em=document.getElementById('cv_accEmail');
-      btnLogin?.addEventListener('click', ()=>{
+      btnLogin?.addEventListener('click', async ()=>{
         const user={name:(nm?.value||'').trim(), email:(em?.value||'').trim()};
         if(!user.name||!user.email){ cvToast('Enter name & email.'); return; }
         saveUser(user); renderAccount(); cvToast('Logged in (local only).');
       });
-      btnLogout?.addEventListener('click', ()=>{ saveUser(null); renderAccount(); cvToast('Logged out.'); });
+      btnLogout?.addEventListener('click', async ()=>{ saveUser(null); renderAccount(); cvToast('Logged out.'); });
       renderAccount();
     }
 
@@ -461,7 +461,7 @@ else
       const isDef=b.dataset.beat==='4';
       b.classList.toggle('primary',isDef);
       b.setAttribute('aria-pressed',isDef?'true':'false');
-      b.addEventListener('click', ()=>{
+      b.addEventListener('click', async ()=>{
         beatPreset=parseInt(b.dataset.beat,10)||4;
         beatButtons.forEach(x=>{x.classList.remove('primary');x.setAttribute('aria-pressed','false');});
         b.classList.add('primary'); b.setAttribute('aria-pressed','true');
@@ -518,12 +518,12 @@ function insertAt(txt){
     document.getElementById('ed_btnFlat').addEventListener('click',()=>insertAt('♭'));
     document.getElementById('ed_btnSlash').addEventListener('click',()=>insertAt(' / '));
 
-    document.getElementById('ed_btnNew').addEventListener('click', ()=>{
-      if((titleEl.value.trim()||contentEl.value.trim()) && !confirm('Clear the editor?')) return;
+    document.getElementById('ed_btnNew').addEventListener('click', async ()=>{
+      if((titleEl.value.trim()||contentEl.value.trim()) && !await cvConfirm('Clear the editor?')) return;
       currentId=null; localStorage.removeItem('cv_edit_id');
       titleEl.value=''; keyEl.value='C'; contentEl.value='';
     });
-    document.getElementById('ed_btnSave').addEventListener('click', ()=>{
+    document.getElementById('ed_btnSave').addEventListener('click', async ()=>{
       const title=(titleEl.value||'').trim(); 
       if(!title){cvToast('Title is empty');return;}
       db=cv_loadDB();
@@ -533,7 +533,7 @@ function insertAt(txt){
       cvToast(`Saved: ${title}`);
     });
     document.getElementById('ed_btnLibrary').addEventListener('click', ()=>cv_switchView('lib'));
-    document.getElementById('ed_btnPerf').addEventListener('click', ()=>{
+    document.getElementById('ed_btnPerf').addEventListener('click', async ()=>{
       const raw=(contentEl.value||'').trim();
       localStorage.setItem('cv_perf_raw',raw);
       if(currentId) localStorage.setItem('cv_perf_id',currentId);
@@ -630,7 +630,7 @@ function insertAt(txt){
         el.className='item'; el.dataset.id=song.id;
         el.innerHTML=`<h3>${cv_escapeHtml(song.title||'(Untitled)')}</h3><div class="sub"></div>`;
 
-        el.addEventListener('click', ()=>{
+        el.addEventListener('click', async ()=>{
           const now=Date.now();
           if(now-lastTap<320 && tappedId===song.id){ // double-tap pada item sama
             openSong(song.id); lastTap=0; tappedId=null; return;
@@ -675,25 +675,25 @@ if(items.length === 0){
     }
 
     // Folder ops
-    btnAddFolder.addEventListener('click', ()=>{
-      const name=prompt('Folder name?',''); if(!name) return;
+    btnAddFolder.addEventListener('click', async ()=>{
+      const name=await cvPrompt('Folder name?',''); if(!name) return;
       if(folders.includes(name)){ cvToast('Folder already exists.'); return; }
       folders.push(name); cv_saveFolders(folders); renderFolders();
     });
-    btnRenameFolder.addEventListener('click', ()=>{
+    btnRenameFolder.addEventListener('click', async ()=>{
       if(filterFolder==='All Folders'){ cvToast('Select a folder to rename.'); return; }
-      const newName=prompt('New folder name?', filterFolder);
+      const newName=await cvPrompt('New folder name?', filterFolder);
       if(!newName||newName===filterFolder) return;
       if(folders.includes(newName)){ cvToast('A folder with that name already exists.'); return; }
       folders=folders.map(f=>f===filterFolder?newName:f); cv_saveFolders(folders);
       const db0=cv_loadDB(); Object.values(db0).forEach(s=>{ if((s.folder||'')===filterFolder) s.folder=newName; });
       cv_saveDB(db0); db=db0; filterFolder=newName; renderFolders(); renderList();
     });
-    btnDeleteFolder.addEventListener('click', ()=>{
+    btnDeleteFolder.addEventListener('click', async ()=>{
       if(filterFolder==='All Folders'){ cvToast('Select a folder to delete.'); return; }
       const hasSongs=Object.values(db).some(s=>(s.folder||'')===filterFolder);
       const msg=`Delete folder "${filterFolder}"?`+(hasSongs?`\nSongs inside will be moved to (no folder).`:``);
-      if(!confirm(msg)) return;
+      if(!await cvConfirm(msg)) return;
       Object.values(db).forEach(s=>{ if((s.folder||'')===filterFolder) s.folder=''; });
       cv_saveDB(db); folders=folders.filter(f=>f!==filterFolder); cv_saveFolders(folders);
       filterFolder='All Folders'; renderFolders(); renderList();
@@ -706,37 +706,37 @@ if(items.length === 0){
       localStorage.setItem('cv_perf_id',id);
       cv_switchView('perf');
     }
-    btnOpen.addEventListener('click', ()=>{
+    btnOpen.addEventListener('click', async ()=>{
       if(!selectedId){ cvToast('Select a song first.'); return; }
       openSong(selectedId);
     });
-    btnEdit.addEventListener('click', ()=>{
+    btnEdit.addEventListener('click', async ()=>{
       if(!selectedId){ cvToast('Select a song first.'); return; }
       localStorage.setItem('cv_edit_id',selectedId); cv_switchView('ed');
     });
-    btnMove.addEventListener('click', ()=>{
+    btnMove.addEventListener('click', async ()=>{
       if(!selectedId) return;
       const choices=['(no folder)',...folders].join(', ');
-      const ans=prompt(`Move to which folder?\nOptions: ${choices}\n(Type exact name, or leave blank for no folder)`,'');
+      const ans=await cvPrompt(`Move to which folder?\nOptions: ${choices}\n(Type exact name, or leave blank for no folder)`,'');
       if(ans===null) return; const target=(ans||'').trim();
       if(target && !folders.includes(target) && target!=='(no folder)'){
-        if(!confirm(`Folder "${target}" does not exist. Create it?`)) return;
+        if(!await cvConfirm(`Folder "${target}" does not exist. Create it?`)) return;
         folders.push(target); cv_saveFolders(folders);
       }
       db[selectedId].folder=(target && target!=='(no folder)')?target:'';
       cv_saveDB(db); renderFolders(); renderList();
     });
-    btnDelete.addEventListener('click', ()=>{
+    btnDelete.addEventListener('click', async ()=>{
       if(!selectedId) return;
       const t=db[selectedId]?.title || '(Untitled)';
-      if(!confirm(`Delete "${t}"? This cannot be undone.`)) return;
+      if(!await cvConfirm(`Delete "${t}"? This cannot be undone.`)) return;
       delete db[selectedId]; cv_saveDB(db); selectedId=null; renderList();
     });
 
     // Search & filter
     const applySearch=()=>{ filterText=searchEl.value.trim().toLowerCase(); renderList(); };
     searchEl.addEventListener('input', applySearch);
-    folderEl.addEventListener('change', ()=>{ filterFolder=folderEl.value; renderList(); });
+    folderEl.addEventListener('change', async ()=>{ filterFolder=folderEl.value; renderList(); });
 
     renderFolders(); renderList();
 // --- Revisi Poin 1: Library selalu sinkron dengan storage ---
@@ -922,18 +922,18 @@ const CHORD_G = new RegExp(
     }
 
     // Controls
-    tDown.addEventListener('click', ()=>{ steps--; perfRender(); savePerfState(); });
-    tUp.addEventListener('click',   ()=>{ steps++; perfRender(); savePerfState(); });
+    tDown.addEventListener('click', async ()=>{ steps--; perfRender(); savePerfState(); });
+    tUp.addEventListener('click',   async ()=>{ steps++; perfRender(); savePerfState(); });
 
-    accSharp.addEventListener('click', ()=>{ useSharps=true; syncAccUI(); perfRender(); savePerfState(); });
-    accFlat .addEventListener('click', ()=>{ useSharps=false; syncAccUI(); perfRender(); savePerfState(); });
+    accSharp.addEventListener('click', async ()=>{ useSharps=true; syncAccUI(); perfRender(); savePerfState(); });
+    accFlat .addEventListener('click', async ()=>{ useSharps=false; syncAccUI(); perfRender(); savePerfState(); });
 
-    fDown.addEventListener('click', ()=>{ fontPerf=Math.max(10,fontPerf-2); perfRender(); savePerfState(); });
-    fUp  .addEventListener('click', ()=>{ fontPerf=Math.min(72,fontPerf+2); perfRender(); savePerfState(); });
-    fReset.addEventListener('click', ()=>{ fontPerf=28; steps=0; useSharps=true; syncAccUI(); perfRender(); savePerfState(); });
+    fDown.addEventListener('click', async ()=>{ fontPerf=Math.max(10,fontPerf-2); perfRender(); savePerfState(); });
+    fUp  .addEventListener('click', async ()=>{ fontPerf=Math.min(72,fontPerf+2); perfRender(); savePerfState(); });
+    fReset.addEventListener('click', async ()=>{ fontPerf=28; steps=0; useSharps=true; syncAccUI(); perfRender(); savePerfState(); });
 
-    btnImm.addEventListener('click', ()=>{ document.body.classList.add('onlyText'); document.documentElement.requestFullscreen?.(); });
-    exitImm.addEventListener('click', ()=>{ document.body.classList.remove('onlyText'); if(document.fullscreenElement) document.exitFullscreen(); });
+    btnImm.addEventListener('click', async ()=>{ document.body.classList.add('onlyText'); document.documentElement.requestFullscreen?.(); });
+    exitImm.addEventListener('click', async ()=>{ document.body.classList.remove('onlyText'); if(document.fullscreenElement) document.exitFullscreen(); });
 
     backLib.addEventListener('click', ()=> cv_switchView('lib'));
     backEd .addEventListener('click', ()=> cv_switchView('ed'));
@@ -959,7 +959,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
   // Kamu bisa memicu prompt dengan tombol sendiri kalau mau:
-  // deferredPrompt.prompt(); deferredPrompt = null;
+  // deferredPrompt.await cvPrompt(); deferredPrompt = null;
 });
 </script>
 <script>
@@ -1084,6 +1084,108 @@ window.CV_FLAGS = { premiumEnabled:false, hardLimit:false, maxFreeSongs:5 };
   window.insertAt = function(text){
     if (typeof window.cvInsert === 'function') return window.cvInsert(text);
     if (typeof _orig === 'function') return _orig(text);
+  };
+})();
+</script>
+
+
+<!-- ===== cv modal (global) ===== -->
+<style>
+  /* simple modal style — tweak sesukamu */
+  #cv_modal {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    align-items:center;
+    justify-content:center;
+    z-index:99999;
+  }
+  #cv_modalBox{
+    width:100%;
+    max-width:380px;
+    background:var(--card, #fff);
+    color:var(--fg, #0f172a);
+    border-radius:12px;
+    padding:16px;
+    box-shadow:0 12px 40px rgba(0,0,0,.35);
+  }
+  #cv_modalMsg{ margin-bottom:10px; font-size:14px; line-height:1.3; }
+  #cv_modalInput{ width:100%; padding:8px 10px; border-radius:8px; border:1px solid #ddd; margin-bottom:12px; font:inherit; }
+  .cv_modalRow{ display:flex; gap:8px; justify-content:flex-end; }
+  .cv_modalBtn{ padding:8px 12px; border-radius:8px; background:var(--chip,#eef2ff); border:1px solid var(--border,#e5e7eb); cursor:pointer; }
+  .cv_modalPrimary{ background:var(--accent,#3B82F6); color:var(--accent-fg,#fff); border-color:transparent; }
+</style>
+
+<div id="cv_modal" role="dialog" aria-hidden="true">
+  <div id="cv_modalBox" class="card">
+    <div id="cv_modalMsg"></div>
+    <input id="cv_modalInput" type="text" />
+    <div class="cv_modalRow">
+      <button id="cv_modalCancel" class="cv_modalBtn">Cancel</button>
+      <button id="cv_modalOk" class="cv_modalBtn cv_modalPrimary">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const modal = document.getElementById('cv_modal');
+  const msgEl = document.getElementById('cv_modalMsg');
+  const inputEl = document.getElementById('cv_modalInput');
+  const okBtn = document.getElementById('cv_modalOk');
+  const cancelBtn = document.getElementById('cv_modalCancel');
+
+  let resolver = null;
+
+  function openModal({msg = '', showInput = true, def = ''}){
+    msgEl.textContent = msg;
+    inputEl.style.display = showInput ? 'block' : 'none';
+    inputEl.value = def ?? '';
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden','false');
+    // focus
+    setTimeout(()=>{ if(showInput) inputEl.focus(); else okBtn.focus(); },50);
+  }
+  function closeModal(){
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden','true');
+  }
+
+  okBtn.addEventListener('click', async ()=> {
+    if(!resolver) return;
+    const val = (inputEl.style.display!=='none') ? inputEl.value.trim() : true;
+    const r = resolver;
+    resolver = null;
+    closeModal();
+    r(val);
+  });
+  cancelBtn.addEventListener('click', async ()=> {
+    if(!resolver) return;
+    const r = resolver;
+    resolver = null;
+    closeModal();
+    r(inputEl.style.display!=='none' ? null : false);
+  });
+
+  // keyboard handling: Enter -> ok, Esc -> cancel
+  modal.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape'){ e.preventDefault(); cancelBtn.click(); }
+    else if(e.key === 'Enter'){ e.preventDefault(); okBtn.click(); }
+  });
+
+  window.cvPrompt = function(msg, def=''){
+    return new Promise(resolve=>{
+      resolver = resolve;
+      openModal({msg, showInput:true, def});
+    });
+  };
+
+  window.cvConfirm = function(msg){
+    return new Promise(resolve=>{
+      resolver = resolve;
+      openModal({msg, showInput:false});
+    });
   };
 })();
 </script>
