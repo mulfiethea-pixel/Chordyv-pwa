@@ -3,6 +3,14 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#0F172A">
+<!-- Aktifkan mode web app di iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ChordyV">
+
+<!-- Icon khusus iOS (180x180 px, dengan background navy/putih) -->
+<link rel="apple-touch-icon" sizes="180x180" href="/Chordyv-pwa/icons/ios-180x180.png">
   <title>ChordyV — Editor • Library • Performance (SPA)</title>
 <style>
     /* =================== GLOBAL THEME (default WHITE) =================== */
@@ -31,20 +39,19 @@
     .seg{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}
     .seg > .btn{border:0;border-right:1px solid var(--border)}
     .seg > .btn:last-child{border-right:0}
-    .btn.active{background:var(--accent);color:var(--accent-fg);border-color:transparent}
-    .label{font-size:12px;color:var(--muted)}
-
-    /* Inputs */
-    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-    input,select,textarea{
-      border:1px solid var(--border);background:var(--chip);color:var(--fg);
-      border-radius:12px;padding:10px 12px;font:inherit
-textarea 
+/* Inputs */
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+input,select,textarea{
+  border:1px solid var(--border);
+  background:var(--chip);
+  color:var(--fg);
+  border-radius:12px;
+  padding:10px 12px;
+  font:inherit;
   background-clip: padding-box;
   box-sizing: border-box;
 }
-    }
-    select{padding-right:34px}
+select{padding-right:34px}
     .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 
     /* Layout & cards */
@@ -107,26 +114,55 @@ textarea
     .inline .grow{flex:1;min-width:180px}
     @media (max-width:520px){.inline{flex-wrap:wrap}.inline .grow{min-width:unset;flex:1 1 100%}}
 
-    /* Performance view background ikut var(--bg) global (sesuai tema app) */
-    #performanceView{background:var(--bg)}
-    #perf_area{
-      white-space:pre-wrap;          /* wrap baris panjang */
-      word-wrap:break-word;
-      overflow-wrap:anywhere;
-      line-height:2.1;
-      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-      font-size:var(--font-perf,28px);
-      min-height:80vh;
-      color:var(--fg);               /* chord & melodi mengikuti tema */
-    }
+ /* =================== PERFORMANCE (2 WARNA) =================== */
 
-    /* Span styling */
-    #perf_area .chord     { color:var(--fg) !important; font-weight:700 }
-    #perf_area .melodi    { color:var(--fg) !important; font-style:italic }
-    #perf_area .teks,
-    #perf_area .teks-line { color:#dc2626 !important }   /* hanya teks yang merah */
-    #perf_area .bar       { color:var(--muted) !important }
+/* Latar view ikut tema */
+#performanceView {
+  background: var(--bg);
+}
 
+/* Panggung performance */
+#perf_area {
+  /* default: SEMUA elemen hitam */
+  color: #111 !important;
+
+  white-space: pre-wrap;     /* wrap baris panjang */
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  line-height: 2.1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--font-perf, 28px);
+  min-height: 80vh;
+}
+
+/* === TEKS (merah) === */
+/* baris teks murni (judul/section) */
+#perf_area .teks-line {
+  color: #e11d48 !important;
+  font-weight: 600;
+}
+/* fragmen teks di baris campuran (kata: Intro, Verse, Aksen, TUTI, dst.) */
+#perf_area .teks {
+  color: #e11d48 !important;
+  font-weight: 600;
+}
+
+/* === SISANYA (hitam) === */
+/* chord, bar/dot/rest, angka melodi → tetap hitam */
+#perf_area .chord,
+#perf_area .bar,
+#perf_area .melodi {
+  color: #111 !important;
+  font-weight: 700;          /* tegas untuk chord; kalau tak mau, hapus baris ini */
+  font-style: normal;        /* angka melodi non-italic; kalau mau italic, ubah ke italic */
+}
+
+/* (opsional) kalau ada rule lama yang masih nempel, paksa reset */
+#perf_area .chord *,
+#perf_area .bar *,
+#perf_area .melodi * {
+  color: #111 !important;
+}
     /* Immersive */
     body.onlyText #perf_toolbar{display:none}
     #perf_exitImm{position:fixed;inset:10px 10px auto auto;z-index:10;display:none;
@@ -162,15 +198,6 @@ textarea
 <link rel="apple-touch-icon" sizes="83x83" href="ios-83x83.png">
 <link rel="apple-touch-icon" sizes="1024x1024" href="ios-1024x1024.png">
 
-<!-- iPad Air 2 — Portrait -->
-<link rel="apple-touch-startup-image"
-      href="splash-1536x2048.png"
-      media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-
-<!-- iPad Air 2 — Landscape -->
-<link rel="apple-touch-startup-image"
-      href="splash-2048x1536.png"
-      media="(device-width: 1024px) and (device-height: 768px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
 </head>
 <body>
 <!-- =================== HEADER (Editor only) + SETTINGS =================== -->
@@ -211,7 +238,10 @@ textarea
           </div>
 
           <!-- Quick Guide -->
-          <div class="sec">
+     <div class="sec">
+  <button class="ghost" onclick="showChordyVHelp()">User Guide</button>
+</div>   
+  <div class="sec">
             <details>
               <summary style="cursor:pointer">Quick Guide</summary>
               <div class="help" style="margin-top:8px">
@@ -352,6 +382,7 @@ textarea
     }
   })();
   </script>
+<!-- ===== MODULE: ROUTER ===== -->
 <!-- =================== ROUTER (landing = Editor) =================== -->
   <script>
   (()=> {
@@ -384,6 +415,7 @@ else
   switchView('lib');
   })();
   </script>
+<!-- ===== FEATURE: EDITOR ===== -->
 <!-- =================== EDITOR VIEW + MODULE =================== -->
   <script>
   cv_onViewInit('ed', ()=>{
@@ -447,12 +479,29 @@ else
     keyEl.innerHTML=NAT_KEYS.map(k=>`<option>${k}</option>`).join(''); keyEl.value='C';
 
     function loadByIdIfAny(){
-      db=cv_loadDB();
-      if(currentId && db[currentId]){
-        const s=db[currentId];
-        titleEl.value=s.title||''; keyEl.value=s.key||'C'; contentEl.value=s.raw||'';
-      }
-    }
+  db = cv_loadDB();
+  const temp = localStorage.getItem('cv_edit_temp'); // ← buffer dari Performance
+
+  if (currentId && db[currentId]) {
+    // kasus: buka lagu tersimpan
+    const s = db[currentId];
+    titleEl.value   = s.title || '';
+    keyEl.value     = s.key   || 'C';
+    contentEl.value = s.raw   || '';
+  } else if (temp) {
+    // kasus: balik dari Performance yang berasal dari RAW (tanpa id)
+    currentId       = null;
+    titleEl.value   = '';
+    keyEl.value     = 'C';
+    contentEl.value = temp;
+    localStorage.removeItem('cv_edit_temp'); // habiskan buffer
+  } else {
+    // default (editor kosong)
+    titleEl.value   = titleEl.value || '';
+    keyEl.value     = keyEl.value   || 'C';
+    contentEl.value = contentEl.value|| '';
+  }
+}
     loadByIdIfAny();
 
     // Beat preset highlight
@@ -548,6 +597,7 @@ function insertAt(txt){
     });
   });
   </script>
+<!-- ===== FEATURE: LIBRARY ===== -->
 <!-- =================== LIBRARY VIEW + MODULE =================== -->
   <script>
   cv_onViewInit('lib', ()=>{
@@ -751,6 +801,7 @@ window.addEventListener('cv:view', (e) => {
 });
   });
   </script>
+<!-- ===== FEATURE: PERFORMANCE ===== -->
 <!-- =================== PERFORMANCE VIEW + MODULE =================== -->
   <script>
   cv_onViewInit('perf', ()=>{
@@ -856,60 +907,76 @@ window.addEventListener('cv:view', (e) => {
     let fontPerf=parseInt(localStorage.getItem('cv_perf_font')||'28')||28;
 
    // === DEFINISI CHORD YANG LEBIH KETAT ===
-const CH_NAME = String.raw`[A-G](?:#|b|♯|♭)?`;                           
-const CH_EXT  = String.raw`(?:maj|min|dim|aug|sus|add|m|M|maj7|min7|m7|M7|°|ø|Δ)?`;
-const CH_ALTER= String.raw`(?:[#b+\-]?\d+|no\d+|add\d+|sus[24]|b5|#5|b9|#9|b11|#11|b13|#13)*`;
-const CH_QUAL = String.raw`${CH_EXT}${CH_ALTER}`;
+function markupPerformance(src, steps, useSharps){
+  // === teori kecil ===
+  const SHARP=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  const FLAT =["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+  const NAME_TO_SEMI=new Map(); SHARP.forEach((n,i)=>NAME_TO_SEMI.set(n,i)); FLAT.forEach((n,i)=>NAME_TO_SEMI.set(n,i));
+  const mod=(n,m)=>((n%m)+m)%m;
+  const semiToName=(s,sharp)=> (sharp?SHARP:FLAT)[mod(s,12)].replace(/b/g,'♭');
+  const normalize=(s)=> String(s||'').replace(/♯/g,'#').replace(/♭/g,'b').toUpperCase();
 
-const CHORD_G = new RegExp(
-  `(^|[\\s|.%-])(${CH_NAME}${CH_QUAL}(?:/${CH_NAME})?)([.,…]*)(?=$|[\\s|.%-])`,
-  'ug'
-);
+  // === ATURAN CHORD: "berdiri sendiri" (tidak menempel huruf/angka di kiri/kanan) ===
+  // Token chord: Root kapital A–G, opsional accidental, lalu combo bebas TANPA spasi (huruf/angka/simbol umum),
+  // opsional slash-bass. Tidak boleh menempel huruf/angka di kiri/kanan.
+// --- CHORD TOKEN (ketat) ---
+const CH_NAME  = String.raw`[A-G](?:#|b|♯|♭)?`;
+const CH_EXT   = String.raw`(?:maj|min|dim|half|hd|aug|sus|add|m|M)?`;
+const CH_ALTER = String.raw`(?:[#b+\-]?\d+|no\d+|add\d+|sus[24]|b5|#5|b9|#9|b11|#11|b13|#13)*`;
+const CH_QUAL  = `${CH_EXT}${CH_ALTER}`;
+const CH_CORE  = `${CH_NAME}${CH_QUAL}(?:\\/${CH_NAME})?`;
+const CHORD_G  = new RegExp(`(^|[^A-Za-z0-9#♭♯/])(${CH_CORE})(?=$|[^A-Za-z0-9#♭♯/])`, 'gu');
 
-    function replaceChordMatch(_full, prefix, chordTok, trail){
-      const m = chordTok.match(/^([A-G](?:#|b|♯|♭)?)([^/\s.,…]*)(?:\/([A-G](?:#|b|♯|♭)?))?$/);
-      if(!m) return prefix + chordTok + (trail||'');
-      const r = normalizeNote(m[1]);
-      const rest = m[2] || '';
-      const b = m[3] ? normalizeNote(m[3]) : null;
+  function transposeToken(ch){
+    const m = ch.match(/^([A-G](?:#|b|♯|♭)?)([A-Za-z0-9+°øΔ]*)(?:\/([A-G](?:#|b|♯|♭)?))?$/);
+    if(!m) return ch;
+    const r = normalize(m[1]);
+    const rest = m[2] || '';
+    const bass = m[3] ? normalize(m[3]) : null;
+    const semiR = NAME_TO_SEMI.get(r);
+    if (semiR == null) return ch;
+    const r2 = semiToName(semiR + steps, useSharps);
+    const b2 = bass!=null ? semiToName(NAME_TO_SEMI.get(bass)+steps, useSharps) : null;
+    return r2 + rest + (b2 ? '/'+b2 : '');
+  }
 
-      const semiR = NAME_TO_SEMI.get(r);
-      if(semiR == null) return prefix + chordTok + (trail||'');
+  const lines = src.split(/\r?\n/);
+  const out = lines.map(line=>{
+    const raw = String(line||'');
+    if (!raw.trim()) return ''; // baris kosong
 
-      const root2 = semiToName(semiR + steps, useSharps);
-      const bass2 = b!=null ? semiToName(NAME_TO_SEMI.get(b) + steps, useSharps) : null;
+    // 1) Tandai CHORD sesuai aturan (pre-boundary dijaga, chord dibungkus)
+    let s = raw.replace(CHORD_G, (_all, pre, tok) => {
+      const t = transposeToken(tok);
+      return `${pre}<span class="chord">${t}</span>`;
+    });
 
-      return prefix + root2 + rest + (bass2 ? '/'+bass2 : '') + (trail||'');
-    }
+    // 2) Format bar/isi bar/melodi (tidak mengubah teks biasa)
+    s = s
+      .replace(/(\|)/g, '<span class="bar">$1</span>')
+      .replace(/(\%)/g, '<span class="bar">$1</span>')
+      .replace(/(^|\s)(\.+)(?=\s|$)/g, '$1<span class="bar">$2</span>')
+      .replace(/(^|\s)(-+)(?=\s|$)/g, '$1<span class="bar">$2</span>')
+      .replace(/(^|\s)(\d[\d.\-]*)(?=\s|$)/g, '$1<span class="melodi">$2</span>');
 
-    function perfRender(raw){
-      const srcRaw = (raw && raw.trim()) ? raw : (localStorage.getItem('cv_perf_raw')||'').trim();
-      const src = sanitizeRaw(srcRaw);
-      const lines = src.split(/\r?\n/);
+    // 3) Jika SATU baris tidak mengandung chord/bar/melodi sama sekali → tekankan sebagai teks-line
+    const isMusicish = /class="chord"|class="bar"|class="melodi"/.test(s);
+    if (!isMusicish) return `<span class="teks-line">${cv_escapeHtml(raw)}</span>`;
+// 4) Bungkus potongan teks (huruf) yang tersisa dalam baris campuran → merah
+s = s
+  .split(/(<[^>]+>)/) // pisah tag vs teks polos
+  .map(part => {
+    if (part.startsWith('<')) return part; // biarkan tag chord/bar/melodi tetap
+    return part.replace(/([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’\-]*)/g, '<span class="teks">$1</span>');
+  })
+  .join('');
+    return s;
 
-      const out = lines.map(line=>{
-        if(!line.trim()) return '';
-        let s = line.replace(CHORD_G, replaceChordMatch);
-        const hasMusic =
-  /[|.%\-]|\d/.test(s) ||
-  new RegExp(`${CH_NAME}${CH_QUAL}(?:/${CH_NAME})?`, 'u').test(s);
-        if(!hasMusic){
-          return `<span class="teks-line">${cv_escapeHtml(s)}</span>`;
-        }
-        s = s
-          .replace(/(\|)/g, '<span class="bar">$1</span>')
-          .replace(/(\%)/g, '<span class="bar">$1</span>')
-          .replace(/(^|\s)(\.+)(?=\s|$)/g, '$1<span class="bar">$2</span>')
-          .replace(/(^|\s)(-+)(?=\s|$)/g, '$1<span class="bar">$2</span>')
-          .replace(/(^|\s)(\d[\d.\-]*)(?=\s|$)/g, '$1<span class="melodi">$2</span>');
-        return s;
-      }).join('\n');
+  }).join('\n');
 
-      perf.innerHTML=out;
-      document.documentElement.style.setProperty('--font-perf', fontPerf+'px');
-      tSteps.textContent=String(steps);
-      syncAccUI();
-    }
+  return out;
+}
+
 
     function savePerfState(){
       localStorage.setItem('cv_perf_steps', String(steps));
@@ -920,7 +987,41 @@ const CHORD_G = new RegExp(
       accSharp.classList.toggle('active', useSharps);
       accFlat.classList.toggle('active', !useSharps);
     }
+// --- Sumber konten (satu pintu) ---
+function getPerfSource(){
+  const raw = (localStorage.getItem('cv_perf_raw')||'').trim();
+  if (raw) return raw;
+  const id = localStorage.getItem('cv_perf_id')||'';
+  if (id) {
+    const db = cv_loadDB();
+    const s  = db && db[id] && db[id].raw ? String(db[id].raw).trim() : '';
+    if (s) return s;
+  }
+  return '';
+}
+function isEmptyLike(s){ return !s || !String(s).trim(); }
+function showPlaceholder(){
+  perf.innerHTML = `<span class="teks-line">No content loaded.
+Buka dari Editor (Open → Performance) atau pilih lagu di Library.</span>`;
+  document.documentElement.style.setProperty('--font-perf', fontPerf+'px');
+  tSteps.textContent = String(steps);
+  syncAccUI();
+}
 
+function perfRender(rawFromArg){
+  let srcRaw = (rawFromArg ?? getPerfSource() ?? '');
+  if (isEmptyLike(srcRaw)) return showPlaceholder();
+  const src = sanitizeRaw(srcRaw);
+  if (isEmptyLike(src)) return showPlaceholder();
+
+  const html = markupPerformance(src, steps, useSharps);
+  if (isEmptyLike(html.replace(/<[^>]+>/g,''))) return showPlaceholder();
+
+  perf.innerHTML = html;
+  document.documentElement.style.setProperty('--font-perf', fontPerf+'px');
+  tSteps.textContent = String(steps);
+  syncAccUI();
+}
     // Controls
     tDown.addEventListener('click', async ()=>{ steps--; perfRender(); savePerfState(); });
     tUp.addEventListener('click',   async ()=>{ steps++; perfRender(); savePerfState(); });
@@ -934,9 +1035,25 @@ const CHORD_G = new RegExp(
 
     btnImm.addEventListener('click', async ()=>{ document.body.classList.add('onlyText'); document.documentElement.requestFullscreen?.(); });
     exitImm.addEventListener('click', async ()=>{ document.body.classList.remove('onlyText'); if(document.fullscreenElement) document.exitFullscreen(); });
+backLib.addEventListener('click', ()=>{
+  cv_switchView('lib');
+});
+   backEd.addEventListener('click', ()=>{
+  const id  = localStorage.getItem('cv_perf_id') || '';
+  const raw = (localStorage.getItem('cv_perf_raw') || '').trim();
+  const db  = cv_loadDB();
 
-    backLib.addEventListener('click', ()=> cv_switchView('lib'));
-    backEd .addEventListener('click', ()=> cv_switchView('ed'));
+  if (id && db[id]) {
+    // Lagu sedang tampil berasal dari Library (punya id)
+    localStorage.setItem('cv_edit_id', id);
+    localStorage.removeItem('cv_edit_temp');
+  } else {
+    // Lagu sedang tampil berasal dari teks “raw” (belum disave)
+    localStorage.removeItem('cv_edit_id');
+    if (raw) localStorage.setItem('cv_edit_temp', raw);
+  }
+  cv_switchView('ed');
+});
 
     perfRender();
 
@@ -976,18 +1093,21 @@ window.CV_FLAGS = { premiumEnabled:false, hardLimit:false, maxFreeSongs:5 };
 </script>
 <script>
 (function(){
-  const ALLOW = new Set(['SPAN','BR','#text']);
-  function sanitizeNode(node){
-    if (node.nodeType === 1 && (node.tagName === 'SCRIPT' || node.tagName === 'STYLE')) {
-      node.remove(); return true;
-    }
-    if (node.nodeType === 1 && !ALLOW.has(node.tagName)) {
-      const txt = document.createTextNode(node.textContent);
-      node.replaceWith(txt);
-      return true;
-    }
-    return false;
+  const ALLOW = new Set(['PRE','DIV','SPAN','BR','#text']);
+function sanitizeNode(node){
+  // Lindungi root perf_area biar gak kesapu
+  if (node.nodeType === 1 && node.id === 'perf_area') return false;
+
+  if (node.nodeType === 1 && (node.tagName === 'SCRIPT' || node.tagName === 'STYLE')) {
+    node.remove(); return true;
   }
+  if (node.nodeType === 1 && !ALLOW.has(node.tagName)) {
+    const txt = document.createTextNode(node.textContent);
+    node.replaceWith(txt);
+    return true;
+  }
+  return false;
+}
   function sweep(root){
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null);
     const toSanitize = [];
@@ -1017,6 +1137,7 @@ window.CV_FLAGS = { premiumEnabled:false, hardLimit:false, maxFreeSongs:5 };
 })();
 </script>
 
+<!-- ===== UI COMPONENT: TOAST ===== -->
 <!-- Toast (non-blocking) -->
 <style>
   .cv-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(6px);
@@ -1089,6 +1210,7 @@ window.CV_FLAGS = { premiumEnabled:false, hardLimit:false, maxFreeSongs:5 };
 </script>
 
 
+<!-- ===== UI COMPONENT: MODAL ===== -->
 <!-- ===== cv modal (global) ===== -->
 <style>
   /* simple modal style — tweak sesukamu */
@@ -1189,6 +1311,52 @@ window.CV_FLAGS = { premiumEnabled:false, hardLimit:false, maxFreeSongs:5 };
   };
 })();
 </script>
+<!-- Help Modal -->
+  <div id="cv_helpModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:1000;">
+    <div style="background:#fff;color:#000;max-width:600px;width:90%;padding:20px;border-radius:12px;
+      max-height:80%;overflow-y:auto;">
+      <div id="cv_helpContent"></div>
+      <div style="text-align:right;margin-top:16px;">
+        <button onclick="document.getElementById('cv_helpModal').style.display='none'"
+          style="background:#0EA5E9;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
 
+  <script>
+    function showChordyVHelp(){
+      const html = `
+        <h2 style="margin:0 0 12px;color:#0EA5E9;">ChordyV Basic Guide</h2>
+
+        <h3>1. Writing Format</h3>
+        <p>Chords must be uppercase (C, Am7, F#dim, G/B).<br>
+        Symbols: | (barline), . (beat filler), - (rest), % (repeat bar), # / ♭ (accidental), / (slash chord).</p>
+
+        <h3>2. Example</h3>
+        <pre>[Intro] G Cmaj7 Bm
+Am7 Em D
+
+[Verse 1]
+G   Cmaj7   Gmaj7
+lyrics lyrics lyrics</pre>
+
+        <h3>3. Supported Chords</h3>
+        <p>A–G (#/b), maj, min/m, dim, aug, sus, add, 7/9/11/13, m7♭5/hd, slash chords.</p>
+
+        <h3>4. Editor Limitations</h3>
+        <ul>
+          <li>No transpose in Editor (only in Performance).</li>
+          <li>No chord auto-correct (typos not recognized).</li>
+          <li>No audio/metronome.</li>
+          <li>Styling (bold, red text) only visible in Performance.</li>
+        </ul>
+      `;
+      document.getElementById('cv_helpContent').innerHTML = html;
+      document.getElementById('cv_helpModal').style.display = 'flex';
+    }
+  </script>
 </body>
 </html>
