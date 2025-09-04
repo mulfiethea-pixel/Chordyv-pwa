@@ -12,7 +12,7 @@
 
 <!-- Icon khusus iOS (180x180 px, dengan background navy/putih) -->
 <link rel="apple-touch-icon" sizes="180x180" href="/Chordyv-pwa/icons/ios-180x180.png">
- <link rel="manifest" href="manifest.webmanifest?v=2">
+ <link rel="manifest" href="manifest.webmanifest">
  <title>ChordyV — Editor • Library • Performance (SPA)</title>
 <style>
     /* =================== GLOBAL THEME (default WHITE) =================== */
@@ -1059,9 +1059,7 @@ backLib.addEventListener('click', ()=>{
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    if (!navigator.serviceWorker.controller) {
-      navigator.serviceWorker.register('./sw.js').catch(console.error);
-    }
+    navigator.serviceWorker.register('/Chordyv-pwa/sw.js').catch(console.error);
   });
 }
 </script>
