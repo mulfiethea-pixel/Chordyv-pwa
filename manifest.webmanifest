@@ -4,7 +4,7 @@
   "start_url": "/Chordyv-pwa/index.html",
   "scope": "/Chordyv-pwa/",
   "display": "standalone",
-  "background_color": "#0F172A",
+  "background_color": "#FFFFFF",
   "theme_color": "#0F172A",
   "icons": [
     {
