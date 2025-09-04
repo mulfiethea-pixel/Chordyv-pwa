@@ -1,4 +1,4 @@
-const CACHE = 'chordyv-cache-v4'; // naikkan versi cache
+const CACHE = 'chordyv-cache-v5'; // naikkan versi cache
 
 const ASSETS = [
   './',
