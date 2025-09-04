@@ -1,0 +1,29 @@
+{
+  "name": "ChordyV",
+  "short_name": "ChordyV",
+  "start_url": "/Chordyv-pwa/index.html",
+  "scope": "/Chordyv-pwa/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "icons": [
+    {
+      "src": "/Chordyv-pwa/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/Chordyv-pwa/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/Chordyv-pwa/icons/icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
