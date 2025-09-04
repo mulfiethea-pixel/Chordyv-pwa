@@ -1,11 +1,11 @@
-const CACHE = 'chordyv-cache-v5'; // naikkan versi cache
+const CACHE = 'chordyv-cache-v6'; // naikkan versi cache
 
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icons/chordyv-icon-bar-192-padded.png',
-  './icons/chordyv-icon-bar-512-padded.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
   './privacy.html',
   './terms.html'
 ];
