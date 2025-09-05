@@ -72,9 +72,73 @@ select{padding-right:34px}
       color:#fff;font-weight:700;text-transform:lowercase;box-shadow:0 4px 12px rgba(0,0,0,.18)}
     h1#titleBar{margin:0;font-size:18px;font-weight:700;color:#0f172a}
     body.theme-navy h1#titleBar{color:#dbeafe}
-    .gear{display:inline-flex;align-items:center;justify-content:center;
-      width:36px;height:36px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
-    .grow{flex:1}
+   .gear {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:36px;
+  height:36px;
+  border-radius:12px;      /* boleh 50% kalau mau bulat penuh */
+  background:none;
+  border:none;
+  box-shadow:none;         /* hilangin bayangan */
+  cursor:pointer;
+  transition:background 0.2s ease;
+}
+.gear:hover {
+  background:rgba(0,0,0,0.05); /* efek hover tipis */
+}
+/* Tombol hamburger flat (samakan dengan .gear) */
+.hamburger{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border:none;background:none;border-radius:12px;box-shadow:none;
+  transition:background .2s ease; cursor:pointer;
+}
+.hamburger:hover{ background:rgba(0,0,0,.05); }
+
+/* Backdrop untuk drawer */
+.backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.35);
+  z-index:50; opacity:0; transition:opacity .28s ease;
+}
+.backdrop.show{ opacity:1; }
+
+/* Drawer umum */
+.drawer{
+  position:fixed; top:0; bottom:0; width:300px; max-width:85vw; 
+  background:var(--card); border:1px solid var(--border);
+  box-shadow:0 24px 60px rgba(0,0,0,.35);
+  z-index:60; padding:16px; overflow:auto; -webkit-overflow-scrolling:touch;
+  transition:transform .28s ease;
+}
+
+/* Drawer kiri (start off-canvas) */
+.drawer-left{ left:0; transform:translateX(-110%); }
+/* Nanti saat open → tambahkan class .open di elemen .drawer-left */
+.drawer-left.open{ transform:translateX(0); }
+/* Drawer kanan (start off-canvas) */
+.drawer-right {
+  right:0;
+  transform:translateX(110%);
+}
+.drawer-right.open {
+  transform:translateX(0);
+}
+
+/* Header & sections */
+.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo-chip{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:12px;background:#0F172A;color:#fff;font-weight:700}
+
+.drawer-sec{border-top:1px solid var(--border); padding-top:12px; margin-top:12px; display:flex; flex-direction:column; gap:10px}
+.drawer-sec label{font-weight:700}
+.about-summary{cursor:pointer; font-weight:700}
+
+/* Link & tombol util */
+.link{display:inline-flex;align-items:center;justify-content:center;gap:8px; padding:9px 12px; border:1px solid var(--border); border-radius:10px; text-decoration:none; color:var(--fg); background:var(--chip)}
+.link:hover{background:#f3f4f6}
+.links{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.btn.google{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;color:#0f172a;border-radius:12px;padding:10px 14px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
 
     /* Settings panel */
     .settings{position:relative}
@@ -191,93 +255,124 @@ select{padding-right:34px}
 </head>
 <body>
 <!-- =================== HEADER (Editor only) + SETTINGS =================== -->
-  <header id="cv_header">
-    <div class="head">
+<header id="cv_header">
+<div class="head">
+    <!-- HAMBURGER (LEFT) -->
+<button id="cv_btnHamburger" class="ghost hamburger" aria-label="Menu" title="Menu">
+  <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+    <rect x="3" y="6"  width="18" height="2" rx="1" fill="#0F172A"/>
+    <rect x="3" y="11" width="18" height="2" rx="1" fill="#0F172A"/>
+    <rect x="3" y="16" width="18" height="2" rx="1" fill="#0F172A"/>
+  </svg>
+</button>
       <div class="logo">cv</div>
       <h1 id="titleBar">ChordyV — Editor</h1>
       <div class="grow"></div>
 
       <div class="settings" id="cv_settings">
-        <button id="cv_btnSettings" class="ghost gear" title="Settings">⚙️</button>
-        <div class="settings-panel" id="cv_settingsPanel" role="dialog" aria-label="Settings">
-          <div class="settings-head">
-            <b>Settings</b>
-            <button id="cv_btnCloseSettings" class="ghost closex">✕</button>
-          </div>
+  <button id="cv_btnSettings" class="ghost gear" title="Settings" aria-label="Settings">
+    <!-- SVG Gear Double -->
+    <svg xmlns="http://www.w3.org/2000/svg" 
+         width="28" height="28" viewBox="0 0 24 24">
+      <defs>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#0F172A;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#C0C0C0;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <!-- Gear luar gradient -->
+      <path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.21l-2.49 1a7.028 7.028 0 0 0-1.7-.98l-.38-2.65A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.5.42l-.38 2.65c-.63.25-1.2.58-1.7.98l-2.49-1a.5.5 0 0 0-.61.21l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.14.24.43.34.7.23l2.49-1c.5.4 1.07.73 1.7.98l.38 2.65c.04.26.25.42.5.42h4c.25 0 .46-.16.5-.42l.38-2.65c.63-.25 1.2-.58 1.7-.98l2.49 1c.27.11.56.01.7-.23l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65z" fill="url(#grad1)"/>
+      <!-- Gear dalam silver -->
+      <g transform="translate(12 12) scale(0.5) translate(-12 -12)">
+        <path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.21l-2.49 1a7.028 7.028 0 0 0-1.7-.98l-.38-2.65A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.5.42l-.38 2.65c-.63.25-1.2.58-1.7.98l-2.49-1a.5.5 0 0 0-.61.21l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.14.24.43.34.7.23l2.49-1c.5.4 1.07.73 1.7.98l.38 2.65c.04.26.25.42.5.42h4c.25 0 .46-.16.5-.42l.38-2.65c.63-.25 1.2-.58 1.7-.98l2.49 1c.27.11.56.01.7-.23l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65z" fill="#C0C0C0"/>
+      </g>
+    </svg>
+  </button>         
+  </header>
+<!-- Backdrop untuk kedua drawer -->
+<div id="cv_backdrop" class="backdrop" hidden></div>
 
-          <!-- Account -->
-          <div class="sec" id="cv_accountSec">
-            <label>Account</label>
-            <div class="help" id="cv_accStatus">not logged in.</div>
-            <div class="row" style="margin-top:8px;gap:8px">
-              <input id="cv_accName" type="text" placeholder="Name" style="flex:1 1 160px">
-              <input id="cv_accEmail" type="email" placeholder="Email" style="flex:1 1 200px">
-              <button id="cv_btnLogin"  class="primary">Login</button>
-              <button id="cv_btnLogout" class="ghost">Logout</button>
-            </div>
-          </div>
+<!-- DRAWER KIRI (Hamburger) -->
+<aside id="cv_drawerLeft" class="drawer drawer-left" aria-label="Main menu" hidden>
+  <div class="drawer-head">
+    <div class="brand">
+      <span class="logo-chip">cv</span>
+      <b>ChordyV</b>
+    </div>
+    <button id="cv_closeLeft" class="ghost closex" aria-label="Close">✕</button>
+  </div>
 
-          <!-- Theme (Global for Editor/Library/Performance) -->
-          <div class="sec">
-            <label>Theme (Global)</label>
-            <div class="row">
-              <label><input type="radio" name="cv_theme" value="white"> White</label>
-              <label><input type="radio" name="cv_theme" value="navy"> Navy</label>
-            </div>
-            <div class="help">Global theme applies to Editor, Library, and Performance.</div>
-          </div>
+  <!-- Menu Hamburger -->
+  <div class="drawer-sec">
+    <label>Account</label>
+    <div class="help" id="cv_accStatus_drawer">not logged in.</div>
+    <div class="row" style="gap:8px">
+      <input id="cv_accName" type="text" placeholder="Name" style="flex:1 1 160px">
+      <input id="cv_accEmail" type="email" placeholder="Email" style="flex:1 1 200px">
+      <button id="cv_btnLogin"  class="primary">Login</button>
+      <button id="cv_btnLogout" class="ghost">Logout</button>
+    </div>
+  </div>
 
-          <!-- Quick Guide -->
-     <div class="sec">
-  <button class="ghost" onclick="showChordyVHelp()">User Guide</button>
-</div>   
-  <div class="sec">
-            <details>
-              <summary style="cursor:pointer">Quick Guide</summary>
-              <div class="help" style="margin-top:8px">
-                <ul style="margin:6px 0 0 18px;padding:0">
-                  <li><b>|</b> — barline</li>
-                  <li><b>Bar</b> — fill 1 bar with“.” then close with <b>|</b> (follows preset beat)</li>
-                  <li><b>-</b> — rest</li>
-                  <li><b>%</b> — repeat previous bar</li>
-                  <li><b>#</b> / <b>♭</b> — quick insert</li>
-                </ul>
-              </div>
-            </details>
-          </div>
-
-          <!-- About -->
-          <div class="sec">
-            <details open>
-              <summary style="cursor:pointer">About</summary>
-              <div class="help" style="margin-top:8px">
-                <b>ChordyV</b> — simple chord bank & performance tool.<br/>
-                Version <span id="cv_aboutVer">v1.0.0</span>
-<div class="legal-links" style="margin-top:12px; font-size:12px; text-align:center;">
-  <a href="./privacy.html" 
-     style="color:#0EA5E9; text-decoration:none;">Privacy Policy</a>
-  <span style="color:#9CA3AF;"> • </span>
-  <a href="./terms.html" 
-     style="color:#0EA5E9; text-decoration:none;">Terms of Use</a>
-</div>
-              </div>
-            </details>
-          </div>
-
-          <!-- Data -->
-          <div class="sec">
-            <label>Data</label>
-            <div class="row" style="gap:8px">
-              <button id="cv_btnExport" class="ghost">Export Songs</button>
-              <button id="cv_btnImport" class="ghost">Import Songs</button>
-              <input id="cv_importFile" type="file" accept="application/json" style="display:none"/>
-            </div>
-            <div class="help">Backup/restore songs & folders.</div>
-          </div>
+  <div class="drawer-sec">
+    <details>
+      <summary class="about-summary">About</summary>
+      <div class="help" style="margin-top:8px">
+        <b>ChordyV</b> — simple chord bank & performance tool.<br>
+        Version <span>v1.0.0.0</span> 2025
+        <div style="margin-top:12px; font-size:12px; text-align:center;">
+          <a href="./privacy.html" style="color:#0EA5E9;text-decoration:none;">Privacy Policy</a>
+          <span style="color:#9CA3AF;"> • </span>
+          <a href="./terms.html" style="color:#0EA5E9;text-decoration:none;">Terms of Use</a>
         </div>
       </div>
+    </details>
+  </div>
+</aside>
+
+<!-- DRAWER KANAN (Gear / Settings) -->
+<aside id="cv_drawerRight" class="drawer drawer-right" aria-label="Settings" hidden>
+  <div class="drawer-head">
+    <b>Settings</b>
+    <button id="cv_closeRight" class="ghost closex" aria-label="Close">✕</button>
+  </div>
+
+  <!-- ====== Pindahan isi Settings lama ke sini ====== -->
+  <div class="drawer-sec">
+    <label>Theme (Global)</label>
+    <div class="row">
+      <label><input type="radio" name="cv_theme" value="white"> White</label>
+      <label><input type="radio" name="cv_theme" value="navy"> Navy</label>
     </div>
-  </header>
+    <div class="help">Global theme applies to Editor, Library, and Performance.</div>
+  </div>
+
+  <div class="drawer-sec">
+    <button class="ghost" onclick="showChordyVHelp()">User Guide</button>
+    <details style="margin-top:6px">
+      <summary class="about-summary">Quick Guide</summary>
+      <div class="help" style="margin-top:8px">
+        <ul style="margin:6px 0 0 18px;padding:0">
+          <li><b>|</b> — barline</li>
+          <li><b>Bar</b> — fill 1 bar dengan “.” lalu tutup pakai <b>|</b></li>
+          <li><b>-</b> — rest</li>
+          <li><b>%</b> — repeat previous bar</li>
+          <li><b>#</b> / <b>♭</b> — quick insert</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="drawer-sec">
+    <label>Data</label>
+    <div class="row" style="gap:8px">
+      <button id="cv_btnExport" class="ghost">Export Songs</button>
+      <button id="cv_btnImport" class="ghost">Import Songs</button>
+      <input id="cv_importFile" type="file" accept="application/json" style="display:none">
+    </div>
+    <div class="help">Backup/restore songs & folders.</div>
+  </div>
+</aside>
 <!-- =================== VIEWS =================== -->
   <div id="editorView" class="wrap view active"></div>
   <div id="libraryView" class="wrap view"></div>
@@ -1064,9 +1159,6 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <script>
-window.CV_FLAGS = { premiumEnabled:false, hardLimit:false, maxFreeSongs:5 };
-</script>
-<script>
 (function(){
   const ALLOW = new Set(['PRE','DIV','SPAN','BR','#text']);
 function sanitizeNode(node){
@@ -1333,5 +1425,128 @@ lyrics lyrics lyrics</pre>
       document.getElementById('cv_helpModal').style.display = 'flex';
     }
   </script>
+<!-- Backdrop global (untuk drawer) -->
+<div id="cv_backdrop" class="backdrop" hidden></div>
+
+<!-- Drawer kiri (Hamburger) -->
+<aside id="cv_drawerLeft" class="drawer drawer-left" role="dialog" aria-label="Main menu" aria-hidden="true">
+  <div class="drawer-head">
+    <div class="brand">
+      <span class="logo-chip">cv</span>
+      <b>ChordyV</b>
+    </div>
+    <button class="ghost closex" aria-label="Close">✕</button>
+  </div>
+
+  <section class="drawer-sec">
+    <label>Account</label>
+    <div class="help">Sign in with Google</div>
+    <button class="btn google" disabled>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="margin-right:8px">
+        <path fill="#4285F4" d="M21.35 11.1h-9.18v2.98h5.26c-.22 1.49-1.59 4.37-5.26 4.37-3.17 0-5.76-2.62-5.76-5.85s2.59-5.85 5.76-5.85c1.8 0 3 .76 3.69 1.41l2.51-2.42C17.13 4.39 15.07 3.5 12.17 3.5 7.42 3.5 3.61 7.31 3.61 12s3.81 8.5 8.56 8.5c4.94 0 8.21-3.46 8.21-8.33 0-.56-.06-1.01-.13-1.57z"/>
+      </svg>
+      Sign in with Google
+    </button>
+  </section>
+
+  <section class="drawer-sec">
+    <details open>
+      <summary class="about-summary">About</summary>
+      <div class="help" style="margin-top:8px">
+        <b>ChordyV</b><br/>
+        version 1.0.0.0 · 2025
+      </div>
+      <div class="links">
+        <a class="link" href="./privacy.html" target="_blank" rel="noopener">Privacy Policy</a>
+        <a class="link" href="./terms.html"   target="_blank" rel="noopener">Terms of Use</a>
+      </div>
+    </details>
+  </section>
+</aside>
+<!-- Drawer kanan (Gear) -->
+<aside id="cv_drawerRight" class="drawer drawer-right" role="dialog" aria-label="Settings" aria-hidden="true">
+  <div class="drawer-head">
+    <b>Settings</b>
+    <button id="cv_btnCloseDrawerRight" class="ghost closex" aria-label="Close">✕</button>
+  </div>
+
+  <!-- Theme -->
+  <section class="drawer-sec">
+    <label>Theme</label>
+    <div class="row" style="gap:10px">
+      <label class="chip"><input type="radio" name="cv_theme" value="white"> White</label>
+      <label class="chip"><input type="radio" name="cv_theme" value="navy"> Navy</label>
+    </div>
+    <div class="help">Apply instantly & saved locally.</div>
+  </section>
+
+  <!-- Guides -->
+  <section class="drawer-sec">
+    <label>Guides</label>
+    <div class="row" style="gap:10px; flex-wrap:wrap">
+      <button class="btn secondary" id="cv_btnQuickGuide">Quick Guide</button>
+      <a class="btn" href="./user-guide.html" target="_blank" rel="noopener">User Guide</a>
+    </div>
+  </section>
+
+  <!-- Data -->
+  <section class="drawer-sec">
+    <label>Data</label>
+    <div class="row" style="gap:10px; flex-wrap:wrap">
+      <button class="btn secondary" id="cv_btnExport">Export JSON</button>
+      <label class="btn">
+        Import JSON <input type="file" id="cv_fileImport" accept="application/json" style="display:none">
+      </label>
+    </div>
+    <div class="help">Backup/restore your library.</div>
+  </section>
+</aside>
+<script>
+(()=> {
+  const qs = sel => document.querySelector(sel);
+
+  const btnHamb = qs('#cv_btnHamburger');
+  const btnGear  = qs('#cv_btnSettings');
+
+  const left     = qs('#cv_drawerLeft');
+  const right    = qs('#cv_drawerRight');
+  const back     = qs('#cv_backdrop');
+
+  const closeL   = qs('#cv_closeLeft');
+  const closeR   = qs('#cv_closeRight');
+
+  function show(el){
+    el.hidden = false;
+    requestAnimationFrame(()=> el.classList.add('open'));
+  }
+  function hide(el){
+    el.classList.remove('open');
+    el.addEventListener('transitionend', ()=> el.hidden = true, {once:true});
+  }
+  function openLeft(){
+    show(left); back.hidden=false; requestAnimationFrame(()=> back.classList.add('show'));
+  }
+  function openRight(){
+    show(right); back.hidden=false; requestAnimationFrame(()=> back.classList.add('show'));
+  }
+  function closeAll(){
+    if(!left.hidden)  hide(left);
+    if(!right.hidden) hide(right);
+    back.classList.remove('show');
+    back.addEventListener('transitionend', ()=> back.hidden=true, {once:true});
+  }
+
+  btnHamb?.addEventListener('click', openLeft);
+  btnGear?.addEventListener('click', openRight);
+  closeL?.addEventListener('click', closeAll);
+  closeR?.addEventListener('click', closeAll);
+  back?.addEventListener('click', closeAll);
+
+  // Escape untuk tutup
+  window.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape') closeAll();
+  });
+})();
+</script>
 </body>
 </html>
