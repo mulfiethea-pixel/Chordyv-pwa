@@ -693,9 +693,121 @@ header .head .grow{ display:none !important; }
   })();
   </script>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Google Identity Services (GIS) -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+/* ===== Konfigurasi ===== */
+const CV_GOOGLE_CLIENT_ID = "806458447193-quti8hur03rabsi9etaag1v8kqq0ah8o.apps.googleusercontent.com";
+const CV_USER_KEY = "cv_user";
+
+/* ===== Util ===== */
+function decodeJwt(token){
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const json = decodeURIComponent(atob(base64).split('').map(c =>
+    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+  ).join(''));
+  return JSON.parse(json);
+}
+const saveUser = u => localStorage.setItem(CV_USER_KEY, JSON.stringify(u));
+const loadUser = () => { try { return JSON.parse(localStorage.getItem(CV_USER_KEY)||"null"); } catch { return null; } };
+const clearUser = () => localStorage.removeItem(CV_USER_KEY);
+
+/* ===== UI helpers ===== */
+function renderLoggedOut(){
+  const box = document.getElementById("accountBox");
+  if (box) box.innerHTML = `<div class="user-info free">
+    <div class="name">Guest</div>
+    <div class="email">not logged in</div>
+  </div>`;
+
+  const mount = document.getElementById("googleBtn");
+  if (mount){
+    mount.innerHTML = "";
+    if (window.google?.accounts?.id){
+      google.accounts.id.initialize({
+        client_id: CV_GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse,
+        ux_mode: "popup",
+        context: "signin"
+      });
+      google.accounts.id.renderButton(mount, {
+        theme: "outline",
+        size: "large",
+        type: "standard",
+        shape: "pill",
+        text: "signin_with",
+        logo_alignment: "left"
+      });
+      // Kalau nanti mau: google.accounts.id.prompt();  // One Tap
+    } else {
+      mount.textContent = navigator.onLine ? "Loading Google..." : "Offline: Sign-in unavailable";
+    }
+  }
+  const lo = document.getElementById("googleLogoutBtn");
+  if (lo) lo.style.display = "none";
+}
+
+function renderLoggedIn(user){
+  const box = document.getElementById("accountBox");
+  if (box){
+    const ava = user.picture ? `<img src="${user.picture}" alt="" style="width:28px;height:28px;border-radius:50%;margin-right:8px;vertical-align:-6px">` : "";
+    box.innerHTML = `<div class="user-info">
+      <div class="name">${ava}${user.name || "User"}</div>
+      <div class="email">${user.email || ""}</div>
+    </div>`;
+  }
+  const mount = document.getElementById("googleBtn");
+  if (mount) mount.innerHTML = "";
+  const lo = document.getElementById("googleLogoutBtn");
+  if (lo) lo.style.display = "inline-block";
+}
+
+/* ===== Callback dari Google ===== */
+function handleCredentialResponse(res){
+  try{
+    const payload = decodeJwt(res.credential);
+    const user = {
+      uid: payload.sub,
+      email: payload.email,
+      name: payload.name,
+      picture: payload.picture || "",
+      idToken: res.credential,
+      exp: payload.exp
+    };
+    saveUser(user);
+    renderLoggedIn(user);
+    // NOTE: untuk produksi, verifikasi idToken di server.
+  }catch(e){
+    console.error("Google Sign-In error:", e);
+    alert("Failed to sign in. Please try again.");
+  }
+}
+
+/* ===== Logout ===== */
+function googleSignOut(){
+  clearUser();
+  window.google?.accounts?.id?.disableAutoSelect?.();
+  renderLoggedOut();
+}
+
+/* ===== Init ===== */
+function cvAuthInit(){
+  const u = loadUser();
+  const now = Math.floor(Date.now()/1000);
+  if (u && u.exp && u.exp > now) renderLoggedIn(u);
+  else { clearUser(); renderLoggedOut(); }
+
+  const lo = document.getElementById("googleLogoutBtn");
+  if (lo) lo.onclick = googleSignOut;
+}
+document.addEventListener("DOMContentLoaded", cvAuthInit);
+</script>
+<script
+  src="https://accounts.google.com/gsi/client"
+  async defer
+  onload="window.cvAuthInit && cvAuthInit()">
+</script>
 </head>
+
 <body>
 <!-- =================== HEADER (Editor only) + SETTINGS =================== -->
 <header id="cv_header">
@@ -2119,114 +2231,6 @@ lyrics lyrics lyrics</pre>
     if(e.key === 'Escape') closeAll();
   });
 })();
-</script>
-<script>
-/* ===== Konfigurasi ===== */
-const CV_GOOGLE_CLIENT_ID = "806458447193-quti8hur03rabsi9etaag1v8kqq0ah8o.apps.googleusercontent.com";
-const CV_USER_KEY = "cv_user";
-
-/* ===== Util ===== */
-function decodeJwt(token){
-  const base64Url = token.split('.')[1];
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const json = decodeURIComponent(atob(base64).split('').map(c =>
-    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-  ).join(''));
-  return JSON.parse(json);
-}
-const saveUser = u => localStorage.setItem(CV_USER_KEY, JSON.stringify(u));
-const loadUser = () => { try { return JSON.parse(localStorage.getItem(CV_USER_KEY)||"null"); } catch { return null; } };
-const clearUser = () => localStorage.removeItem(CV_USER_KEY);
-
-/* ===== UI helpers ===== */
-function renderLoggedOut(){
-  const box = document.getElementById("accountBox");
-  if (box) box.innerHTML = `<div class="user-info free">
-    <div class="name">Guest</div>
-    <div class="email">not logged in</div>
-  </div>`;
-
-  const mount = document.getElementById("googleBtn");
-  if (mount){
-    mount.innerHTML = "";
-    if (window.google?.accounts?.id){
-      google.accounts.id.initialize({
-        client_id: CV_GOOGLE_CLIENT_ID,
-        callback: handleCredentialResponse,
-        ux_mode: "popup",
-        context: "signin"
-      });
-      google.accounts.id.renderButton(mount, {
-        theme: "outline",
-        size: "large",
-        type: "standard",
-        shape: "pill",
-        text: "signin_with",
-        logo_alignment: "left"
-      });
-      // Kalau nanti mau: google.accounts.id.prompt();  // One Tap
-    } else {
-      mount.textContent = navigator.onLine ? "Loading Google..." : "Offline: Sign-in unavailable";
-    }
-  }
-  const lo = document.getElementById("googleLogoutBtn");
-  if (lo) lo.style.display = "none";
-}
-
-function renderLoggedIn(user){
-  const box = document.getElementById("accountBox");
-  if (box){
-    const ava = user.picture ? `<img src="${user.picture}" alt="" style="width:28px;height:28px;border-radius:50%;margin-right:8px;vertical-align:-6px">` : "";
-    box.innerHTML = `<div class="user-info">
-      <div class="name">${ava}${user.name || "User"}</div>
-      <div class="email">${user.email || ""}</div>
-    </div>`;
-  }
-  const mount = document.getElementById("googleBtn");
-  if (mount) mount.innerHTML = "";
-  const lo = document.getElementById("googleLogoutBtn");
-  if (lo) lo.style.display = "inline-block";
-}
-
-/* ===== Callback dari Google ===== */
-function handleCredentialResponse(res){
-  try{
-    const payload = decodeJwt(res.credential);
-    const user = {
-      uid: payload.sub,
-      email: payload.email,
-      name: payload.name,
-      picture: payload.picture || "",
-      idToken: res.credential,
-      exp: payload.exp
-    };
-    saveUser(user);
-    renderLoggedIn(user);
-    // NOTE: untuk produksi, verifikasi idToken di server.
-  }catch(e){
-    console.error("Google Sign-In error:", e);
-    alert("Failed to sign in. Please try again.");
-  }
-}
-
-/* ===== Logout ===== */
-function googleSignOut(){
-  clearUser();
-  window.google?.accounts?.id?.disableAutoSelect?.();
-  renderLoggedOut();
-}
-
-/* ===== Init ===== */
-function cvAuthInit(){
-  const u = loadUser();
-  const now = Math.floor(Date.now()/1000);
-  if (u && u.exp && u.exp > now) renderLoggedIn(u);
-  else { clearUser(); renderLoggedOut(); }
-
-  const lo = document.getElementById("googleLogoutBtn");
-  if (lo) lo.onclick = googleSignOut;
-}
-document.addEventListener("DOMContentLoaded", cvAuthInit);
 </script>
 </body>
 </html>
