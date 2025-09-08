@@ -24,7 +24,8 @@
       --font-perf:28px;
     }
     body{margin:0;background:var(--bg);color:var(--fg);
-      font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Inter,"Noto Sans",sans-serif}
+      font:16px/1.55 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Inter, "Noto Sans", sans-serif;
+}
     body.theme-navy{
       --bg:#0e1a38; --fg:#e5ecff; --card:#0f1f45; --muted:#94a3b8; --border:#1e2b57;
       --chip:#0b1324;
@@ -76,8 +77,8 @@ select{padding-right:34px}
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width:36px;
-  height:36px;
+  width:42px;
+  height:42px;
   border-radius:12px;      /* boleh 50% kalau mau bulat penuh */
   background:none;
   border:none;
@@ -91,7 +92,7 @@ select{padding-right:34px}
 /* Tombol hamburger flat (samakan dengan .gear) */
 .hamburger{
   display:inline-flex;align-items:center;justify-content:center;
-  width:36px;height:36px;border:none;background:none;border-radius:12px;box-shadow:none;
+  width:42px;height:42px;border:none;background:none;border-radius:12px;box-shadow:none;
   transition:background .2s ease; cursor:pointer;
 }
 .hamburger:hover{ background:rgba(0,0,0,.05); }
@@ -139,18 +140,6 @@ select{padding-right:34px}
 .link:hover{background:#f3f4f6}
 .links{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 .btn.google{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;color:#0f172a;border-radius:12px;padding:10px 14px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
-
-    /* Settings panel */
-    .settings{position:relative}
-    .settings-panel{
-      position:absolute; right:0; top:calc(100% + 10px);
-      width:360px; max-width:90vw; max-height:75vh; overflow:auto;
-      background:var(--card); border:1px solid var(--border); border-radius:16px; padding:14px;
-      display:none; z-index:20; box-shadow:0 24px 60px rgba(0,0,0,.35)
-    }
-    .settings.open .settings-panel{display:block}
-    .settings-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-    .settings-head b{font-size:18px}
     .closex{width:32px;height:32px;border-radius:10px}
     .sec{border-top:1px solid var(--border);padding-top:10px;margin-top:10px}
     .help{font-size:12px;color:var(--muted)}
@@ -229,16 +218,468 @@ select{padding-right:34px}
 #perf_area .melodi * {
   color: #111 !important;
 }
-    /* Immersive */
-    body.onlyText #perf_toolbar{display:none}
-    #perf_exitImm{position:fixed;inset:10px 10px auto auto;z-index:10;display:none;
-      background:rgba(15,23,42,.6);color:#fff;border:0;border-radius:10px;padding:8px 12px}
-    body.onlyText #perf_exitImm{display:inline-flex}
- #perf_toolbar {
+/* =================== Immersive (REPLACED) =================== */
+
+/* Sembunyikan UI saat immersive */
+body.onlyText #perf_toolbar { display: none; }
+body.onlyText #perf_meta    { display: none; }
+
+/* Tombol Exit – selalu terlihat & di atas semuanya */
+#perf_exitImm{
+  position: fixed;
+  inset: 10px 10px auto auto;   /* pojok kanan-atas */
+  z-index: 9999;                /* paling atas */
+  display: none;                /* default: sembunyi */
+  /* lawan gaya "flat/transparent" di #performanceView button */
+  background: rgba(15,23,42,.75) !important; 
+  color: #fff !important;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.22);
+  pointer-events: auto;         /* pastikan bisa diklik */
+}
+
+/* Tampilkan saat immersive aktif */
+body.onlyText #perf_exitImm{
+  display: inline-flex !important; 
+  align-items: center; 
+  gap: 6px;
+}
+
+/* Tambahan: kalau user masuk fullscreen via gesture/menu,
+   tetap paksa tombol Exit muncul meski class onlyText belum nempel */
+:fullscreen #perf_exitImm,
+:-webkit-full-screen #perf_exitImm{
+  display: inline-flex !important;
+  z-index: 9999 !important;
+}
+
+/* Extra guard: karena elemen tombol berada di dalam #performanceView
+   dan ada rule global: #performanceView button { background: transparent; … }
+   maka kita override lagi secara lebih spesifik di konteks ini */
+#performanceView #perf_exitImm{
+  background: rgba(15,23,42,.75) !important;
+  color: #fff !important;
+}
+
+/* Toolbar (tetap) */
+#perf_toolbar {
   position: sticky;
   top: 0;
   z-index: 8;
-} 
+}
+/* ===== EDITOR-ONLY MODERN BUTTONS ===== */
+#editorView .beat-group .preset-beat{
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  background:#f8fafc;
+  color:#0f172a;
+  padding:8px 14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .2s ease;
+}
+#editorView .beat-group .preset-beat:hover{ background:#eef7ff; }
+#editorView .beat-group .preset-beat.is-selected{
+  background:#0ea5e9;
+  color:#fff;
+  border-color:#0ea5e9;
+}
+#editorView .primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  box-shadow: 0 6px 14px rgba(0,0,0,.10);
+}
+#editorView .ghost {
+  background: rgba(148,163,184,.12);
+}
+#editorView .shortcut-bar button {
+  min-width: 40px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(148,163,184,.12);
+}
+#editorView .shortcut-bar button:hover {
+  background: rgba(148,163,184,.18);
+}
+/* === FIX OVERRIDE PRIMARY & GHOST === */
+#editorView button.primary {
+  background: var(--accent) !important;
+  color: var(--accent-fg) !important;
+  border-color: transparent !important;
+}
+
+#editorView button.ghost {
+  background: rgba(148,163,184,.12) !important;
+}
+
+/* ===== LIBRARY-ONLY MODERN BUTTONS ===== */
+#libraryView button:not(.cv-fab),
+#libraryView .btn,
+#libraryView .ghost,
+#libraryView .primary {
+  border: none !important;
+  background: transparent;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .18s ease, transform .08s ease, box-shadow .18s ease;
+}
+#libraryView .cv-fab {
+  border-radius: 50% !important;
+  background: linear-gradient(180deg,#16a3dc,#0ea5e9) !important;
+  color: #fff !important;
+  width: 56px; height: 56px;
+  padding: 0 !important;
+  display: inline-grid; place-items: center;
+}
+#libraryView .cv-fab::before {
+  content: '+'; font-size: 28px; font-weight: 700;
+}
+#libraryView .primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  box-shadow: 0 6px 14px rgba(0,0,0,.10);
+}
+#libraryView .ghost {
+  background: rgba(148,163,184,.12);
+}
+#libraryView button:hover {
+  background: rgba(148,163,184,.18);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0,0,0,.12);
+}
+#libraryView button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(0,0,0,.10);
+}
+/* === FIX OVERRIDE PRIMARY & GHOST === */
+#libraryView button.primary {
+  background: var(--accent) !important;
+  color: var(--accent-fg) !important;
+  border-color: transparent !important;
+}
+
+#libraryView button.ghost {
+  background: rgba(148,163,184,.12) !important;
+}
+/* ===== PERFORMANCE-ONLY MODERN BUTTONS ===== */
+#performanceView button,
+#performanceView .btn,
+#performanceView .ghost,
+#performanceView .primary {
+  border: none !important;
+  background: transparent;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .18s ease, transform .08s ease, box-shadow .18s ease;
+}
+
+/* Segmented toolbar buttons (transpose, acc, font size) */
+#performanceView .seg .btn {
+  background: rgba(148,163,184,.12);
+}
+#performanceView .seg .btn:hover {
+  background: rgba(148,163,184,.18);
+}
+
+/* Primary (jarang dipakai di perf, tapi tetap siap) */
+#performanceView .primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  box-shadow: 0 6px 14px rgba(0,0,0,.10);
+}
+/* ===== LIBRARY sizing & alignment ===== */
+
+/* Search lebih ramping */
+#libraryView #lib_search{
+  height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--chip);
+  border-radius: 14px !important;  /* kunci biar gak jadi kotak */
+  font-size: 14px;
+  line-height: 1.3;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ===== Toolbar Library compact & segmented ===== */
+#libraryView .row.compact { 
+  gap: 6px;                 /* lebih rapet */
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Kelompok rapet: tombol jadi satu capsule */
+#libraryView .seg.tight{
+  display: inline-flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Item di dalam seg: nempel, ada garis pemisah tipis */
+#libraryView .seg.tight > *{
+  border: 0 !important;
+  border-right: 1px solid var(--border);
+  background: rgba(148,163,184,.12);
+  height: 36px;            /* samakan tinggi */
+  padding: 6px 10px;       /* lebih ramping */
+  border-radius: 0 !important;
+}
+#libraryView .seg.tight > *:last-child{ border-right: 0; }
+
+/* Dropdown versi kompak */
+#libraryView .seg.tight select{
+  width: auto;
+  min-width: 96px;         /* jangan kependekan */
+  max-width: 128px;        /* cegah melebar */
+  appearance: none;
+}
+
+/* Sedikit rampingkan tombol default di Library */
+#libraryView button:not(.cv-fab){ height:36px; padding:6px 10px; }
+
+/* Jarak antar kontrol lebih rapat */
+#libraryView .card .row{ gap: 10px; }
+
+/* Biar deretan kontrol nggak mepet tepi kiri-kanan */
+#libraryView .card{ padding-left: 16px; padding-right: 16px; }
+
+/* Tombol chip di Library (Open/Edit/Move/…) sudah disetel sebelumnya;
+   ini samain sudut & tinggi kalau perlu */
+#libraryView button,
+#libraryView .ghost{
+  border-radius: 12px;
+  height: 38px;
+  padding: 8px 12px;
+}
+
+/* Opsional: center-kan Search & kontrol pada layar kecil */
+@media (max-width: 420px){
+/* Samain font dropdown Keys & Folders dengan tombol */
+#libraryView #lib_key,
+#libraryView #lib_folder{
+  font-size: 13.5px;
+  height: 36px;
+  line-height: 1.3;
+  padding: 6px 10px;
+  border-radius: 0 !important;   /* hanya untuk dropdown di segmen ketat */
+  background: rgba(148,163,184,.12);
+  border: none !important;
+  width: auto;
+  min-width: 96px;
+  max-width: 128px;
+  appearance: none;
+}
+
+#libraryView .new-btn:hover {
+  color: #1e2b57;                 /* navy lebih gelap pas hover */
+  transform: translateY(-1px);
+}
+
+#libraryView .new-btn:active {
+  transform: translateY(0);
+}
+/* === Editor: samakan #ed_title dengan search di Library === */
+#editorView #ed_title{
+  font-size: 14px;
+  height: 38px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--chip);
+  color: var(--fg);
+  width: 100%;
+  max-width: 360px;   /* biar “serasa” seperti Search di Library */
+}
+
+#editorView #ed_title::placeholder{ color: var(--muted); }
+
+/* === Shared Floating Action Button (FAB) === */
+.cv-fab{
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(180deg,#16a3dc,#0ea5e9);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+  z-index: 1000;
+  font-size: 0; /* sembunyikan teks */
+}
+.cv-fab::before{
+  content: '+';
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+.cv-fab:hover{
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(0,0,0,.3);
+}
+/* === FIX: Pastikan FAB tidak transparan di Editor & Library === */
+/* LIBRARY: FAB + di pojok kanan-bawah, floating */
+/* LIBRARY: FAB + di pojok kanan-bawah, floating */
+#libraryView .cv-fab {
+  position: fixed !important;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+  right: 20px !important;
+
+  width: 56px !important;
+  height: 56px !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 50% !important;
+  background: linear-gradient(180deg,#16a3dc,#0ea5e9) !important;
+  color: #fff !important;
+
+  display: inline-grid !important;
+  place-items: center !important;
+  line-height: 1 !important;
+  z-index: 1000 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25) !important;
+  transition: transform .15s, box-shadow .15s !important;
+}
+#libraryView .cv-fab::before {
+  content: '+'; font-size: 28px; font-weight: 700; color:#fff !important;
+}
+/* === FIX: Tombol Preset Beat agar biru saat dipilih === */
+#editorView .beat-group .preset-beat.is-selected,
+#editorView .beat-group .preset-beat[aria-pressed="true"] {
+  background:#0ea5e9 !important;
+  color:#fff !important;
+  border-color:#0ea5e9 !important;
+}
+/* === Global Accent Override: samain Editor, Library, Performance === */
+:root {
+  --accent:#0ea5e9 !important;
+  --accent-fg:#ffffff !important;
+}
+/* === Hilangin border tombol di Editor & Library === */
+#editorView button,
+#editorView .btn,
+#editorView .preset-beat,
+#editorView .ghost,
+#editorView .primary,
+#editorView .shortcut-bar button,
+#libraryView button,
+#libraryView .btn,
+#libraryView .ghost,
+#libraryView .primary {
+  border: none !important;
+}
+#libraryView #lib_search{
+  border-radius: 14px !important;
+}
+/* ===== Editor: segmented toolbar Save/Library/Open biar sama dgn Library ===== */
+#editorView .row .seg.tight{
+  display:inline-flex;
+  gap:0;
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+}
+
+/* Item di dalam kapsul: rata tinggi, tanpa radius per-item, ada pemisah tipis */
+#editorView .seg.tight > button{
+  height:36px;
+  padding:6px 10px;
+  border:0 !important;
+  border-right:1px solid var(--border);
+  border-radius:0 !important;
+  background: rgba(148,163,184,.12);
+  box-shadow:none !important;
+  transform:none !important;
+}
+#editorView .seg.tight > button:last-child{ border-right:0; }
+
+/* Primary di dalam kapsul: tetap biru tapi menyatu rapi */
+#editorView .seg.tight > .primary{
+  background: var(--accent) !important;
+  color: var(--accent-fg) !important;
+  border-color: transparent !important;
+}
+#editorView .seg.tight > .primary:hover{
+  background: var(--accent) !important; /* jangan berubah/berbayang */
+}
+
+/* Sedikit rapetin jarak baris tombolnya */
+#editorView .row[style*="margin-top:10px"]{ gap:10px; align-items:center; }
+/* ===== Header: 3 kolom (left / center / right) ===== */
+header .head{
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;  /* kiri-fleks • tengah-auto • kanan-fleks */
+  align-items: center;
+  gap: 12px;
+}
+
+/* tempatkan masing-masing area */
+header .head .left  { justify-self: start; }
+header .head .center{ justify-self: center; display:flex; align-items:center; gap:10px; }
+header .head .right { justify-self: end; }
+
+/* pastikan judul tidak memaksa melar */
+header .head #titleBar{
+  margin: 0;
+  white-space: nowrap;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* biar konsisten di tema navy juga */
+body.theme-navy header .head #titleBar{ color:#dbeafe; }
+
+/* hilangkan elemen .grow lama kalau masih ada */
+header .head .grow{ display:none !important; }
+/* ===== Drawer / Sheet Fix: biar isi nggak bablas ke kanan ===== */
+.sheet, .drawer {
+  width: min(88vw, 360px);    /* lebar konsisten */
+  max-width: 360px;
+  box-sizing: border-box;
+  overflow-x: hidden;         /* cegah isi keluar */
+  word-break: break-word;     /* teks panjang tetap wrap */
+}
+
+/* semua anak wajib ikut border-box dan bisa menyusut */
+.sheet *, .drawer * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Input login */
+.sheet input[type="text"],
+.sheet input[type="email"],
+.sheet input[type="password"],
+.drawer input[type="text"],
+.drawer input[type="email"],
+.drawer input[type="password"] {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+}
+
+/* Tombol login/logout biar rapi */
+.sheet .actions, .drawer .actions {
+  display: flex;
+  gap: 12px;
+}
+.sheet .actions > *, .drawer .actions > * {
+  flex: 1 1 0;
+  max-width: 100%;
+}
 </style>
 <script>
   /* =================== CORE STORAGE & UTIL =================== */
@@ -251,29 +692,35 @@ select{padding-right:34px}
     window.cv_escapeHtml = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   })();
   </script>
-
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Google Identity Services (GIS) -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <!-- =================== HEADER (Editor only) + SETTINGS =================== -->
 <header id="cv_header">
 <div class="head">
-    <!-- HAMBURGER (LEFT) -->
-<button id="cv_btnHamburger" class="ghost hamburger" aria-label="Menu" title="Menu">
-  <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-    <rect x="3" y="6"  width="18" height="2" rx="1" fill="#0F172A"/>
-    <rect x="3" y="11" width="18" height="2" rx="1" fill="#0F172A"/>
-    <rect x="3" y="16" width="18" height="2" rx="1" fill="#0F172A"/>
-  </svg>
-</button>
-      <div class="logo">cv</div>
-      <h1 id="titleBar">ChordyV — Editor</h1>
-      <div class="grow"></div>
+  <div class="left">
+    <button id="cv_btnHamburger" class="ghost hamburger" aria-label="Menu" title="Menu">
+      <!-- svg hamburger kamu -->
+      <svg viewBox="0 0 24 24" width="42" height="42" aria-hidden="true">
+        <rect x="3" y="6"  width="18" height="2" rx="1" fill="#0F172A"/>
+        <rect x="3" y="11" width="18" height="2" rx="1" fill="#0F172A"/>
+        <rect x="3" y="16" width="18" height="2" rx="1" fill="#0F172A"/>
+      </svg>
+    </button>
+  </div>
 
-      <div class="settings" id="cv_settings">
-  <button id="cv_btnSettings" class="ghost gear" title="Settings" aria-label="Settings">
+  <div class="center">
+    <div class="logo-chip sm">Cv.|</div>
+    <h1 id="titleBar">ChordyV — Library</h1>
+  </div>
+
+  <div class="right">
+    <button id="cv_btnSettings" class="ghost gear" title="Settings" aria-label="Settings">
     <!-- SVG Gear Double -->
     <svg xmlns="http://www.w3.org/2000/svg" 
-         width="28" height="28" viewBox="0 0 24 24">
+         width="42" height="42" viewBox="0 0 24 24">
       <defs>
         <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" style="stop-color:#0F172A;stop-opacity:1" />
@@ -287,7 +734,9 @@ select{padding-right:34px}
         <path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.21l-2.49 1a7.028 7.028 0 0 0-1.7-.98l-.38-2.65A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.5.42l-.38 2.65c-.63.25-1.2.58-1.7.98l-2.49-1a.5.5 0 0 0-.61.21l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.14.24.43.34.7.23l2.49-1c.5.4 1.07.73 1.7.98l.38 2.65c.04.26.25.42.5.42h4c.25 0 .46-.16.5-.42l.38-2.65c.63-.25 1.2-.58 1.7-.98l2.49 1c.27.11.56.01.7-.23l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65z" fill="#C0C0C0"/>
       </g>
     </svg>
-  </button>         
+  </button>
+</div>
+</div>         
   </header>
 <!-- Backdrop untuk kedua drawer -->
 <div id="cv_backdrop" class="backdrop" hidden></div>
@@ -296,7 +745,7 @@ select{padding-right:34px}
 <aside id="cv_drawerLeft" class="drawer drawer-left" aria-label="Main menu" hidden>
   <div class="drawer-head">
     <div class="brand">
-      <span class="logo-chip">cv</span>
+      <span class="logo-chip">Cv.|</span>
       <b>ChordyV</b>
     </div>
     <button id="cv_closeLeft" class="ghost closex" aria-label="Close">✕</button>
@@ -304,15 +753,17 @@ select{padding-right:34px}
 
   <!-- Menu Hamburger -->
   <div class="drawer-sec">
-    <label>Account</label>
-    <div class="help" id="cv_accStatus_drawer">not logged in.</div>
-    <div class="row" style="gap:8px">
-      <input id="cv_accName" type="text" placeholder="Name" style="flex:1 1 160px">
-      <input id="cv_accEmail" type="email" placeholder="Email" style="flex:1 1 200px">
-      <button id="cv_btnLogin"  class="primary">Login</button>
-      <button id="cv_btnLogout" class="ghost">Logout</button>
-    </div>
-  </div>
+  <label>Account</label>
+
+  <!-- Account status (akan di-update otomatis via script) -->
+  <div class="help" id="accountBox">not logged in.</div>
+
+  <!-- Tombol Google Sign-In akan dirender ke sini -->
+  <div id="googleBtn"></div>
+
+  <!-- Tombol Logout (disembunyikan dulu) -->
+  <button id="googleLogoutBtn" class="ghost" style="display:none">Sign out</button>
+</div>
 
   <div class="drawer-sec">
     <details>
@@ -394,15 +845,7 @@ select{padding-right:34px}
           applyTheme(val);
         });
       });
-    }
-    function initSettingsPanel(){
-      const box=document.getElementById('cv_settings');
-      const btn=document.getElementById('cv_btnSettings');
-      const close=document.getElementById('cv_btnCloseSettings');
-      btn?.addEventListener('click', ()=> box.classList.toggle('open'));
-      close?.addEventListener('click', ()=> box.classList.remove('open'));
-      document.addEventListener('click', e=>{ if(!box.contains(e.target)) box.classList.remove('open'); });
-    }
+    }  
     function initDataIO(){
       const btnEx = document.getElementById('cv_btnExport');
       const btnIm = document.getElementById('cv_btnImport');
@@ -439,7 +882,7 @@ select{padding-right:34px}
     const loadUser=()=>{try{return JSON.parse(localStorage.getItem(ACC_KEY)||'null')}catch{return null}};
     const saveUser=u=>{u?localStorage.setItem(ACC_KEY,JSON.stringify(u)):localStorage.removeItem(ACC_KEY)};
     function renderAccount(){
-      const s=document.getElementById('cv_accStatus');
+     const s=document.getElementById('cv_accStatus_drawer');
       const nm=document.getElementById('cv_accName');
       const em=document.getElementById('cv_accEmail');
       const u=loadUser();
@@ -461,9 +904,9 @@ select{padding-right:34px}
     }
 
     if(document.readyState==='loading'){
-      document.addEventListener('DOMContentLoaded', ()=>{ initTheme(); initSettingsPanel(); initDataIO(); initAccount(); });
+      document.addEventListener('DOMContentLoaded', ()=>{ initTheme();initDataIO(); initAccount(); });
     }else{
-      initTheme(); initSettingsPanel(); initDataIO(); initAccount();
+      initTheme();initDataIO(); initAccount();
     }
   })();
   </script>
@@ -518,12 +961,12 @@ else
           </div>
           <div>
             <label>Preset Beat</label>
-            <div class="row">
-              <button class="ghost" data-beat="2">2/4</button>
-              <button class="ghost" data-beat="3">3/4</button>
-              <button class="ghost primary" data-beat="4">4/4</button>
-              <button class="ghost" data-beat="6">6/8</button>
-            </div>
+           <div class="beat-group">
+  <button type="button" class="preset-beat is-selected" data-beat="2/4">2/4</button>
+  <button type="button" class="preset-beat" data-beat="3/4">3/4</button>
+  <button type="button" class="preset-beat" data-beat="4/4">4/4</button>
+  <button type="button" class="preset-beat" data-beat="6/8">6/8</button>
+</div>
           </div>
         </div>
       </div>
@@ -542,13 +985,19 @@ else
         <label>content (Chords / Melody / Text)</label>
         <textarea id="ed_content" spellcheck="false" placeholder="Write chords / melody / text..."></textarea>
 
-        <div class="row" style="margin-top:10px">
-          <button id="ed_btnNew" class="ghost">New</button>
-          <button id="ed_btnSave" class="primary">Save</button>
-          <div class="grow"></div>
-          <button id="ed_btnLibrary" class="ghost">Library</button>
-          <button id="ed_btnPerf" class="ghost">Open (Performance)</button>
-        </div>
+       <div class="row" style="margin-top:10px; display:flex; align-items:center; gap:10px">
+  <!-- FAB tetap terpisah -->
+  <button id="ed_btnNew" class="cv-fab" title="New song"></button>
+
+  <!-- Group: Save / Library / Open jadi kapsul -->
+  <div class="seg tight">
+    <button id="ed_btnSave"    class="btn primary">Save</button>
+    <button id="ed_btnLibrary" class="btn ghost">Library</button>
+    <button id="ed_btnPerf"    class="btn ghost">Open</button>
+  </div>
+
+  <div class="grow"></div>
+</div>
       </div>
     `;
 
@@ -588,19 +1037,46 @@ else
   }
 }
     loadByIdIfAny();
+// Beat preset highlight (FINAL)
+const beatButtons = [...document.querySelectorAll('#editorView .beat-group .preset-beat')];
 
-    // Beat preset highlight
-    const beatButtons=[...document.querySelectorAll('[data-beat]')];
-    beatButtons.forEach(b=>{
-      const isDef=b.dataset.beat==='4';
-      b.classList.toggle('primary',isDef);
-      b.setAttribute('aria-pressed',isDef?'true':'false');
-      b.addEventListener('click', async ()=>{
-        beatPreset=parseInt(b.dataset.beat,10)||4;
-        beatButtons.forEach(x=>{x.classList.remove('primary');x.setAttribute('aria-pressed','false');});
-        b.classList.add('primary'); b.setAttribute('aria-pressed','true');
-      });
+// Normalisasi nilai data-beat: "2/4" → 2, "4" → 4
+const normalizeBeat = (s) => {
+  if (!s) return 4;
+  if (s.includes('/')) return parseInt(s, 10) || 4;
+  return parseInt(s, 10) || 4;
+};
+
+// Pilih default dari markup (tombol yang punya .is-selected).
+// Kalau tidak ada, fallback ke 4/4.
+let selected =
+  beatButtons.find(b => b.classList.contains('is-selected')) ||
+  beatButtons.find(b => (b.dataset.beat === '4/4' || b.dataset.beat === '4'));
+
+beatButtons.forEach(b => {
+  const on = (b === selected);
+  b.classList.toggle('is-selected', on);
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+});
+
+// Set nilai awal beatPreset dari tombol yang terpilih
+beatPreset = normalizeBeat(selected?.dataset.beat);
+
+// Klik handler: aktifkan tombol yang dipilih + set beatPreset
+beatButtons.forEach(b => {
+  b.addEventListener('click', () => {
+    selected = b;
+    beatPreset = normalizeBeat(b.dataset.beat);
+
+    beatButtons.forEach(x => {
+      x.classList.remove('is-selected');
+      x.setAttribute('aria-pressed', 'false');
     });
+
+    b.classList.add('is-selected');
+    b.setAttribute('aria-pressed', 'true');
+  });
+});
 
 function insertAt(txt){
   // Kalau ada cvInsert, pakai itu (lebih pintar)
@@ -644,7 +1120,7 @@ function insertAt(txt){
       return ' ' + ('. '.repeat(Math.max(1, n)).trimEnd()) + ' | ';
     }
 
-    document.getElementById('ed_btnPipe').addEventListener('click',()=>insertAt(' | '));
+document.getElementById('ed_btnPipe').addEventListener('click',()=>insertAt(' | '));
     document.getElementById('ed_btnBar').addEventListener('click',()=>insertAt(makeBar()));
     document.getElementById('ed_btnRest').addEventListener('click',()=>insertAt(' - '));
     document.getElementById('ed_btnRepeat').addEventListener('click',()=>insertAt(' % '));
@@ -658,29 +1134,70 @@ function insertAt(txt){
       titleEl.value=''; keyEl.value='C'; contentEl.value='';
     });
     document.getElementById('ed_btnSave').addEventListener('click', async ()=>{
-      const title=(titleEl.value||'').trim(); 
-      if(!title){cvToast('Title is empty');return;}
-      db=cv_loadDB();
-      const id=currentId||('s_'+Math.random().toString(36).slice(2,9));
-      db[id]={title,key:keyEl.value||'C',folder:(db[id]?.folder||''),raw:contentEl.value||''};
-      cv_saveDB(db); currentId=id; localStorage.setItem('cv_edit_id',id);
-      cvToast(`Saved: ${title}`);
-    });
-    document.getElementById('ed_btnLibrary').addEventListener('click', ()=>cv_switchView('lib'));
+  const title=(titleEl.value||'').trim(); 
+  if(!title){cvToast('Title is empty');return;}
+  db=cv_loadDB();
+  const id=currentId||('s_'+Math.random().toString(36).slice(2,9));
+  db[id]={
+    title,
+    key:   keyEl.value||'C',
+    beat:  beatPreset||4,                 // ← simpan beat
+    folder:(db[id]?.folder||''),
+    raw:   contentEl.value||''
+  };
+  cv_saveDB(db); currentId=id; localStorage.setItem('cv_edit_id',id);
+  cvToast(`Saved: ${title}`);
+});
     document.getElementById('ed_btnPerf').addEventListener('click', async ()=>{
-      const raw=(contentEl.value||'').trim();
-      localStorage.setItem('cv_perf_raw',raw);
-      if(currentId) localStorage.setItem('cv_perf_id',currentId);
-      cv_switchView('perf');
-    });
+  const raw=(contentEl.value||'').trim();
+  localStorage.setItem('cv_perf_raw', raw);
+  if(currentId) localStorage.setItem('cv_perf_id', currentId);
 
-    window.addEventListener('cv:view', e=>{
-      if(e.detail?.name==='ed'){
-        const id=localStorage.getItem('cv_edit_id');
-        if(id && id!==currentId){ currentId=id; loadByIdIfAny(); }
-      }
-    });
-  });
+  // ← kirim meta untuk Performance
+  const meta = {
+    id:    currentId || null,
+    title: (titleEl.value||'').trim() || '(Untitled)',
+    key:   keyEl.value || 'C',
+    beat:  beatPreset || 4
+  };
+  localStorage.setItem('cv_perf_meta', JSON.stringify(meta));
+
+  cv_switchView('perf');
+});
+
+/* === Editor: tombol "Library" (DITAMBAHKAN) === */
+document.getElementById('ed_btnLibrary')?.addEventListener('click', () => {
+  const raw = (document.getElementById('ed_content')?.value || '').trim();
+  if (raw) localStorage.setItem('cv_edit_temp', raw);
+  cv_switchView('lib');
+});
+
+  window.addEventListener('cv:view', e=>{
+  if(e.detail?.name==='ed'){
+    // PRIORITAS: jika ada flag "baru", kosongkan Editor
+    if (localStorage.getItem('cv_edit_new')) {
+      localStorage.removeItem('cv_edit_new');
+      currentId = null;
+      localStorage.removeItem('cv_edit_id');
+      titleEl.value = '';
+      keyEl.value = 'C';
+      contentEl.value = '';
+      return;
+    }
+    const id = localStorage.getItem('cv_edit_id');
+    if (id && id !== currentId) {
+      currentId = id;
+      loadByIdIfAny();                 // buka lagu terpilih
+    } else if (!id && currentId) {
+      // tidak ada id, tapi sebelumnya ada lagu → kosongkan
+      currentId = null;
+      titleEl.value = '';
+      keyEl.value = 'C';
+      contentEl.value = '';
+    }
+  }
+});
+});
   </script>
 <!-- ===== FEATURE: LIBRARY ===== -->
 <!-- =================== LIBRARY VIEW + MODULE =================== -->
@@ -688,49 +1205,59 @@ function insertAt(txt){
   cv_onViewInit('lib', ()=>{
     const wrap=document.getElementById('libraryView');
     wrap.innerHTML = `
-      <div class="card">
-        <div class="row">
-          <div class="grow">
-            <label>Search songs</label>
-            <input id="lib_search" type="text" placeholder="Search songs..."/>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div class="grow inline">
-            <div class="grow">
-              <label>Folder</label>
-              <select id="lib_folder"></select>
-            </div>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <button id="lib_btnAddFolder" class="ghost">+ Add Folder</button>
-          <button id="lib_btnRenameFolder" class="ghost">Rename Folder</button>
-          <button id="lib_btnDeleteFolder" class="ghost">Delete Folder</button>
-          <div class="grow"></div>
-          <div id="lib_counter" class="counter">0 songs • 0 folders</div>
-        </div>
+  <div class="card">
+    <!-- Baris 1: Search -->
+    <div class="row">
+      <div class="grow">
+        <input id="lib_search" type="text" placeholder="Search songs..."/>
       </div>
+    </div>
 
-      <div class="card" style="margin-top:12px">
-        <div id="list" class="list"></div>
+    <!-- Baris 2: Tombol Folder + Select Keys/Folders dalam SATU baris -->
+<div class="row compact" style="margin-top:10px">
+  <!-- Group 1: Folder actions -->
+  <div class="seg tight">
+    <button id="lib_btnAddFolder" class="btn">+ Add Folder</button>
+    <button id="lib_btnRenameFolder" class="btn">Rename</button>
+    <button id="lib_btnDeleteFolder" class="btn">Delete</button>
+  </div>
 
-        <div class="actions" style="margin-top:10px; display:flex; gap:10px; align-items:center">
-          <button id="lib_btnOpen"   class="primary" disabled>Open</button>
-          <button id="lib_btnEdit"   class="ghost"   disabled>Edit</button>
-          <button id="lib_btnMove"   class="ghost"   disabled>Move</button>
-          <button id="lib_btnDelete" class="ghost"   disabled>Delete</button>
-          <div class="grow"></div>
-        </div>
+  <!-- Group 2: Filters (rapet) -->
+  <div class="seg tight">
+    <select id="lib_key"></select>
+    <select id="lib_folder"></select>
+  </div>
 
-        <div class="tip" style="margin-top:8px;font-size:12px;color:var(--muted)">Tip: double-tap a song to Open (Performance).</div>
-      </div>
-    `;
+  <div class="grow"></div>
+  <div id="lib_counter" class="counter">0 songs • 0 folders</div>
+</div>
+  </div>
 
-    let db=cv_loadDB(), folders=cv_loadFolders();
-    let selectedId=null, filterText='', filterFolder='All Folders', lastTap=0, tappedId=null;
+  <div class="card" style="margin-top:12px">
+    <div id="list" class="list"></div>
+
+    <div class="actions" style="margin-top:10px; display:flex; gap:10px; align-items:center">
+  <!-- Group: Open/Edit/Move/Delete jadi kapsul -->
+  <div class="seg tight">
+    <button id="lib_btnOpen"   class="btn" disabled>Open</button>
+    <button id="lib_btnEdit"   class="btn" disabled>Edit</button>
+    <button id="lib_btnMove"   class="btn" disabled>Move</button>
+    <button id="lib_btnDelete" class="btn" disabled>Delete</button>
+  </div>
+
+  <!-- FAB tetap terpisah -->
+  <button id="lib_btnNewSong" class="cv-fab" title="New song"></button>
+  <div class="grow"></div>
+</div>
+
+    <div class="tip" style="margin-top:8px;font-size:12px;color:var(--muted)">
+      Tip: double-tap a song to Open (Performance).
+    </div>
+  </div>
+`;
+
+  let db=cv_loadDB(), folders=cv_loadFolders();
+let selectedId=null, filterText='', filterFolder='Folders', filterKey='Keys', lastTap=0, tappedId=null;
 
     const searchEl=document.getElementById('lib_search');
     const folderEl=document.getElementById('lib_folder');
@@ -745,18 +1272,31 @@ function insertAt(txt){
     const btnEdit=document.getElementById('lib_btnEdit');
     const btnMove=document.getElementById('lib_btnMove');
     const btnDelete=document.getElementById('lib_btnDelete');
+const btnNewSong = document.getElementById('lib_btnNewSong');
+btnNewSong.addEventListener('click', ()=>{
+  localStorage.removeItem('cv_edit_id');     // pastikan tidak ada id
+  localStorage.removeItem('cv_edit_temp');   // buang buffer
+  localStorage.setItem('cv_edit_new','1');   // ← FLAG: minta editor kosong
+  cv_switchView('ed');
+});
 
     function renderFolders(){
-      const opts=['All Folders',...folders];
+      const opts=['Folders',...folders];
       folderEl.innerHTML=opts.map(n=>`<option>${cv_escapeHtml(n)}</option>`).join('');
       folderEl.value=filterFolder;
     }
-
+function renderKeys(){
+  const NAT_KEYS=["C","G","D","A","E","B","F#","C#","F","Bb","Eb","Ab","Db","Gb","Cb"];
+  const keyEl = document.getElementById('lib_key');
+  keyEl.innerHTML = ['Keys', ...NAT_KEYS].map(k=>`<option>${k}</option>`).join('');
+  keyEl.value = filterKey;
+  keyEl.addEventListener('change', ()=>{ filterKey = keyEl.value; renderList(); });
+}
     function renderList(){
       listEl.innerHTML='';
       const items=Object.entries(db).map(([id,s])=>({...s,id}))
         .filter(s => (!filterText || (s.title||'').toLowerCase().includes(filterText))
-                  && (filterFolder==='All Folders' || (s.folder||'')===filterFolder))
+                  && (filterFolder==='Folders' || (s.folder||'')===filterFolder))
         .sort((a,b)=>(a.title||'').localeCompare(b.title||''));
 
       let stillValid=false;
@@ -777,22 +1317,6 @@ function insertAt(txt){
         if(song.id===selectedId){ el.classList.add('active'); stillValid=true; }
         listEl.appendChild(el);
       });
-if(items.length === 0){
-  const hint = document.createElement('div');
-  hint.style.padding = "16px";
-  hint.style.textAlign = "center";
-  hint.style.color = "var(--muted)";
-  hint.style.cursor = "pointer";
-  hint.style.textDecoration = "underline";
-  hint.style.fontStyle = "italic";
-  hint.textContent = "No songs yet. Click here to open the Editor.";
-
-  hint.addEventListener("mouseover", ()=> hint.style.color = "var(--accent)");
-  hint.addEventListener("mouseout",  ()=> hint.style.color = "var(--muted)");
-
-  hint.addEventListener('click', ()=> cv_switchView('ed'));
-  listEl.appendChild(hint);
-}
       if(!stillValid){ selectedId=null; }
       updateActions(items.length);
       counterEl.textContent=`${Object.keys(db).length} songs • ${folders.length} folders`;
@@ -816,7 +1340,7 @@ if(items.length === 0){
       folders.push(name); cv_saveFolders(folders); renderFolders();
     });
     btnRenameFolder.addEventListener('click', async ()=>{
-      if(filterFolder==='All Folders'){ cvToast('Select a folder to rename.'); return; }
+      if(filterFolder==='Folders'){ cvToast('Select a folder to rename.'); return; }
       const newName=await cvPrompt('New folder name?', filterFolder);
       if(!newName||newName===filterFolder) return;
       if(folders.includes(newName)){ cvToast('A folder with that name already exists.'); return; }
@@ -825,22 +1349,33 @@ if(items.length === 0){
       cv_saveDB(db0); db=db0; filterFolder=newName; renderFolders(); renderList();
     });
     btnDeleteFolder.addEventListener('click', async ()=>{
-      if(filterFolder==='All Folders'){ cvToast('Select a folder to delete.'); return; }
+      if(filterFolder==='Folders'){ cvToast('Select a folder to delete.'); return; }
       const hasSongs=Object.values(db).some(s=>(s.folder||'')===filterFolder);
       const msg=`Delete folder "${filterFolder}"?`+(hasSongs?`\nSongs inside will be moved to (no folder).`:``);
       if(!await cvConfirm(msg)) return;
       Object.values(db).forEach(s=>{ if((s.folder||'')===filterFolder) s.folder=''; });
       cv_saveDB(db); folders=folders.filter(f=>f!==filterFolder); cv_saveFolders(folders);
-      filterFolder='All Folders'; renderFolders(); renderList();
+      filterFolder='Folders'; renderFolders(); renderList();
     });
 
     // List actions
     function openSong(id){
-      if(!db[id]) return;
-      localStorage.setItem('cv_perf_raw',(db[id].raw||'').trim());
-      localStorage.setItem('cv_perf_id',id);
-      cv_switchView('perf');
-    }
+  if(!db[id]) return;
+  const s = db[id];
+  localStorage.setItem('cv_perf_raw', (s.raw||'').trim());
+  localStorage.setItem('cv_perf_id', id);
+
+  // ← kirim meta untuk Performance
+  const meta = {
+    id,
+    title: s.title || '(Untitled)',
+    key:   s.key   || 'C',
+    beat:  s.beat  || 4
+  };
+  localStorage.setItem('cv_perf_meta', JSON.stringify(meta));
+
+  cv_switchView('perf');
+}
     btnOpen.addEventListener('click', async ()=>{
       if(!selectedId){ cvToast('Select a song first.'); return; }
       openSong(selectedId);
@@ -881,6 +1416,7 @@ window.addEventListener('cv:view', (e) => {
     db = cv_loadDB();            // reload songs dari localStorage
     folders = cv_loadFolders();  // reload folders dari localStorage
     renderFolders();
+renderKeys();
     renderList();
   }
 });
@@ -890,53 +1426,64 @@ window.addEventListener('cv:view', (e) => {
 <!-- =================== PERFORMANCE VIEW + MODULE =================== -->
   <script>
   cv_onViewInit('perf', ()=>{
-    const wrap=document.getElementById('performanceView');
-    wrap.innerHTML = `
-      <button id="perf_exitImm">↩︎ Exit</button>
-      <div id="perf_toolbar" class="card" style="margin-bottom:12px">
-        <div class="row" style="gap:8px">
-          <button id="perf_backLib" class="btn tiny">← Library</button>
-          <button id="perf_backEd"  class="btn tiny">← Editor</button>
+   const wrap = document.getElementById('performanceView');
+wrap.innerHTML = `
+  <div id="perf_toolbar" class="card" style="margin-bottom:12px">
+    <div class="row" style="gap:8px">
+      <button id="perf_backLib" class="btn tiny">← Library</button>
+      <button id="perf_backEd"  class="btn tiny">← Editor</button>
 
-          <div class="seg">
-            <button class="btn tiny" id="perf_tDown">−</button>
-            <button class="btn tiny" id="perf_tSteps" disabled>0</button>
-            <button class="btn tiny" id="perf_tUp">＋</button>
-          </div>
-
-          <div class="seg">
-            <button id="perf_accSharp" class="btn tiny">#</button>
-            <button id="perf_accFlat"  class="btn tiny">♭</button>
-          </div>
-
-          <div class="seg">
-            <button class="btn tiny" id="perf_fDown">A−</button>
-            <button class="btn tiny" id="perf_fUp">A＋</button>
-            <button class="btn tiny" id="perf_fReset">Reset</button>
-          </div>
-
-          <div class="grow"></div>
-
-          <button class="btn tiny" id="perf_btnImm">⛶ Full Screen</button>
-        </div>
+      <div class="seg">
+        <button class="btn tiny" id="perf_tDown">−</button>
+        <button class="btn tiny" id="perf_tSteps" disabled>0</button>
+        <button class="btn tiny" id="perf_tUp">＋</button>
       </div>
 
-      <div id="perf_stage" class="card">
-        <pre id="perf_area"></pre>
+      <div class="seg">
+        <button class="btn tiny" id="perf_accSharp">#</button>
+        <button class="btn tiny" id="perf_accFlat">♭</button>
       </div>
-    `;
+
+      <div class="seg">
+        <button class="btn tiny" id="perf_fontSmall">A−</button>
+        <button class="btn tiny" id="perf_fontBig">A＋</button>
+        <button class="btn tiny" id="perf_fontReset">Reset</button>
+      </div>
+
+      <button id="perf_full" class="btn tiny">⛶ Full Screen</button>
+    </div>
+  </div>
+
+  <div id="perf_stage" class="card">
+    <h2 id="perf_meta" style="margin:0 0 8px; font-size:16px; font-weight:600; color:var(--fg)"></h2>
+    <pre id="perf_area"></pre>
+  </div>
+
+  <button id="perf_exitImm">↩ Exit</button>
+`;
 
     const perf=document.getElementById('perf_area');
+const metaEl = document.getElementById('perf_meta');
+
+function loadPerfMeta(){
+  try { return JSON.parse(localStorage.getItem('cv_perf_meta')||'null'); }
+  catch { return null; }
+}
+
+function showPerfMeta(){
+  if(!metaEl) return;
+  const m = loadPerfMeta();
+  if(!m){ metaEl.textContent = ''; return; }
+  metaEl.textContent = `${m.title || '(Untitled)'} • Key: ${m.key || 'C'} • Beat: ${(m.beat||4)}/4`;
+}
     const tDown=document.getElementById('perf_tDown');
     const tUp=document.getElementById('perf_tUp');
     const tSteps=document.getElementById('perf_tSteps');
-    const fDown=document.getElementById('perf_fDown');
-    const fUp=document.getElementById('perf_fUp');
-    const fReset=document.getElementById('perf_fReset');
+const fDown = document.getElementById('perf_fontSmall');
+const fUp   = document.getElementById('perf_fontBig');
+const fReset= document.getElementById('perf_fontReset');
     const accSharp=document.getElementById('perf_accSharp');
     const accFlat=document.getElementById('perf_accFlat');
-    const btnImm=document.getElementById('perf_btnImm');
-    const exitImm=document.getElementById('perf_exitImm');
     const backLib=document.getElementById('perf_backLib');
     const backEd=document.getElementById('perf_backEd');
 
@@ -1118,8 +1665,7 @@ function perfRender(rawFromArg){
     fUp  .addEventListener('click', async ()=>{ fontPerf=Math.min(72,fontPerf+2); perfRender(); savePerfState(); });
     fReset.addEventListener('click', async ()=>{ fontPerf=28; steps=0; useSharps=true; syncAccUI(); perfRender(); savePerfState(); });
 
-    btnImm.addEventListener('click', async ()=>{ document.body.classList.add('onlyText'); document.documentElement.requestFullscreen?.(); });
-    exitImm.addEventListener('click', async ()=>{ document.body.classList.remove('onlyText'); if(document.fullscreenElement) document.exitFullscreen(); });
+    
 backLib.addEventListener('click', ()=>{
   cv_switchView('lib');
 });
@@ -1140,14 +1686,60 @@ backLib.addEventListener('click', ()=>{
   cv_switchView('ed');
 });
 
+  // === render awal ===
     perfRender();
+    showPerfMeta();
 
+    // refresh tiap kali masuk view Performance
     window.addEventListener('cv:view', (e) => {
       if (e.detail?.name === 'perf') {
         perfRender();
+        showPerfMeta();
       }
     });
-  });
+
+    // ==== FULLSCREEN & EXIT BUTTON ====
+    const btnFull    = document.getElementById('perf_full');
+    const btnExitImm = document.getElementById('perf_exitImm');
+    const rootEl     = document.documentElement;
+
+    function enterOnlyTextUI(){ document.body.classList.add('onlyText'); }
+    function exitOnlyTextUI(){  document.body.classList.remove('onlyText'); }
+
+    // masuk fullscreen
+    btnFull?.addEventListener('click', () => {
+      enterOnlyTextUI();  // sembunyikan toolbar + meta
+
+      const req = rootEl.requestFullscreen
+               || rootEl.webkitRequestFullscreen
+               || rootEl.msRequestFullscreen;
+
+      if (!req) return; // device tak dukung fullscreen → tetap onlyText
+
+      try {
+        const p = req.call(rootEl);
+        if (p?.catch) p.catch(()=> exitOnlyTextUI());
+      } catch { exitOnlyTextUI(); }
+    });
+
+    // tombol ↩ Exit (pojok kanan atas)
+    btnExitImm?.addEventListener('click', ()=>{
+      document.exitFullscreen?.();
+      exitOnlyTextUI();
+    });
+
+    // keluar fullscreen via ESC/back → reset UI
+    function onFsChange(){
+      const inFs = document.fullscreenElement
+                || document.webkitFullscreenElement
+                || document.msFullscreenElement;
+      if (!inFs) exitOnlyTextUI();
+    }
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
+    document.addEventListener('MSFullscreenChange', onFsChange);
+
+  }); // <== penutup cv_onViewInit('perf', …)
   </script>
 
 
@@ -1547,6 +2139,114 @@ lyrics lyrics lyrics</pre>
     if(e.key === 'Escape') closeAll();
   });
 })();
+</script>
+<script>
+/* ===== Konfigurasi ===== */
+const CV_GOOGLE_CLIENT_ID = "YOUR_CLIENT_ID.apps.googleusercontent.com";
+const CV_USER_KEY = "cv_user";
+
+/* ===== Util ===== */
+function decodeJwt(token){
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const json = decodeURIComponent(atob(base64).split('').map(c =>
+    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+  ).join(''));
+  return JSON.parse(json);
+}
+const saveUser = u => localStorage.setItem(CV_USER_KEY, JSON.stringify(u));
+const loadUser = () => { try { return JSON.parse(localStorage.getItem(CV_USER_KEY)||"null"); } catch { return null; } };
+const clearUser = () => localStorage.removeItem(CV_USER_KEY);
+
+/* ===== UI helpers ===== */
+function renderLoggedOut(){
+  const box = document.getElementById("accountBox");
+  if (box) box.innerHTML = `<div class="user-info free">
+    <div class="name">Guest</div>
+    <div class="email">not logged in</div>
+  </div>`;
+
+  const mount = document.getElementById("googleBtn");
+  if (mount){
+    mount.innerHTML = "";
+    if (window.google?.accounts?.id){
+      google.accounts.id.initialize({
+        client_id: CV_GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse,
+        ux_mode: "popup",
+        context: "signin"
+      });
+      google.accounts.id.renderButton(mount, {
+        theme: "outline",
+        size: "large",
+        type: "standard",
+        shape: "pill",
+        text: "signin_with",
+        logo_alignment: "left"
+      });
+      // Kalau nanti mau: google.accounts.id.prompt();  // One Tap
+    } else {
+      mount.textContent = navigator.onLine ? "Loading Google..." : "Offline: Sign-in unavailable";
+    }
+  }
+  const lo = document.getElementById("googleLogoutBtn");
+  if (lo) lo.style.display = "none";
+}
+
+function renderLoggedIn(user){
+  const box = document.getElementById("accountBox");
+  if (box){
+    const ava = user.picture ? `<img src="${user.picture}" alt="" style="width:28px;height:28px;border-radius:50%;margin-right:8px;vertical-align:-6px">` : "";
+    box.innerHTML = `<div class="user-info">
+      <div class="name">${ava}${user.name || "User"}</div>
+      <div class="email">${user.email || ""}</div>
+    </div>`;
+  }
+  const mount = document.getElementById("googleBtn");
+  if (mount) mount.innerHTML = "";
+  const lo = document.getElementById("googleLogoutBtn");
+  if (lo) lo.style.display = "inline-block";
+}
+
+/* ===== Callback dari Google ===== */
+function handleCredentialResponse(res){
+  try{
+    const payload = decodeJwt(res.credential);
+    const user = {
+      uid: payload.sub,
+      email: payload.email,
+      name: payload.name,
+      picture: payload.picture || "",
+      idToken: res.credential,
+      exp: payload.exp
+    };
+    saveUser(user);
+    renderLoggedIn(user);
+    // NOTE: untuk produksi, verifikasi idToken di server.
+  }catch(e){
+    console.error("Google Sign-In error:", e);
+    alert("Failed to sign in. Please try again.");
+  }
+}
+
+/* ===== Logout ===== */
+function googleSignOut(){
+  clearUser();
+  window.google?.accounts?.id?.disableAutoSelect?.();
+  renderLoggedOut();
+}
+
+/* ===== Init ===== */
+function cvAuthInit(){
+  const u = loadUser();
+  const now = Math.floor(Date.now()/1000);
+  if (u && u.exp && u.exp > now) renderLoggedIn(u);
+  else { clearUser(); renderLoggedOut(); }
+
+  const lo = document.getElementById("googleLogoutBtn");
+  if (lo) lo.onclick = googleSignOut;
+}
+document.addEventListener("DOMContentLoaded", cvAuthInit);
 </script>
 </body>
 </html>
