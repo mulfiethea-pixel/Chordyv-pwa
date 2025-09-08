@@ -829,87 +829,67 @@ header .head .grow{ display:none !important; }
   <div id="libraryView" class="wrap view"></div>
   <div id="performanceView" class="wrap view"></div>
 <!-- =================== GLOBAL THEME / SETTINGS JS =================== -->
-  <script>
-  (()=> {
-    const THEME_KEY='cv_theme';
+ <script>
+(()=> {
+  const THEME_KEY='cv_theme';
 
-    function applyTheme(t){ document.body.classList.toggle('theme-navy', t==='navy'); }
-    function initTheme(){
-      const current = localStorage.getItem(THEME_KEY) || 'white';
-      applyTheme(current);
-      document.querySelectorAll('input[name="cv_theme"]').forEach(r=>{
-        r.checked = (r.value===current);
-        r.addEventListener('change', async ()=>{
-          const val = r.value==='navy' ? 'navy' : 'white';
-          localStorage.setItem(THEME_KEY, val);
-          applyTheme(val);
-        });
+  function applyTheme(t){ document.body.classList.toggle('theme-navy', t==='navy'); }
+  function initTheme(){
+    const current = localStorage.getItem(THEME_KEY) || 'white';
+    applyTheme(current);
+    document.querySelectorAll('input[name="cv_theme"]').forEach(r=>{
+      r.checked = (r.value===current);
+      r.addEventListener('change', ()=>{
+        const val = r.value==='navy' ? 'navy' : 'white';
+        localStorage.setItem(THEME_KEY, val);
+        applyTheme(val);
       });
-    }  
-    function initDataIO(){
-      const btnEx = document.getElementById('cv_btnExport');
-      const btnIm = document.getElementById('cv_btnImport');
-      const file  = document.getElementById('cv_importFile');
-      btnEx?.addEventListener('click', async ()=>{
-        const payload={songs:cv_loadDB(),folders:cv_loadFolders()};
-        const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-        const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='chordyv_backup.json';
-        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
-      });
-      btnIm?.addEventListener('click', ()=> file?.click());
-      file?.addEventListener('change', async ()=>{
-        const f=file.files?.[0]; if(!f) return;
-        try{
-          const txt=await f.text(); const obj=JSON.parse(txt);
-          const db=cv_loadDB(), folders=cv_loadFolders();
-          const inSongs=obj.songs||{}, inFolders=obj.folders||[];
-          inFolders.forEach(name=>{ if(name && !folders.includes(name)) folders.push(name); });
-          for(const [id,song] of Object.entries(inSongs)){
-            if(!db[id]) db[id]=song;
-            else{
-              const action=await cvPrompt(`Conflict: "${song.title||'(Untitled)'}"\nType: o=overwrite, k=keep both, s=skip`,'k');
-              if(action==='o') db[id]=song;
-              else if(action==='k') db['s_'+Math.random().toString(36).slice(2,9)]=song;
-            }
+    });
+  }
+
+  function initDataIO(){
+    const btnEx = document.getElementById('cv_btnExport');
+    const btnIm = document.getElementById('cv_btnImport');
+    const file  = document.getElementById('cv_importFile');
+
+    btnEx?.addEventListener('click', async ()=>{
+      const payload={songs:cv_loadDB(),folders:cv_loadFolders()};
+      const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='chordyv_backup.json';
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    });
+
+    btnIm?.addEventListener('click', ()=> file?.click());
+    file?.addEventListener('change', async ()=>{
+      const f=file.files?.[0]; if(!f) return;
+      try{
+        const txt=await f.text(); const obj=JSON.parse(txt);
+        const db=cv_loadDB(), folders=cv_loadFolders();
+        const inSongs=obj.songs||{}, inFolders=obj.folders||[];
+        inFolders.forEach(name=>{ if(name && !folders.includes(name)) folders.push(name); });
+        for (const [id,song] of Object.entries(inSongs)){
+          if(!db[id]) db[id]=song;
+          else{
+            const action=await cvPrompt(`Conflict: "${song.title||'(Untitled)'}"\nType: o=overwrite, k=keep both, s=skip`,'k');
+            if(action==='o') db[id]=song;
+            else if(action==='k') db['s_'+Math.random().toString(36).slice(2,9)]=song;
           }
-          cv_saveDB(db); cv_saveFolders(folders); cvToast('Import completed.');
-        }catch(e){ cvToast('Import failed.'); }
-        finally{ file.value=''; }
-      });
-    }
-    // Account mock
-    const ACC_KEY='cv_user';
-    const loadUser=()=>{try{return JSON.parse(localStorage.getItem(ACC_KEY)||'null')}catch{return null}};
-    const saveUser=u=>{u?localStorage.setItem(ACC_KEY,JSON.stringify(u)):localStorage.removeItem(ACC_KEY)};
-    function renderAccount(){
-     const s=document.getElementById('cv_accStatus_drawer');
-      const nm=document.getElementById('cv_accName');
-      const em=document.getElementById('cv_accEmail');
-      const u=loadUser();
-      if(u){ s.textContent=`Login sebagai ${u.name||'(no name)'} — ${u.email||'-'}`; if(nm) nm.value=u.name||''; if(em) em.value=u.email||''; }
-      else { s.textContent='not logged in.'; if(nm) nm.value=''; if(em) em.value=''; }
-    }
-    function initAccount(){
-      const btnLogin=document.getElementById('cv_btnLogin');
-      const btnLogout=document.getElementById('cv_btnLogout');
-      const nm=document.getElementById('cv_accName');
-      const em=document.getElementById('cv_accEmail');
-      btnLogin?.addEventListener('click', async ()=>{
-        const user={name:(nm?.value||'').trim(), email:(em?.value||'').trim()};
-        if(!user.name||!user.email){ cvToast('Enter name & email.'); return; }
-        saveUser(user); renderAccount(); cvToast('Logged in (local only).');
-      });
-      btnLogout?.addEventListener('click', async ()=>{ saveUser(null); renderAccount(); cvToast('Logged out.'); });
-      renderAccount();
-    }
+        }
+        cv_saveDB(db); cv_saveFolders(folders); cvToast('Import completed.');
+      }catch{ cvToast('Import failed.'); }
+      finally{ if (file) file.value=''; }
+    });
+  }
 
-    if(document.readyState==='loading'){
-      document.addEventListener('DOMContentLoaded', ()=>{ initTheme();initDataIO(); initAccount(); });
-    }else{
-      initTheme();initDataIO(); initAccount();
-    }
-  })();
-  </script>
+  // === INIT (panggil fungsinya) ===
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', ()=>{ initTheme(); initDataIO(); });
+  } else {
+    initTheme(); initDataIO();
+  }
+})();
+</script>
 <!-- ===== MODULE: ROUTER ===== -->
 <!-- =================== ROUTER (landing = Editor) =================== -->
   <script>
