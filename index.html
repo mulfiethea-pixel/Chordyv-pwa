@@ -1259,6 +1259,94 @@ header .head #titleBar img{ height:24px;width:auto;display:block;vertical-align:
 #editorView .toolbar .active:hover{
   background: var(--accent) !important;
 }
+/* ===== Header icon contrast (light ↔ navy) ===== */
+
+/* Variabel default (tema terang) */
+:root{
+  --header-bg: #ffffff;
+  --header-fg: #111827; /* hampir-hitam */
+}
+
+/* Tema navy: cukup tambahkan class ini di <body> atau root container */
+.theme-navy{
+  --header-bg: #0b1220;   /* navy/dark */
+  --header-fg: #ffffff;   /* putih agar kontras */
+}
+
+/* Terapkan ke header */
+header .head{
+  background: var(--header-bg);
+  color: var(--header-fg);        /* <- ini yang jadi sumber currentColor */
+}
+
+/* 1) Jika hamburger/gear berbasis SVG: ikuti currentColor */
+header .head .hamburger,
+header .head .gear,
+header .head .icon{
+  color: var(--header-fg);        /* pastikan pewarnaan dari sini */
+}
+header .head .hamburger svg,
+header .head .gear svg{
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+/* 2) Jika hamburger berupa <span> garis-garis */
+header .head .hamburger .bar,
+header .head .hamburger .line{
+  background: currentColor;       /* garis ikut warna header-fg */
+}
+
+/* 3) Jika hamburger berupa <img> (PNG/SVG external) → gunakan filter */
+header .head .hamburger img,
+header .head .gear img{
+  filter: var(--icon-filter, none);
+}
+/* di tema navy, balik jadi putih */
+.theme-navy header .head .hamburger img,
+.theme-navy header .head .gear img{
+  filter: brightness(0) invert(1);   /* hitam → putih */
+}
+
+/* Opsional: hover/focus biar tetap jelas */
+header .head .hamburger:hover,
+header .head .gear:hover{ opacity: .9; }
+header .head .hamburger:focus-visible,
+header .head .gear:focus-visible{
+  outline: 2px solid color-mix(in srgb, var(--header-fg) 40%, transparent);
+  outline-offset: 2px;
+}
+/* Default (tema putih) */
+:root {
+  --perf-text: #e11d48;   /* merah */
+  --perf-chord: #111111;  /* chord & angka hitam */
+}
+
+/* Tema navy */
+body.theme-navy {
+  --perf-text: #e11d48;   /* tetap merah */
+  --perf-chord: #ffffff;  /* chord & angka putih */
+}
+
+/* Terapkan di Performance */
+#perf_area .teks-line,
+#perf_area .teks {
+  color: var(--perf-text) !important;
+  font-weight: 600;
+}
+
+#perf_area .chord,
+#perf_area .bar,
+#perf_area .melodi {
+  color: var(--perf-chord) !important;
+  font-weight: 700;
+}
+
+#perf_area .chord *,
+#perf_area .bar *,
+#perf_area .melodi * {
+  color: var(--perf-chord) !important;
+}
 </style>
 </head>
 
