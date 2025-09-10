@@ -13,7 +13,7 @@
 <!-- Icon khusus iOS (180x180 px, dengan background navy/putih) -->
 <link rel="apple-touch-icon" sizes="180x180" href="/Chordyv-pwa/ios-180x180.png">
  <link rel="manifest" href="manifest.webmanifest">
- <title>ChordyV — Editor • Library • Performance (SPA)</title>
+ <title>V — Editor • Library • Performance (SPA)</title>
 <style>
     /* =================== GLOBAL THEME (default WHITE) =================== */
     :root{
@@ -30,6 +30,58 @@
       --bg:#0e1a38; --fg:#e5ecff; --card:#0f1f45; --muted:#94a3b8; --border:#1e2b57;
       --chip:#0b1324;
     }
+/* Gradasi “ChordyV” navy → biru */
+.cv-grad{
+  background: linear-gradient(135deg, #0f1f45, #2aa0ff) !important;
+  color:#fff !important;
+  box-shadow: 0 10px 20px rgba(16, 44, 86, .25);
+  border: none;
+}
+
+/* Biar tombol upgrade ikut radius & padding rapi */
+#cv_btnUpgrade, #cv_upgradeBtn{
+  padding:10px 14px;
+  border-radius:20px;
+  width:100%;
+  font-weight:600;
+  font-size:15px;
+  letter-spacing:.3px;
+}
+  /* Header */
+  #cv_modalUpgrade h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 12px;
+  }
+
+  /* Benefit list */
+  #cv_modalUpgrade ul {
+    margin: 12px 0;
+    padding-left: 20px;
+  }
+  #cv_modalUpgrade li {
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #374151;
+  }
+
+  /* Buttons in modal */
+  #cv_modalUpgrade .btn-primary {
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 8px 14px;
+  }
+  #cv_modalUpgrade .btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    font-weight: 500;
+    border-radius: 10px;
+    padding: 8px 14px;
+  }
+
 
     /* Buttons */
     button,.btn,.ghost,.primary{
@@ -681,8 +733,123 @@ header .head .grow{ display:none !important; }
   max-width: 100%;
 }
 </style>
+<style>
+/* ===== Upgrade / Premium Pill Button ===== */
+/* Cocok untuk #cv_btnUpgrade (punyamu) & #cv_upgradeBtn (referensi) */
+#cv_btnUpgrade.primary,
+#cv_upgradeBtn.cv-pro-pill{
+  display:flex; align-items:center; justify-content:center; gap:.6rem;
+  width:100%; height:52px; padding:0 20px;
+  border:none; border-radius:16px;
+  color:#fff; font-weight:700; letter-spacing:.2px;
+  background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 45%,#0ea5e9 100%);
+  box-shadow:0 10px 18px rgba(29,78,216,.25), inset 0 1px 0 rgba(255,255,255,.35);
+  transition:transform .06s ease, box-shadow .2s ease, filter .2s ease;
+}
+#cv_btnUpgrade.primary::before,
+#cv_upgradeBtn.cv-pro-pill .icon::before{
+  content:"✨";
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:28px; border-radius:10px;
+  background:rgba(255,255,255,.18);
+}
+/* Saat sudah Pro → hijau */
+#cv_btnUpgrade.ghost{
+  display:flex; align-items:center; justify-content:center; gap:.6rem;
+  width:100%; height:52px; padding:0 20px;
+  border:none; border-radius:16px;
+  color:#fff; font-weight:700; letter-spacing:.2px;
+  background:linear-gradient(135deg,#16a34a 0%,#22c55e 60%,#4ade80 100%);
+  box-shadow:0 10px 18px rgba(22,163,74,.22), inset 0 1px 0 rgba(255,255,255,.35);
+  cursor:default;
+}
+#cv_btnUpgrade.ghost::before{ content:"⭐"; }
+
+/* ===== Upgrade Modal ===== */
+/* Cocok untuk #cv_modalUpgrade (punyamu) & #cv_upgradeModal (referensi) */
+#cv_modalUpgrade .modal-overlay,
+#cv_upgradeModal{ backdrop-filter:blur(8px); background:rgba(15,23,42,.35); }
+
+#cv_modalUpgrade .modal-content,
+#cv_upgradeModal #cv_upgradeBox{
+  border-radius:20px;
+  background:linear-gradient(180deg,#ffffff,#f8fafc);
+  box-shadow:0 18px 40px rgba(2,6,23,.25);
+  padding:18px 18px 14px;
+  max-width:640px;
+}
+
+#cv_modalUpgrade .modal-head,
+#cv_upgradeModal #cv_upgradeHead{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+
+#cv_modalUpgrade .modal-icon,
+#cv_upgradeModal #cv_upgradeHead .badge{
+  width:44px; height:44px; border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#1d4ed8,#60a5fa);
+  color:#fff; font-size:22px;
+  box-shadow:0 8px 18px rgba(29,78,216,.28);
+}
+
+#cv_modalUpgrade h2,
+#cv_upgradeModal #cv_upgradeTitle{ font-size:20px; font-weight:800; color:#0f172a; margin:0; }
+
+#cv_modalUpgrade p.sub,
+#cv_upgradeModal #cv_upgradeSub{ margin:.25rem 0 0; color:#475569; font-size:14px; }
+
+/* List benefit ala kartu */
+#cv_modalUpgrade .benefits,
+#cv_upgradeModal #cv_upgradeBenefits{ display:grid; gap:10px; margin:14px 0; }
+
+#cv_modalUpgrade .benefit,
+#cv_upgradeModal #cv_upgradeBenefits li{
+  display:flex; gap:10px; align-items:flex-start;
+  background:#eef2ff; border-radius:14px; padding:10px 12px; border:1px solid var(--border,#e5e7eb);
+}
+#cv_modalUpgrade .benefit .check,
+#cv_upgradeModal #cv_upgradeBenefits .tick{
+  flex:0 0 26px; height:26px; width:26px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  background:#22c55e; color:#fff; font-weight:800; box-shadow:0 4px 10px rgba(34,197,94,.35);
+}
+
+#cv_modalUpgrade .modal-actions,
+#cv_upgradeModal #cv_upgradeActions{ display:flex; gap:12px; margin-top:8px; }
+
+#cv_modalUpgrade .btn-secondary,
+#cv_upgradeModal #cv_btnMaybeLater{
+  flex:1; background:#eef2f7; color:#1f2937; border:none; border-radius:12px; padding:12px 14px; font-weight:600;
+}
+#cv_modalUpgrade .btn-primary,
+#cv_upgradeModal #cv_btnGetPro{
+  flex:1; color:#fff; border:none; border-radius:12px; padding:12px 14px; font-weight:800;
+  background:linear-gradient(135deg,#1e40af,#2563eb 50%,#3b82f6 100%);
+  box-shadow:0 10px 18px rgba(37,99,235,.28), inset 0 1px 0 rgba(255,255,255,.3);
+}
+
+/* Navy tweak */
+body.theme-navy #cv_modalUpgrade .modal-content,
+body.theme-navy #cv_upgradeModal #cv_upgradeBox{
+  background:linear-gradient(180deg,#0f1f45,#0b1734);
+  box-shadow:0 16px 36px rgba(2,6,23,.55);
+}
+body.theme-navy #cv_modalUpgrade h2{ color:#e5ecff; }
+body.theme-navy #cv_modalUpgrade p.sub{ color:#a7b2c7; }
+body.theme-navy #cv_modalUpgrade .benefit{ background:#0b1324; }
+</style>
 <script>
-  /* =================== CORE STORAGE & UTIL =================== */
+const CV_PRO_KEY = 'cv_isPro';
+window.cvIsPro = localStorage.getItem(CV_PRO_KEY) === '1';
+
+window.setPro = function(v){
+  window.cvIsPro = !!v;
+  localStorage.setItem(CV_PRO_KEY, window.cvIsPro ? '1' : '0');
+  // optional: broadcast event kalau ada UI lain yang mau update
+  window.dispatchEvent(new CustomEvent('cv:pro', { detail:{ isPro: window.cvIsPro } }));
+};
+</script>
+<script>
+  /* CORE STORAGE & UTIL */
   (()=> {
     const DB_KEY='cv_songs', FOLD_KEY='cv_folders';
     window.cv_loadDB = ()=>{ try{return JSON.parse(localStorage.getItem(DB_KEY)||'{}')}catch{return{}} };
@@ -806,6 +973,80 @@ document.addEventListener("DOMContentLoaded", cvAuthInit);
   async defer
   onload="window.cvAuthInit && cvAuthInit()">
 </script>
+<style>
+/* ===== Upgrade Modal: visual persis screenshot ===== */
+#cv_upgradeModal{
+  position: fixed; inset: 0; z-index: 100000;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.45);
+}
+#cv_upgradeModal.show{ display:flex; }
+
+#cv_upgradeBox{
+  width: min(92vw, 520px);
+  background: var(--card, #fff);
+  color: var(--fg, #0f172a);
+  border-radius: 22px;
+  padding: 20px 18px 16px;
+  box-shadow: 0 22px 60px rgba(0,0,0,.35);
+}
+
+/* Header: badge biru-navy + judul/subtitle */
+#cv_upgradeHead{
+  display:flex; align-items:center; gap:12px; margin-bottom:6px;
+}
+#cv_upgradeHead .badge{
+  display:grid; place-items:center;
+  width:44px; height:44px; border-radius:16px;
+  background: linear-gradient(135deg,#0f1f45 0%, #183b7a 55%, #2aa0ff 100%);
+  color:#fff; font-weight:800; font-size:20px;
+  box-shadow: 0 8px 22px rgba(16,77,160,.32);
+}
+#cv_upgradeTitle{
+  margin:0; font-size:22px; font-weight:800; letter-spacing:.2px;
+}
+#cv_upgradeSub{
+  margin: 6px 0 12px; color: var(--muted,#64748b); font-size:14px;
+}
+
+/* Benefit tiles: biru muda seperti chip di SS */
+#cv_upgradeBenefits{
+  list-style:none; margin:10px 0 16px; padding:0; display:grid; gap:12px;
+}
+#cv_upgradeBenefits li{
+  display:flex; gap:12px; align-items:flex-start;
+  background: #e8f0ff;                      /* tone biru muda */
+  border: 1px solid #dbe7ff;
+  color: var(--fg,#0f172a);
+  padding: 14px 16px; border-radius: 16px;
+  font-size: 15px; line-height: 1.4;
+}
+#cv_upgradeBenefits .tick{
+  font-weight:800; font-size:18px;
+  color:#12b76a;                             /* ceklis hijau */
+}
+
+/* Actions: kiri abu lembut, kanan gradient navy→blue */
+#cv_upgradeActions{ display:flex; gap:12px; margin-top: 2px; }
+#cv_btnMaybeLater, #cv_btnGetPro{
+  flex:1 1 0; height: 48px; border:0; border-radius: 14px; font-weight:800; cursor:pointer;
+}
+#cv_btnMaybeLater{
+  background: rgba(148,163,184,.16); color: var(--fg,#0f172a);
+}
+#cv_btnGetPro{
+  background: linear-gradient(135deg,#0f1f45 0%, #183b7a 55%, #2aa0ff 100%);
+  color:#fff;
+  box-shadow: 0 10px 26px rgba(16,77,160,.36);
+}
+
+/* Responsif kecil */
+@media (max-width:420px){
+  #cv_upgradeBox{ border-radius: 20px; padding: 18px 14px 14px; }
+  #cv_upgradeBenefits li{ padding: 12px 14px; font-size:14px; }
+  #cv_btnMaybeLater, #cv_btnGetPro{ height:46px; }
+}
+</style>
 </head>
 
 <body>
@@ -876,6 +1117,10 @@ document.addEventListener("DOMContentLoaded", cvAuthInit);
   <!-- Tombol Logout (disembunyikan dulu) -->
   <button id="googleLogoutBtn" class="ghost" style="display:none">Sign out</button>
 </div>
+<div class="drawer-sec">
+    <button id="cv_btnUpgrade" class="cv-grad" style="width:100%">Upgrade to Pro</button>
+    <div class="help" id="cv_proStatus">Free User</div>
+  </div>
 
   <div class="drawer-sec">
     <details>
@@ -959,41 +1204,80 @@ document.addEventListener("DOMContentLoaded", cvAuthInit);
     });
   }
 
-  function initDataIO(){
-    const btnEx = document.getElementById('cv_btnExport');
-    const btnIm = document.getElementById('cv_btnImport');
-    const file  = document.getElementById('cv_importFile');
+function initDataIO(){
+  const btnEx = document.getElementById('cv_btnExport');
+  const btnIm = document.getElementById('cv_btnImport');
 
-    btnEx?.addEventListener('click', async ()=>{
-      const payload={songs:cv_loadDB(),folders:cv_loadFolders()};
-      const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a'); a.href=url; a.download='chordyv_backup.json';
-      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-    });
+  // dukung 2 kemungkinan id input file
+  const fileA = document.getElementById('cv_importFile');
+  const fileB = document.getElementById('cv_fileImport');
+  const file  = fileA || fileB;
 
-    btnIm?.addEventListener('click', ()=> file?.click());
-    file?.addEventListener('change', async ()=>{
-      const f=file.files?.[0]; if(!f) return;
-      try{
-        const txt=await f.text(); const obj=JSON.parse(txt);
-        const db=cv_loadDB(), folders=cv_loadFolders();
-        const inSongs=obj.songs||{}, inFolders=obj.folders||[];
-        inFolders.forEach(name=>{ if(name && !folders.includes(name)) folders.push(name); });
-        for (const [id,song] of Object.entries(inSongs)){
-          if(!db[id]) db[id]=song;
-          else{
-            const action=await cvPrompt(`Conflict: "${song.title||'(Untitled)'}"\nType: o=overwrite, k=keep both, s=skip`,'k');
-            if(action==='o') db[id]=song;
-            else if(action==='k') db['s_'+Math.random().toString(36).slice(2,9)]=song;
-          }
+  // === EXPORT ===
+  btnEx?.addEventListener('click', (e)=>{
+    // guard Free
+    if (!window.cvIsPro){
+      e.preventDefault();
+      showUpgradeModal('export');
+      return;
+    }
+    // logic export asli (dipertahankan)
+    const payload={songs:cv_loadDB(),folders:cv_loadFolders?.()};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='chordyv_backup.json';
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  });
+
+  // === IMPORT (klik tombol) ===
+  btnIm?.addEventListener('click', (e)=>{
+    if (!window.cvIsPro){
+      e.preventDefault();
+      showUpgradeModal('import');
+      return;
+    }
+    file?.click();
+  });
+
+  // === IMPORT (on change) ===
+  file?.addEventListener('change', async (ev)=>{
+    if (!window.cvIsPro){
+      ev.target.value = '';
+      showUpgradeModal('import');
+      return;
+    }
+
+    const f=file.files?.[0]; if(!f) return;
+    try{
+      const txt=await f.text(); const obj=JSON.parse(txt);
+      const db=cv_loadDB(), folders=cv_loadFolders?.() || [];
+      const inSongs=obj.songs||{}, inFolders=obj.folders||[];
+
+      // merge folders
+      inFolders.forEach(name=>{ if(name && !folders.includes(name)) folders.push(name); });
+      cv_saveFolders?.(folders);
+
+      // merge songs (logicmu dipertahankan)
+      for (const [id,song] of Object.entries(inSongs)){
+        if(!db[id]) db[id]=song;
+        else{
+          const action=await cvPrompt(`Conflict: "${song.title||'(Untitled)'}"\nType: o=overwrite, k=keep both, s=skip`,'k');
+          if(action==='o') db[id]=song;
+          else if(action==='k') db['s_'+Math.random().toString(36).slice(2,9)]=song;
         }
-        cv_saveDB(db); cv_saveFolders(folders); cvToast('Import completed.');
-      }catch{ cvToast('Import failed.'); }
-      finally{ if (file) file.value=''; }
-    });
-  }
+      }
 
+      cv_saveDB(db);
+window.dispatchEvent(new CustomEvent('cv:view', { detail: { name: 'lib' } }));
+      cvToast?.('Import completed.');
+    }catch(e){
+      console.error('IMPORT ERROR:', e);
+      cvToast?.('Import failed.');
+    } finally {
+      if (file) file.value='';
+    }
+  });
+}
   // === INIT (panggil fungsinya) ===
   if (document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', ()=>{ initTheme(); initDataIO(); });
@@ -1225,27 +1509,48 @@ document.getElementById('ed_btnPipe').addEventListener('click',()=>insertAt(' | 
       currentId=null; localStorage.removeItem('cv_edit_id');
       titleEl.value=''; keyEl.value='C'; contentEl.value='';
     });
-    document.getElementById('ed_btnSave').addEventListener('click', async ()=>{
-  const title=(titleEl.value||'').trim(); 
-  if(!title){cvToast('Title is empty');return;}
-  db=cv_loadDB();
-  const id=currentId||('s_'+Math.random().toString(36).slice(2,9));
-  db[id]={
+/* ===== FREEMIUM / LIMIT SAVE ===== */
+// Revisi tombol Save (Editor)  
+// ===== FREEMIUM / LIMIT SAVE (FINAL) =====
+const CV_LIMIT_FREE = true;      // set true untuk test gating
+const FREE_MAX_SONGS = 5;
+
+function canSaveMoreSongs(db){
+  if (!CV_LIMIT_FREE) return true;
+  if (window.cvIsPro) return true;     // flag Pro dari Step 0
+  return Object.keys(db || {}).length < FREE_MAX_SONGS;
+}
+document.getElementById('ed_btnSave').addEventListener('click', async ()=>{
+  const title = (titleEl.value||'').trim();
+  if (!title){ cvToast?.('Title is empty'); return; }
+
+  const db = cv_loadDB();
+
+  // Free limit guard
+  if (!canSaveMoreSongs(db)){
+    showUpgradeModal('save-limit');
+    return;
+  }
+
+  // === Logic save ===
+  const id = currentId || ('s_'+Math.random().toString(36).slice(2,9));
+  db[id] = {
     title,
-    key:   keyEl.value||'C',
-    beat:  beatPreset||4,                 // ← simpan beat
+    key:   keyEl.value || 'C',
+    beat:  beatPreset || 4,
     folder:(db[id]?.folder||''),
-    raw:   contentEl.value||''
+    raw:   contentEl.value || ''
   };
-  cv_saveDB(db); currentId=id; localStorage.setItem('cv_edit_id',id);
-  cvToast(`Saved: ${title}`);
+  cv_saveDB(db);
+  currentId = id;
+  localStorage.setItem('cv_edit_id', id);
+  cvToast?.(`Saved: ${title}`);
 });
-    document.getElementById('ed_btnPerf').addEventListener('click', async ()=>{
+document.getElementById('ed_btnPerf').addEventListener('click', async ()=>{
   const raw=(contentEl.value||'').trim();
   localStorage.setItem('cv_perf_raw', raw);
   if(currentId) localStorage.setItem('cv_perf_id', currentId);
 
-  // ← kirim meta untuk Performance
   const meta = {
     id:    currentId || null,
     title: (titleEl.value||'').trim() || '(Untitled)',
@@ -1253,10 +1558,8 @@ document.getElementById('ed_btnPipe').addEventListener('click',()=>insertAt(' | 
     beat:  beatPreset || 4
   };
   localStorage.setItem('cv_perf_meta', JSON.stringify(meta));
-
   cv_switchView('perf');
 });
-
 /* === Editor: tombol "Library" (DITAMBAHKAN) === */
 document.getElementById('ed_btnLibrary')?.addEventListener('click', () => {
   const raw = (document.getElementById('ed_content')?.value || '').trim();
@@ -1373,46 +1676,53 @@ btnNewSong.addEventListener('click', ()=>{
 });
 
     function renderFolders(){
-      const opts=['Folders',...folders];
-      folderEl.innerHTML=opts.map(n=>`<option>${cv_escapeHtml(n)}</option>`).join('');
-      folderEl.value=filterFolder;
-    }
-function renderKeys(){
-  const NAT_KEYS=["C","G","D","A","E","B","F#","C#","F","Bb","Eb","Ab","Db","Gb","Cb"];
-  const keyEl = document.getElementById('lib_key');
-  keyEl.innerHTML = ['Keys', ...NAT_KEYS].map(k=>`<option>${k}</option>`).join('');
-  keyEl.value = filterKey;
-  keyEl.addEventListener('change', ()=>{ filterKey = keyEl.value; renderList(); });
+  const opts = ['Folders', ...folders]; // <-- tambahkan spread
+  folderEl.innerHTML = opts.map(n => `<option>${cv_escapeHtml(n)}</option>`).join('');
+  folderEl.value = filterFolder;
 }
-    function renderList(){
-      listEl.innerHTML='';
-      const items=Object.entries(db).map(([id,s])=>({...s,id}))
-        .filter(s => (!filterText || (s.title||'').toLowerCase().includes(filterText))
-                  && (filterFolder==='Folders' || (s.folder||'')===filterFolder))
-        .sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+function renderKeys(){
+  const NAT_KEYS = ["C","G","D","A","E","B","F#","C#","F","Bb","Eb","Ab","Db","Gb","Cb"];
+  const keyEl = document.getElementById('lib_key');
+  keyEl.innerHTML = ['Keys', ...NAT_KEYS].map(k => `<option>${k}</option>`).join('');
+  keyEl.value = filterKey;
+  keyEl.onchange = () => {        // ⬅️ ganti dari addEventListener
+    filterKey = keyEl.value;
+    renderList();
+  };
+}
+ function renderList(){
+  listEl.innerHTML = '';
 
-      let stillValid=false;
-      items.forEach(song=>{
-        const el=document.createElement('div');
-        el.className='item'; el.dataset.id=song.id;
-        el.innerHTML=`<h3>${cv_escapeHtml(song.title||'(Untitled)')}</h3><div class="sub"></div>`;
+const items = Object.entries(db)
+  .map(([id, s]) => ({ ...s, id }))
+  .filter(s =>
+    (!filterText || (s.title||'').toLowerCase().includes(filterText)) &&
+    (filterFolder === 'Folders' || (s.folder||'') === filterFolder) &&
+    (filterKey === 'Keys' || (s.key || '') === filterKey)   // ⬅️ pakai ini
+  )
+  .sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+  let stillValid=false;
+  items.forEach(song=>{
+    const el=document.createElement('div');
+    el.className='item'; el.dataset.id=song.id;
+    el.innerHTML=`<h3>${cv_escapeHtml(song.title||'(Untitled)')}</h3><div class="sub"></div>`;
 
-        el.addEventListener('click', async ()=>{
-          const now=Date.now();
-          if(now-lastTap<320 && tappedId===song.id){ // double-tap pada item sama
-            openSong(song.id); lastTap=0; tappedId=null; return;
-          }
-          lastTap=now; tappedId=song.id;
-          select(song.id, el);
-        });
+    el.addEventListener('click', async ()=>{
+      const now=Date.now();
+      if(now-lastTap<320 && tappedId===song.id){
+        openSong(song.id); lastTap=0; tappedId=null; return;
+      }
+      lastTap=now; tappedId=song.id;
+      select(song.id, el);
+    });
 
-        if(song.id===selectedId){ el.classList.add('active'); stillValid=true; }
-        listEl.appendChild(el);
-      });
-      if(!stillValid){ selectedId=null; }
-      updateActions(items.length);
-      counterEl.textContent=`${Object.keys(db).length} songs • ${folders.length} folders`;
-    }
+    if(song.id===selectedId){ el.classList.add('active'); stillValid=true; }
+    listEl.appendChild(el);
+  });
+  if(!stillValid){ selectedId=null; }
+  updateActions(items.length);
+  counterEl.textContent=`${Object.keys(db).length} songs • ${folders.length} folders`;
+}
 
     function select(id, el){
       [...listEl.children].forEach(x=>x.classList.remove('active'));
@@ -2225,12 +2535,400 @@ lyrics lyrics lyrics</pre>
   closeL?.addEventListener('click', closeAll);
   closeR?.addEventListener('click', closeAll);
   back?.addEventListener('click', closeAll);
+// === STEP 2: Wiring tombol Upgrade ===
+document.getElementById('cv_btnUpgrade')?.addEventListener('click', ()=>{
+  showUpgradeModal('upgrade-btn');
+});
+
+// === Trial Premium UI (auto switch tombol & label) ===
+function updateUpgradeUI(){
+  const btn = document.getElementById('cv_btnUpgrade');   // atau 'cv_upgradeBtn' kalau id-mu itu
+  const lbl = document.getElementById('cv_proStatus');     // atau 'proStatus'
+  if (!btn || !lbl) return;
+
+  if (window.cvIsPro){
+    // Sudah Pro → tampilkan badge premium, tetap pakai gradasi navy→biru
+    btn.textContent = '👑 Premium User';
+    btn.classList.add('cv-grad');       // pakai kelas gradasi (lihat patch CSS #2)
+    btn.classList.remove('ghost');
+    btn.disabled = true;                // biar nggak diklik lagi
+    lbl.textContent = 'Pro User';
+  } else {
+    // Free
+    btn.textContent = '✨ Upgrade to Pro';  // satu ikon ✨ saja
+    btn.classList.add('cv-grad');          // sama-sama pakai gradasi
+    btn.classList.remove('ghost');
+    btn.disabled = false;
+    lbl.textContent = 'Free User';
+  }
+}
+
+// Panggil saat load (elemen sudah ada di DOM)
+updateUpgradeUI();
+
+// Sinkron saat status berubah (setPro(true/false) mem-broadcast event ini)
+window.addEventListener('cv:pro', updateUpgradeUI);
+
+
+// Update status teks Free/Pro saat setPro berubah
+window.addEventListener('cv:pro', e=>{
+  const el=document.getElementById('cv_proStatus');
+  if (el) el.textContent = e.detail.isPro ? 'Pro User' : 'Free User';
+});
 
   // Escape untuk tutup
   window.addEventListener('keydown', (e)=>{
     if(e.key === 'Escape') closeAll();
   });
 })();
+</script>
+<!-- === UPGRADE MODAL (FINAL – sama seperti screenshot) === -->
+<style>
+  /* Overlay */
+  #cv_upgradeModal{
+    position: fixed; inset: 0; z-index: 100000;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px);
+    background: rgba(15,23,42,.35);
+  }
+  #cv_upgradeModal.show{ display:flex; }
+
+  /* Card */
+  #cv_upgradeBox{
+    width: min(92vw, 520px);
+    border-radius: 22px;
+    background: linear-gradient(180deg,#ffffff,#f8fafc);
+    color:#0f172a;
+    padding: 20px 18px 16px;
+    box-shadow: 0 22px 60px rgba(2,6,23,.25);
+  }
+
+  /* Head */
+  #cv_upgradeHead{ display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  #cv_upgradeHead .badge{
+    width:44px; height:44px; border-radius:16px; display:grid; place-items:center;
+    background: linear-gradient(135deg,#0f1f45 0%, #183b7a 55%, #2aa0ff 100%);
+    color:#fff; font-size:20px; font-weight:800;
+    box-shadow: 0 8px 22px rgba(16,77,160,.32);
+  }
+  #cv_upgradeTitle{ margin:0; font-size:22px; font-weight:800; letter-spacing:.2px; }
+  #cv_upgradeSub{ margin: 6px 0 12px; color:#64748b; font-size:14px; }
+
+  /* Benefits */
+  #cv_upgradeBenefits{ list-style:none; margin:10px 0 16px; padding:0; display:grid; gap:12px; }
+  #cv_upgradeBenefits li{
+    display:flex; gap:12px; align-items:flex-start;
+    background:#e8f0ff; border:1px solid #dbe7ff;
+    padding:14px 16px; border-radius:16px; font-size:15px; line-height:1.4;
+  }
+  #cv_upgradeBenefits .tick{
+    flex:0 0 26px; width:26px; height:26px; border-radius:8px;
+    display:grid; place-items:center; font-weight:800; font-size:18px;
+    background:#22c55e; color:#fff; box-shadow:0 4px 10px rgba(34,197,94,.35);
+  }
+
+  /* Actions */
+  #cv_upgradeActions{ display:flex; gap:12px; margin-top:2px; }
+  #cv_btnMaybeLater, #cv_btnGetPro{
+    flex:1 1 0; height:48px; border:0; border-radius:14px; font-weight:800; cursor:pointer;
+  }
+  #cv_btnMaybeLater{ background: rgba(148,163,184,.16); color:#0f172a; }
+  #cv_btnGetPro{
+    background: linear-gradient(135deg,#0f1f45 0%, #183b7a 55%, #2aa0ff 100%);
+    color:#fff; box-shadow: 0 10px 26px rgba(16,77,160,.36);
+  }
+
+  /* Tema navy */
+  body.theme-navy #cv_upgradeBox{
+    background: linear-gradient(180deg,#0f1f45,#0b1734);
+    color:#e5ecff; box-shadow:0 16px 36px rgba(2,6,23,.55);
+  }
+  body.theme-navy #cv_upgradeSub{ color:#a7b2c7; }
+  body.theme-navy #cv_upgradeBenefits li{ background:#0b1324; border-color:#1e2b57; }
+</style>
+
+<div id="cv_upgradeModal" aria-hidden="true">
+  <div id="cv_upgradeBox" role="dialog" aria-modal="true" aria-labelledby="cv_upgradeTitle">
+    <div id="cv_upgradeHead">
+      <div class="badge">✨</div>
+      <div>
+        <h2 id="cv_upgradeTitle">Upgrade to Pro</h2>
+        <p id="cv_upgradeSub">Unlock full features and play without limits.</p>
+      </div>
+    </div>
+
+    <ul id="cv_upgradeBenefits">
+      <li><span class="tick">✓</span> <div><b>Unlimited song saving</b> — add and keep as many songs as you wish.</div></li>
+      <li><span class="tick">✓</span> <div><b>Export &amp; Import files</b> — full backup and restore across devices.</div></li>
+      <li><span class="tick">✓</span> <div><b>All future updates</b> — get upcoming Pro features first.</div></li>
+    </ul>
+
+    <div id="cv_upgradeActions">
+      <button id="cv_btnMaybeLater">Maybe later</button>
+      <button id="cv_btnGetPro">Get Pro</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Open/Close API (drop-in replacement utk yang lama)
+  function openUpgrade(source){
+    const m = document.getElementById('cv_upgradeModal');
+    const t = document.getElementById('cv_upgradeTitle');
+    const titleMap = {
+      'upgrade-btn':'Upgrade to Pro',
+      'save-limit':'Save more with Pro',
+      'import':'Import is a Pro feature',
+      'export':'Export is a Pro feature'
+    };
+    t.textContent = titleMap[source] || 'Upgrade to Pro';
+    m.classList.add('show');
+    m.setAttribute('aria-hidden','false');
+  }
+  function closeUpgrade(){
+    const m = document.getElementById('cv_upgradeModal');
+    m.classList.remove('show');
+    m.setAttribute('aria-hidden','true');
+  }
+  // Buttons
+  document.getElementById('cv_btnMaybeLater')?.addEventListener('click', closeUpgrade);
+  document.getElementById('cv_btnGetPro')?.addEventListener('click', ()=>{
+    setPro(true);   // switch ke Pro (untuk demo/dev)
+    closeUpgrade();
+  });
+
+  // Backward-compat alias (biar pemanggil lama tetap jalan)
+  window.showUpgradeModal = openUpgrade;
+  window.hideUpgradeModal = closeUpgrade;
+</script>
+<!-- === DEBUG / SELF-TEST HARNESS (HP friendly) — with Slide Toggle === -->
+<style>
+  :root{
+    --dbg-z: 99999;
+    --dbg-accent: #2563eb;
+    --dbg-bg: rgba(0,0,0,.65);
+    --dbg-track: #111827;
+    --dbg-knob: #1f2937;
+  }
+
+  /* Debug Bar */
+  #cv_debugBar {
+    position:fixed;left:12px;bottom:70px;z-index:var(--dbg-z);
+    background:var(--dbg-bg);color:#fff;padding:8px 10px;
+    border-radius:10px;display:flex;gap:6px;align-items:center;
+    box-shadow:0 6px 20px rgba(0,0,0,.35);
+    backdrop-filter:saturate(120%) blur(4px);
+  }
+  #cv_debugBar[hidden]{ display:none !important; }
+
+  #cv_debugBar button{
+    padding:6px 8px;border-radius:8px;
+    border:1px solid #444;background:#1f2937;
+    color:#fff;cursor:pointer;font-size:12px;white-space:nowrap;
+  }
+  #cv_debugBar .ok{background:#2563eb}
+  #cv_debugBar .warn{background:#a16207}
+  #cv_debugBar .danger{background:#b91c1c}
+
+  /* Slide Toggle (track + knob) */
+  #cv_debugSlider {
+    position:fixed;right:16px;bottom:20px;z-index:var(--dbg-z);
+    width:118px;height:44px;border-radius:999px;
+    background:var(--dbg-track);
+    border:1px solid #374151;
+    display:flex;align-items:center;
+    padding:6px;box-sizing:border-box;
+    user-select:none;touch-action:none; /* enable smooth pointer events */
+    box-shadow:0 8px 24px rgba(0,0,0,.35);
+  }
+  #cv_dbgLabel{
+    font-size:12px;color:#cbd5e1;opacity:.85;margin-left:10px;
+    letter-spacing:.3px;pointer-events:none;user-select:none;
+  }
+  #cv_debugKnob{
+    width:36px;height:36px;border-radius:50%;
+    background:var(--dbg-knob);
+    border:1px solid #374151;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;cursor:pointer;flex:0 0 auto;
+    transform:translateX(0); /* 0..(trackW - padding*2 - knobW - labelSpace) */
+    transition:transform .18s ease;
+  }
+  /* Visual ON state */
+  #cv_debugSlider.on{
+    outline:2px solid color-mix(in srgb, var(--dbg-accent) 75%, transparent);
+  }
+  #cv_debugSlider.on #cv_debugKnob{
+    background:var(--dbg-accent);
+    border-color:var(--dbg-accent);
+    color:#fff;
+  }
+
+  /* Reduced-motion friendly */
+  @media (prefers-reduced-motion: reduce){
+    #cv_debugKnob{ transition:none; }
+  }
+</style>
+
+<div id="cv_debugBar" hidden>
+  <button id="dbg_free" class="warn">Set Free</button>
+  <button id="dbg_pro" class="ok">Set Pro</button>
+  <button id="dbg_reset" class="danger">Reset</button>
+  <button id="dbg_test_free" class="warn">Test Free</button>
+  <button id="dbg_test_pro" class="ok">Test Pro</button>
+</div>
+
+<!-- Slide Toggle -->
+<div id="cv_debugSlider" aria-label="Debug Toggle" role="switch" aria-checked="false">
+  <div id="cv_debugKnob">🐞</div>
+  <div id="cv_dbgLabel">DEBUG</div>
+</div>
+
+<script>
+/* === Slide Toggle Logic === */
+const dbgBar = document.getElementById('cv_debugBar');
+const slider = document.getElementById('cv_debugSlider');
+const knob   = document.getElementById('cv_debugKnob');
+const label  = document.getElementById('cv_dbgLabel');
+
+function dbgLog(...a){ console.log('[SELFTEST]', ...a); }
+
+let dragging = false;
+let startX = 0;
+let currentX = 0;
+let knobX = 0;   // current knob translateX
+let maxX = 0;    // computed based on track width
+let labelSpace = 58; // space we reserve so label always visible
+
+function computeMax(){
+  const trackW = slider.clientWidth;
+  const pad = 6; // from CSS
+  const knobW = knob.clientWidth;
+  maxX = Math.max(0, trackW - pad*2 - knobW - labelSpace);
+}
+computeMax();
+window.addEventListener('resize', computeMax);
+
+function applyKnob(x, withTransition=false){
+  knob.style.transition = withTransition ? 'transform .18s ease' : 'none';
+  knob.style.transform = `translateX(${x}px)`;
+  knobX = x;
+}
+
+function setOnState(isOn){
+  slider.classList.toggle('on', isOn);
+  slider.setAttribute('aria-checked', String(isOn));
+  dbgBar.hidden = !isOn;
+}
+
+function snap(){
+  // If passed halfway, snap to ON; else OFF
+  const isOn = knobX > maxX/2;
+  applyKnob(isOn ? maxX : 0, true);
+  setOnState(isOn);
+}
+
+function onPointerDown(e){
+  dragging = true;
+  startX = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+  currentX = startX;
+  knob.style.transition = 'none';
+}
+function onPointerMove(e){
+  if(!dragging) return;
+  const x = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+  const dx = x - startX;
+  let next = Math.min(maxX, Math.max(0, knobX + dx));
+  applyKnob(next, false);
+  startX = x; // incremental dragging
+}
+function onPointerUp(){
+  if(!dragging) return;
+  dragging = false;
+  snap();
+}
+
+function toggleClick(){
+  // simple tap toggles state
+  const turningOn = knobX === 0;
+  applyKnob(turningOn ? maxX : 0, true);
+  setOnState(turningOn);
+}
+
+/* Pointer (mouse+touch) events */
+knob.addEventListener('mousedown', onPointerDown);
+window.addEventListener('mousemove', onPointerMove);
+window.addEventListener('mouseup', onPointerUp);
+
+knob.addEventListener('touchstart', onPointerDown, {passive:true});
+window.addEventListener('touchmove', onPointerMove, {passive:true});
+window.addEventListener('touchend', onPointerUp, {passive:true});
+
+/* Tap anywhere on slider to toggle */
+slider.addEventListener('click', (e)=>{
+  // Avoid double handling when finishing a drag
+  if(dragging) return;
+  toggleClick();
+});
+
+/* Keyboard accessibility */
+slider.tabIndex = 0;
+slider.addEventListener('keydown', (e)=>{
+  if(e.key === ' ' || e.key === 'Enter'){
+    e.preventDefault();
+    toggleClick();
+  } else if(e.key === 'ArrowRight'){
+    applyKnob(maxX, true); setOnState(true);
+  } else if(e.key === 'ArrowLeft'){
+    applyKnob(0, true); setOnState(false);
+  }
+});
+
+/* === Utilities you already have === */
+function clickIf(id){
+  const el=document.getElementById(id);
+  if(!el){ dbgLog('MISS',id); return false; }
+  el.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+  return true;
+}
+
+async function dbgReset(){
+  localStorage.removeItem('cv_songs');
+  localStorage.removeItem('cv_folders');
+  localStorage.removeItem('cv_edit_id');
+  dbgLog('RESET done');
+}
+
+/* ==== Test scenarios (unchanged) ==== */
+async function testFree(){
+  setPro(false); await dbgReset();
+  let db=cv_loadDB()||{};
+  for(let i=1;i<=5;i++){ db['s_test'+i]={title:'Test '+i,key:'C',beat:4,folder:'',raw:'C | F | G |'}; }
+  cv_saveDB(db);
+  dbgLog('Seeded 5 songs');
+  if (typeof cv_switchView==='function') cv_switchView('ed');
+  document.getElementById('ed_title').value='Test 6';
+  document.getElementById('ed_content').value='C | F | G |';
+  clickIf('ed_btnSave');   // expect modal save-limit
+  clickIf('cv_btnExport'); // expect modal export
+  clickIf('cv_btnImport'); // expect modal import
+}
+async function testPro(){
+  setPro(true);
+  if (typeof cv_switchView==='function') cv_switchView('ed');
+  document.getElementById('ed_title').value='Pro Save OK';
+  document.getElementById('ed_content').value='C | Am | F | G |';
+  clickIf('ed_btnSave');   // expect toast Saved
+  clickIf('cv_btnExport'); // expect download
+  dbgLog('Import (Pro): pilih file manual → expect Import completed');
+}
+
+/* Wire buttons (unchanged) */
+document.getElementById('dbg_free')?.addEventListener('click', ()=>{ setPro(false); dbgLog('set Free'); });
+document.getElementById('dbg_pro')?.addEventListener('click', ()=>{ setPro(true); dbgLog('set Pro'); });
+document.getElementById('dbg_reset')?.addEventListener('click', dbgReset);
+document.getElementById('dbg_test_free')?.addEventListener('click', testFree);
+document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
 </script>
 </body>
 </html>
