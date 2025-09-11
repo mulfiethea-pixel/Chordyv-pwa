@@ -3299,202 +3299,203 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
   });
 </script>
 <script>
-/* ==== ChordyV — Perf Auto-Scroll: smooth step (±2 px/s) ==== */
+/* ==== ChordyV — Performance Auto-Scroll (clean, right-center pill, ±2 px/s) ==== */
 (function(){
+  // ----- state -----
   let btnAuto=null, speedUI=null, spdLabel=null, btnDec=null, btnInc=null, btnPause=null;
-  let rafId=0, lastTs=0, running=false, speed=30;
+  let rafId=0, lastTs=0, running=false;
+  let speed = 30;                        // px/s (default)
   let scroller=null, perfArea=null, perfToolbar=null;
+  let holdTidInc=null, holdTidDec=null;
 
+  // ----- helpers -----
   function pickScroller(){
+    // Prioritas kontainer perf; aman di Safari/iOS & Android
     return document.getElementById('perf_area')
         || document.scrollingElement
         || document.documentElement
         || document.body;
   }
 
-  function ensureToolbarAndButtons(){
+  function makePerfScrollable(){
+    if (perfArea){
+      perfArea.style.overflow = 'auto';
+      perfArea.style.maxHeight = '100dvh';             // dynamic viewport iOS
+      perfArea.style.webkitOverflowScrolling = 'touch';// momentum scroll iOS
+    }
+  }
+
+  function ensureUI(){
+    // Ambil ulang setiap kali view perf aktif
     perfArea    = document.getElementById('perf_area');
     perfToolbar = document.getElementById('perf_toolbar');
-    if (perfArea){
-      perfArea.style.overflow='auto';
-      perfArea.style.maxHeight='100dvh';
-      perfArea.style.webkitOverflowScrolling='touch';
-    }
-    btnAuto=document.getElementById('perf_auto');
-    if(!btnAuto && perfToolbar){
-      btnAuto=document.createElement('button');
-      btnAuto.id='perf_auto'; btnAuto.className='ghost'; btnAuto.textContent='Auto';
+    makePerfScrollable();
+
+    // Tambah tombol "Auto" di toolbar kalau belum ada
+    btnAuto = document.getElementById('perf_auto');
+    if (!btnAuto && perfToolbar){
+      btnAuto = document.createElement('button');
+      btnAuto.id = 'perf_auto';
+      btnAuto.className = 'ghost';
+      btnAuto.textContent = 'Auto';
       perfToolbar.appendChild(btnAuto);
     }
-    speedUI=document.getElementById('perf_speedUI');
-    if(!speedUI){
-      speedUI=document.createElement('div');
-      speedUI.id='perf_speedUI';
-      speedUI.style.cssText=[
-        'position:fixed','left:10px','bottom:12px','z-index:2147483000',
-        'background:rgba(15,23,42,.8)','color:#fff',
-        'padding:8px 10px','border-radius:10px',
-        'display:none','align-items:center','gap:8px',
-        'font:600 13px system-ui','box-shadow:0 6px 18px rgba(0,0,0,.22)'
-      ].join(';');
-      speedUI.innerHTML=`
-        <button id="perf_spd_dec" class="btn">–</button>
-        <span id="perf_spd_label">30 px/s</span>
-        <button id="perf_spd_inc" class="btn">+</button>
-        <button id="perf_pause" class="btn">Pause</button>`;
-      document.body.appendChild(speedUI);
-    }
-    spdLabel=document.getElementById('perf_spd_label');
-    btnDec  =document.getElementById('perf_spd_dec');
-    btnInc  =document.getElementById('perf_spd_inc');
-    btnPause=document.getElementById('perf_pause');
 
-    function rebind(el,fn){
-      if(!el) return;
-      const clone=el.cloneNode(true); el.replaceWith(clone);
-      clone.addEventListener('click',fn); return clone;
+// Buat / atur speed pill (VERTIKAL, kanan-tengah)
+speedUI = document.getElementById('perf_speedUI');
+if (!speedUI){
+  speedUI = document.createElement('div');
+  speedUI.id = 'perf_speedUI';
+  document.body.appendChild(speedUI);
+}
+
+speedUI.style.cssText = [
+  'position:fixed',
+  'right:12px',
+  'top:50%',
+  'transform:translateY(-50%)',
+  'z-index:2147483000',
+  'background:transparent',   // <<< transparan, no bg
+  'color:#fff',
+  'padding:0',                // <<< rapet, no padding
+  'display:none',
+  'flex-direction:column',
+  'align-items:center',
+  'gap:6px',
+  'font:600 11px system-ui,-apple-system,Segoe UI,Roboto,sans-serif'
+].join(';');
+// Isi ulang dengan urutan vertikal: + (naik), label, – (turun), Pause
+speedUI.innerHTML = `
+  <button id="perf_spd_inc" class="btn"
+    style="display:block;border:1px solid rgba(15,23,42,.35);
+       width:32px;height:32px;border-radius:50%;padding:0;font-size:14px;cursor:pointer;
+       background:rgba(15,23,42,.22);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)">+</button>
+
+  <span id="perf_spd_label"
+    style="display:block;min-width:60px;text-align:center;
+           padding:2px 6px;font-size:11px;color:#fff;
+           background:rgba(15,23,42,.45);border-radius:6px">30 px/s</span>
+
+  <button id="perf_spd_dec" class="btn"
+    style="display:block;border:1px solid rgba(15,23,42,.35);
+       width:32px;height:32px;border-radius:50%;padding:0;font-size:14px;cursor:pointer;
+       background:rgba(15,23,42,.22);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)">–</button>
+
+  <button id="perf_pause" class="btn"
+    style="display:block;border:none;width:40px;height:40px;
+           border-radius:50%;padding:0;font-size:12px;cursor:pointer;
+           background:rgba(255,255,255,.12);color:#fff">❚❚</button>
+`;
+spdLabel = document.getElementById('perf_spd_label');
+btnInc   = document.getElementById('perf_spd_inc');
+btnDec   = document.getElementById('perf_spd_dec');
+btnPause = document.getElementById('perf_pause');
+    // Re-bind aman (hindari double binding) → clone & pasang handler baru
+    function rebind(el, fn){
+      if (!el) return null;
+      const clone = el.cloneNode(true);
+      el.replaceWith(clone);
+      clone.addEventListener('click', fn);
+      return clone;
     }
-    if(btnAuto)  btnAuto = rebind(btnAuto, toggleAuto);
-    if(btnInc)   btnInc  = rebind(btnInc,  ()=>{ speed=Math.min(200, speed+2); updateSpeed(); });
-    if(btnDec)   btnDec  = rebind(btnDec,  ()=>{ speed=Math.max(2,   speed-2); updateSpeed(); });
-    if(btnPause) btnPause= rebind(btnPause,toggleAuto);
+    if (btnAuto)  btnAuto  = rebind(btnAuto,  toggleAuto);
+    if (btnPause) btnPause = rebind(btnPause, toggleAuto);
+
+    // Step halus ±2 px/s + press & hold
+    function setSpeed(v){
+      speed = Math.min(300, Math.max(2, Math.round(v)));
+      if (spdLabel) spdLabel.textContent = `${speed} px/s`;
+      try { localStorage.setItem('cv_scroll_speed', String(speed)); } catch {}
+    }
+    try {
+      const saved = parseInt(localStorage.getItem('cv_scroll_speed')||'', 10);
+      if (!Number.isNaN(saved)) setSpeed(saved); else setSpeed(speed);
+    } catch { setSpeed(speed); }
+
+    function holdStart(delta, setterRef){
+      if (setterRef.current) return;
+      setSpeed(speed + delta);
+      setterRef.current = setInterval(()=> setSpeed(speed + delta), 120);
+    }
+    function holdStop(setterRef){
+      if (setterRef.current){ clearInterval(setterRef.current); setterRef.current=null; }
+    }
+    // store tid in small holder objects
+    const incRef = { current:null }, decRef = { current:null };
+
+    // Bind tombol +/-
+    if (btnInc){
+      btnInc.addEventListener('mousedown', ()=>holdStart(+2, incRef));
+      btnInc.addEventListener('mouseup',   ()=>holdStop(incRef));
+      btnInc.addEventListener('mouseleave',()=>holdStop(incRef));
+      btnInc.addEventListener('touchstart', (e)=>{ e.preventDefault(); holdStart(+2, incRef); }, {passive:false});
+      btnInc.addEventListener('touchend',   ()=>holdStop(incRef));
+      btnInc.addEventListener('touchcancel',()=>holdStop(incRef));
+      // single tap fallback
+      btnInc.addEventListener('click', ()=> setSpeed(speed+2));
+    }
+    if (btnDec){
+      btnDec.addEventListener('mousedown', ()=>holdStart(-2, decRef));
+      btnDec.addEventListener('mouseup',   ()=>holdStop(decRef));
+      btnDec.addEventListener('mouseleave',()=>holdStop(decRef));
+      btnDec.addEventListener('touchstart', (e)=>{ e.preventDefault(); holdStart(-2, decRef); }, {passive:false});
+      btnDec.addEventListener('touchend',   ()=>holdStop(decRef));
+      btnDec.addEventListener('touchcancel',()=>holdStop(decRef));
+      // single tap fallback
+      btnDec.addEventListener('click', ()=> setSpeed(speed-2));
+    }
   }
 
-  function showPill(){ if(speedUI) speedUI.style.display='inline-flex'; }
-  function hidePill(){ if(speedUI) speedUI.style.display='none'; }
-  function updateSpeed(){ if(spdLabel) spdLabel.textContent=`${Math.round(speed)} px/s`; }
+  function showPill(){ if (speedUI) speedUI.style.display='inline-flex'; }
+  function hidePill(){ if (speedUI) speedUI.style.display='none'; }
 
   function step(ts){
-    if(!running) return;
-    if(!scroller){ stopAuto(); return; }
-    if(!lastTs) lastTs=ts;
-    const dt=(ts-lastTs)/1000; lastTs=ts;
-    const maxScroll=scroller.scrollHeight-scroller.clientHeight-1;
-    scroller.scrollTop=Math.min(maxScroll, scroller.scrollTop+speed*dt);
-    if(scroller.scrollTop>=maxScroll){ stopAuto(); return; }
-    rafId=requestAnimationFrame(step);
+    if (!running) return;
+    if (!scroller) { stopAuto(); return; }
+    if (!lastTs) lastTs = ts;
+    const dt = (ts - lastTs)/1000; lastTs = ts;
+
+    const maxScroll = scroller.scrollHeight - scroller.clientHeight - 1;
+    scroller.scrollTop = Math.min(maxScroll, scroller.scrollTop + speed * dt);
+    if (scroller.scrollTop >= maxScroll){ stopAuto(); return; }
+
+    rafId = requestAnimationFrame(step);
   }
+
   function startAuto(){
-    if(running) return;
-    scroller=pickScroller(); if(!scroller) return;
-    running=true; lastTs=0; updateSpeed(); showPill();
-    rafId=requestAnimationFrame(step);
+    if (running) return;
+    scroller = pickScroller();
+    if (!scroller) return;
+    running = true; lastTs = 0; showPill();
+    rafId = requestAnimationFrame(step);
   }
   function stopAuto(){
-    running=false; if(rafId) cancelAnimationFrame(rafId);
-    rafId=0; lastTs=0; hidePill();
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = 0; lastTs = 0; hidePill();
   }
-  function toggleAuto(){ running?stopAuto():startAuto(); }
+  function toggleAuto(){ running ? stopAuto() : startAuto(); }
 
-  window.addEventListener('cv:view',(e)=>{
-    const onPerf=e?.detail?.name==='perf';
-    if(onPerf){ ensureToolbarAndButtons(); hidePill(); }
-    else{ stopAuto(); }
-  });
-
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',()=>{ ensureToolbarAndButtons(); });
-  } else { ensureToolbarAndButtons(); }
-})();
-</script>
-<script>
-/* ==== ChordyV — iOS Patch: No-Fullscreen, Immersive Toggle, Exit Button ==== */
-(function(){
-  const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-             || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  if (!isiOS) return;
-
-  // 1) Pastikan kontainer Performance nyaman di iOS
-  function tunePerfArea(){
-    const pa = document.getElementById('perf_area');
-    if (pa){
-      pa.style.overflow = 'auto';
-      pa.style.maxHeight = '100dvh';                 // dukung dynamic viewport iOS
-      pa.style.webkitOverflowScrolling = 'touch';    // momentum scrolling
-    }
-  }
-
-  // 2) Buat tombol Exit (muncul hanya saat immersive/onlyText)
-  function ensureExitBtn(){
-    let btn = document.getElementById('perf_exitImm');
-    if (!btn){
-      btn = document.createElement('button');
-      btn.id = 'perf_exitImm';
-      btn.type = 'button';
-      btn.textContent = 'Exit';
-      btn.style.cssText = [
-        'position:fixed','top:10px','right:10px',
-        'z-index:2147483647',
-        'display:none',
-        'padding:8px 12px','border-radius:10px',
-        'border:none','cursor:pointer',
-        'background:rgba(15,23,42,.9)','color:#fff',
-        'box-shadow:0 8px 20px rgba(0,0,0,.25)',
-        'font:600 13px system-ui,-apple-system,Segoe UI,Roboto,sans-serif'
-      ].join(';');
-      document.body.appendChild(btn);
-
-      btn.addEventListener('click', ()=>{
-        document.body.classList.remove('onlyText');       // keluar immersive
-        try { document.exitFullscreen?.(); } catch(e){}   // kalau kebetulan FS aktif
-        // (Auto-Scroll kamu otomatis sembunyi pill saat keluar view/immersive)
-      });
-    }
-    return btn;
-  }
-
-  // 3) Ganti handler tombol ⛶ agar tidak memanggil Fullscreen API di iOS
-  function overrideFullButton(){
-    const old = document.getElementById('perf_full');
-    if (!old) return;
-    const fresh = old.cloneNode(true);        // hapus listener lama
-    old.replaceWith(fresh);
-    fresh.addEventListener('click', (e)=>{
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      // Toggle "immersive" tanpa Fullscreen API
-      const on = document.body.classList.toggle('onlyText');
-      // Tampilkan/ sembunyikan tombol Exit mengikuti state
-      ensureExitBtn().style.display = on ? 'inline-flex' : 'none';
-      tunePerfArea();
-    }, {capture:true});
-  }
-
-  // 4) Saat router pindah ke Performance, rapikan iOS settings
+  // ----- router/view hooks -----
   window.addEventListener('cv:view', (e)=>{
     const onPerf = e?.detail?.name === 'perf';
     if (onPerf){
-      tunePerfArea();
-      // di iOS: biarkan user klik ⛶ untuk masuk immersive
-      // tapi kalau kamu mau langsung immersive saat masuk perf, uncomment baris di bawah:
-      // document.body.classList.add('onlyText');
-      // ensureExitBtn().style.display = 'inline-flex';
+      ensureUI();
+      hidePill();                // muncul saat user tekan "Auto"
     } else {
-      document.body.classList.remove('onlyText');
-      ensureExitBtn().style.display = 'none';
+      stopAuto();
     }
   });
 
-  // 5) Amankan juga jika user masuk/keluar fullscreen lewat gesture/menu Safari
-  ['fullscreenchange','webkitfullscreenchange','MSFullscreenChange'].forEach(ev=>{
-    document.addEventListener(ev, ()=>{
-      // Di iOS kita tidak mengandalkan FS; jaga tombol Exit sesuai class onlyText
-      ensureExitBtn().style.display = document.body.classList.contains('onlyText') ? 'inline-flex' : 'none';
-    });
-  });
-
-  // Init
+  // Init ketika halaman sudah posisikan di perf
   if (document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', ()=>{
-      tunePerfArea();
-      overrideFullButton();
-      ensureExitBtn();
-    });
+    document.addEventListener('DOMContentLoaded', ensureUI);
   } else {
-    tunePerfArea();
-    overrideFullButton();
-    ensureExitBtn();
+    ensureUI();
   }
+
+  // NOTE: Tidak membuat tombol Exit baru.
+  // Exit bawaan aplikasi (#perf_exitImm) tetap berfungsi normal.
 })();
 </script>
 </body>
