@@ -3544,9 +3544,8 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
 })();
 </script>
 <script>
-/* iOS visibility shim — non-invasive */
+/* iOS OnlyText visibility shim — non-invasive */
 (function () {
-  // Deteksi iOS/iPadOS (termasuk iPadOS Safari yang ngaku "Mac" dgn touch)
   var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
            || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (!isIOS) return;
@@ -3554,34 +3553,41 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
   var asRemote = document.getElementById('as_remote');
   if (!asRemote) return;
 
-  function iosEnsureRemote() {
-    // Tampilkan remote kalau kamu sudah masuk Only Text,
-    // walaupun perangkat tidak benar-benar masuk fullscreen.
+  function ensureVisibleIfOnlyText() {
     if (document.body.classList.contains('onlyText')) {
       asRemote.classList.remove('hidden');
       asRemote.removeAttribute('aria-hidden');
     }
   }
 
-  // 1) Jalankan segera (kalau user sudah di Performance view)
-  iosEnsureRemote();
+  // 1) Jalankan segera
+  ensureVisibleIfOnlyText();
 
-  // 2) Re-run saat kamu pindah view ke Performance
+  // 2) Observe perubahan class <body> (saat enterOnlyTextUI() jalan)
+  var moBody = new MutationObserver(ensureVisibleIfOnlyText);
+  moBody.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+  // 3) Re-run setelah pindah ke Performance view
   window.addEventListener('cv:view', function (e) {
     if (e.detail && e.detail.name === 'perf') {
-      // beri satu frame supaya class onlyText/DOM beres dulu
-      requestAnimationFrame(iosEnsureRemote);
+      requestAnimationFrame(ensureVisibleIfOnlyText);
+      setTimeout(ensureVisibleIfOnlyText, 50);
+      setTimeout(ensureVisibleIfOnlyText, 250);
+    }
+  }, { passive: true });
+
+  // 4) Kalau user tekan tombol Fullscreen (di iPad no-op), tetap coba tampilkan
+  document.addEventListener('fullscreenchange', ensureVisibleIfOnlyText);
+  document.addEventListener('webkitfullscreenchange', ensureVisibleIfOnlyText);
+
+  // 5) Penjaga terakhir: kalau ada script lain yang nge-hide lagi
+  var moRemote = new MutationObserver(function(muts){
+    if (document.body.classList.contains('onlyText') && asRemote.classList.contains('hidden')) {
+      asRemote.classList.remove('hidden');
+      asRemote.removeAttribute('aria-hidden');
     }
   });
-
-  // 3) Re-run kalau ada perubahan fullscreen (beberapa iPad return no-op)
-  document.addEventListener('fullscreenchange', iosEnsureRemote);
-  document.addEventListener('webkitfullscreenchange', iosEnsureRemote);
-
-  // 4) Last-resort guard: kalau ada code lain yang nyembunyiin lagi,
-  //    kita balikin tampil saat class pada asRemote berubah.
-  var mo = new MutationObserver(iosEnsureRemote);
-  mo.observe(asRemote, { attributes: true, attributeFilter: ['class'] });
+  moRemote.observe(asRemote, { attributes: true, attributeFilter: ['class', 'aria-hidden'] });
 })();
 </script>
 </body>
