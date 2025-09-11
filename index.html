@@ -115,11 +115,22 @@ select{padding-right:34px}
     .view.active{display:block}
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
 
-    /* Header (only in Editor) — SS#2 style */
-    header{position:sticky;top:0;z-index:10;display:none;
-      background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);
-      box-shadow:0 4px 18px rgba(0,0,0,.06)}
-    body.theme-navy header{background:rgba(14,26,56,.9)}
+/* === OVERRIDE: Header Spotlight Final === */
+#cv_header{
+  color:#fff;
+  background:radial-gradient(120% 100% at 50% 50%,
+    #2563eb 0%, #1e3a8a 45%, #0f172a 100%
+  ) !important;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  box-shadow:0 4px 18px rgba(0,0,0,.25);
+}
+
+/* Saat theme-navy aktif, tetap pakai spotlight (jangan ditimpa navy flat) */
+body.theme-navy #cv_header{
+  background:radial-gradient(120% 100% at 50% 50%,
+    #2563eb 0%, #1e3a8a 45%, #0f172a 100%
+  ) !important;
+}
     .head{max-width:980px;margin:auto;display:flex;align-items:center;gap:12px;padding:12px 16px}
     .logo{width:30px;height:30px;border-radius:10px;background:#0b2558;display:grid;place-items:center;
       color:#fff;font-weight:700;text-transform:lowercase;box-shadow:0 4px 12px rgba(0,0,0,.18)}
@@ -1273,12 +1284,19 @@ header .head #titleBar img{ height:24px;width:auto;display:block;vertical-align:
   --header-fg: #ffffff;   /* putih agar kontras */
 }
 
-/* Terapkan ke header */
-header .head{
-  background: var(--header-bg);
-  color: var(--header-fg);        /* <- ini yang jadi sumber currentColor */
+#cv_header {
+  background: radial-gradient(120% 100% at 50% 50%,
+    #2563eb 0%, #1e3a8a 45%, #0f172a 100%
+  ) !important;
+  color:#fff !important;
 }
-
+/* Spotlight header + soft fade ke konten */
+#cv_header{
+  position: sticky; /* sudah ada, gapapa */
+  top: 0;
+  z-index: 20;      /* di atas konten */
+  overflow: visible;/* penting: agar ::after boleh keluar ke bawah */
+}
 /* 1) Jika hamburger/gear berbasis SVG: ikuti currentColor */
 header .head .hamburger,
 header .head .gear,
@@ -3299,98 +3317,106 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
   });
 </script>
 <script>
-/* ==== ChordyV — Performance Auto-Scroll (clean, right-center pill, ±2 px/s) ==== */
+/* ==== ChordyV — Performance Auto-Scroll (smooth + iOS carry, vertical pill) ==== */
 (function(){
-  // ----- state -----
+  // ----- state (jangan ubah di luar patch ini) -----
   let btnAuto=null, speedUI=null, spdLabel=null, btnDec=null, btnInc=null, btnPause=null;
   let rafId=0, lastTs=0, running=false;
-  let speed = 30;                        // px/s (default)
   let scroller=null, perfArea=null, perfToolbar=null;
-  let holdTidInc=null, holdTidDec=null;
+
+  // SPEED ENGINE (Chordtela-like)
+  let targetSpeed = 30;      // px/s yang DIMINTA user (disimpan & tampil di label)
+  let curSpeed    = 30;      // px/s AKTUAL (bergerak mulus menuju target)
+  let _fracCarry  = 0;       // akumulasi pecahan px (buat iOS)
+  const SMOOTH_K  = 8;       // 3–10 enak; makin besar makin responsif
 
   // ----- helpers -----
   function pickScroller(){
-    // Prioritas kontainer perf; aman di Safari/iOS & Android
     return document.getElementById('perf_area')
         || document.scrollingElement
         || document.documentElement
         || document.body;
   }
-
   function makePerfScrollable(){
     if (perfArea){
       perfArea.style.overflow = 'auto';
-      perfArea.style.maxHeight = '100dvh';             // dynamic viewport iOS
-      perfArea.style.webkitOverflowScrolling = 'touch';// momentum scroll iOS
+      perfArea.style.maxHeight = '100dvh';
+      perfArea.style.webkitOverflowScrolling = 'touch';
     }
   }
 
   function ensureUI(){
-    // Ambil ulang setiap kali view perf aktif
+    // ambil ulang setiap kali view perf aktif
     perfArea    = document.getElementById('perf_area');
     perfToolbar = document.getElementById('perf_toolbar');
     makePerfScrollable();
 
-    // Tambah tombol "Auto" di toolbar kalau belum ada
+    // tombol "Auto" di toolbar (buat kalau belum ada)
     btnAuto = document.getElementById('perf_auto');
     if (!btnAuto && perfToolbar){
       btnAuto = document.createElement('button');
       btnAuto.id = 'perf_auto';
       btnAuto.className = 'ghost';
       btnAuto.textContent = 'Auto';
+      // sedikit style biar gak invisible oleh CSS global
+      btnAuto.style.background = 'rgba(148,163,184,.12)';
+      btnAuto.style.border = '1px solid rgba(148,163,184,.35)';
+      btnAuto.style.borderRadius = '12px';
       perfToolbar.appendChild(btnAuto);
     }
 
-// Buat / atur speed pill (VERTIKAL, kanan-tengah)
-speedUI = document.getElementById('perf_speedUI');
-if (!speedUI){
-  speedUI = document.createElement('div');
-  speedUI.id = 'perf_speedUI';
-  document.body.appendChild(speedUI);
-}
+    // SPEED PILL: wrapper transparan, vertikal, kanan-tengah
+    speedUI = document.getElementById('perf_speedUI');
+    if (!speedUI){
+      speedUI = document.createElement('div');
+      speedUI.id = 'perf_speedUI';
+      document.body.appendChild(speedUI);
+    }
+    speedUI.style.cssText = [
+      'position:fixed',
+      'right:12px',
+      'top:50%',
+      'transform:translateY(-50%)',
+      'z-index:2147483000',
+      'background:transparent',   // wrapper transparan
+      'color:#fff',
+      'padding:0',
+      'display:none',             // muncul saat Auto ditekan
+      'flex-direction:column',
+      'align-items:center',
+      'gap:6px',
+      'font:600 11px system-ui,-apple-system,Segoe UI,Roboto,sans-serif'
+    ].join(';');
 
-speedUI.style.cssText = [
-  'position:fixed',
-  'right:12px',
-  'top:50%',
-  'transform:translateY(-50%)',
-  'z-index:2147483000',
-  'background:transparent',   // <<< transparan, no bg
-  'color:#fff',
-  'padding:0',                // <<< rapet, no padding
-  'display:none',
-  'flex-direction:column',
-  'align-items:center',
-  'gap:6px',
-  'font:600 11px system-ui,-apple-system,Segoe UI,Roboto,sans-serif'
-].join(';');
-// Isi ulang dengan urutan vertikal: + (naik), label, – (turun), Pause
-speedUI.innerHTML = `
-  <button id="perf_spd_inc" class="btn"
-    style="display:block;border:1px solid rgba(15,23,42,.35);
-       width:32px;height:32px;border-radius:50%;padding:0;font-size:14px;cursor:pointer;
-       background:rgba(15,23,42,.22);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)">+</button>
+    // isi: 3 tombol bulat + label kecil (hanya elemen yg punya bg sendiri)
+    speedUI.innerHTML = `
+      <button id="perf_spd_inc" class="btn"
+        style="display:block;border:1px solid rgba(15,23,42,.35);
+               width:32px;height:32px;border-radius:50%;padding:0;font-size:14px;cursor:pointer;
+               background:rgba(15,23,42,.22);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)">+</button>
 
-  <span id="perf_spd_label"
-    style="display:block;min-width:60px;text-align:center;
-           padding:2px 6px;font-size:11px;color:#fff;
-           background:rgba(15,23,42,.45);border-radius:6px">30 px/s</span>
+      <span id="perf_spd_label"
+        style="display:block;min-width:60px;text-align:center;
+               padding:2px 6px;font-size:11px;color:#fff;
+               background:rgba(15,23,42,.45);border-radius:6px">30 px/s</span>
 
-  <button id="perf_spd_dec" class="btn"
-    style="display:block;border:1px solid rgba(15,23,42,.35);
-       width:32px;height:32px;border-radius:50%;padding:0;font-size:14px;cursor:pointer;
-       background:rgba(15,23,42,.22);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)">–</button>
+      <button id="perf_spd_dec" class="btn"
+        style="display:block;border:1px solid rgba(15,23,42,.35);
+               width:32px;height:32px;border-radius:50%;padding:0;font-size:14px;cursor:pointer;
+               background:rgba(15,23,42,.22);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)">–</button>
 
-  <button id="perf_pause" class="btn"
-    style="display:block;border:none;width:40px;height:40px;
-           border-radius:50%;padding:0;font-size:12px;cursor:pointer;
-           background:rgba(255,255,255,.12);color:#fff">❚❚</button>
-`;
-spdLabel = document.getElementById('perf_spd_label');
-btnInc   = document.getElementById('perf_spd_inc');
-btnDec   = document.getElementById('perf_spd_dec');
-btnPause = document.getElementById('perf_pause');
-    // Re-bind aman (hindari double binding) → clone & pasang handler baru
+      <button id="perf_pause" class="btn"
+        style="display:block;border:1px solid rgba(15,23,42,.35);
+               width:40px;height:40px;border-radius:50%;padding:0;font-size:12px;cursor:pointer;
+               background:rgba(15,23,42,.22);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)">❚❚</button>
+    `;
+
+    spdLabel = document.getElementById('perf_spd_label');
+    btnInc   = document.getElementById('perf_spd_inc');
+    btnDec   = document.getElementById('perf_spd_dec');
+    btnPause = document.getElementById('perf_pause');
+
+    // rebind aman (hindari double binding): clone lalu pasang listener baru
     function rebind(el, fn){
       if (!el) return null;
       const clone = el.cloneNode(true);
@@ -3401,101 +3427,120 @@ btnPause = document.getElementById('perf_pause');
     if (btnAuto)  btnAuto  = rebind(btnAuto,  toggleAuto);
     if (btnPause) btnPause = rebind(btnPause, toggleAuto);
 
-    // Step halus ±2 px/s + press & hold
+    // ---- speed setter (TARGET) + simpan ----
     function setSpeed(v){
-      speed = Math.min(300, Math.max(2, Math.round(v)));
-      if (spdLabel) spdLabel.textContent = `${speed} px/s`;
-      try { localStorage.setItem('cv_scroll_speed', String(speed)); } catch {}
-    }
+  targetSpeed = Math.max(1, Math.min(300, v));  // biarin desimal
+  if (spdLabel) spdLabel.textContent = `${Math.round(targetSpeed)} px/s`; 
+  try { localStorage.setItem('cv_scroll_speed', String(targetSpeed)); } catch {}
+}
+    // load saved
     try {
       const saved = parseInt(localStorage.getItem('cv_scroll_speed')||'', 10);
-      if (!Number.isNaN(saved)) setSpeed(saved); else setSpeed(speed);
-    } catch { setSpeed(speed); }
+      if (!Number.isNaN(saved)) setSpeed(saved); else setSpeed(targetSpeed);
+    } catch { setSpeed(targetSpeed); }
 
-    function holdStart(delta, setterRef){
-      if (setterRef.current) return;
-      setSpeed(speed + delta);
-      setterRef.current = setInterval(()=> setSpeed(speed + delta), 120);
-    }
-    function holdStop(setterRef){
-      if (setterRef.current){ clearInterval(setterRef.current); setterRef.current=null; }
-    }
-    // store tid in small holder objects
+    // ---- press & hold: ±5% tiap tick ----
     const incRef = { current:null }, decRef = { current:null };
+    function holdStart(mode, ref){
+      if (ref.current) return;
+      const tick = ()=>{
+        if (mode === '+') setSpeed(targetSpeed * 1.05);
+        else              setSpeed(targetSpeed / 1.05);
+      };
+      tick();
+      ref.current = setInterval(tick, 100);
+    }
+    function holdStop(ref){
+      if (ref.current){ clearInterval(ref.current); ref.current=null; }
+    }
 
-    // Bind tombol +/-
+    // bind +/− (tap & hold)
     if (btnInc){
-      btnInc.addEventListener('mousedown', ()=>holdStart(+1, incRef));
+      btnInc.addEventListener('mousedown', ()=>holdStart('+', incRef));
       btnInc.addEventListener('mouseup',   ()=>holdStop(incRef));
       btnInc.addEventListener('mouseleave',()=>holdStop(incRef));
-      btnInc.addEventListener('touchstart', (e)=>{ e.preventDefault(); holdStart(+1, incRef); }, {passive:false});
+      btnInc.addEventListener('touchstart', e=>{ e.preventDefault(); holdStart('+', incRef); }, {passive:false});
       btnInc.addEventListener('touchend',   ()=>holdStop(incRef));
       btnInc.addEventListener('touchcancel',()=>holdStop(incRef));
-      // single tap fallback
-      btnInc.addEventListener('click', ()=> setSpeed(speed+1));
+      btnInc.addEventListener('click', ()=> setSpeed(targetSpeed + 1));    // tap +1 px/s// tap +5%
     }
     if (btnDec){
-      btnDec.addEventListener('mousedown', ()=>holdStart(-1, decRef));
+      btnDec.addEventListener('mousedown', ()=>holdStart('-', decRef));
       btnDec.addEventListener('mouseup',   ()=>holdStop(decRef));
       btnDec.addEventListener('mouseleave',()=>holdStop(decRef));
-      btnDec.addEventListener('touchstart', (e)=>{ e.preventDefault(); holdStart(-1, decRef); }, {passive:false});
+      btnDec.addEventListener('touchstart', e=>{ e.preventDefault(); holdStart('-', decRef); }, {passive:false});
       btnDec.addEventListener('touchend',   ()=>holdStop(decRef));
       btnDec.addEventListener('touchcancel',()=>holdStop(decRef));
-      // single tap fallback
-      btnDec.addEventListener('click', ()=> setSpeed(speed-1));
+      btnDec.addEventListener('click', ()=> setSpeed(targetSpeed - 1)); // tap -5%
     }
   }
 
+  // ----- UI pill show/hide -----
   function showPill(){ if (speedUI) speedUI.style.display='inline-flex'; }
   function hidePill(){ if (speedUI) speedUI.style.display='none'; }
 
+  // ----- loop (smoothing + iOS fractional carry) -----
   function step(ts){
     if (!running) return;
     if (!scroller) { stopAuto(); return; }
     if (!lastTs) lastTs = ts;
     const dt = (ts - lastTs)/1000; lastTs = ts;
 
-    const maxScroll = scroller.scrollHeight - scroller.clientHeight - 1;
-    scroller.scrollTop = Math.min(maxScroll, scroller.scrollTop + speed * dt);
-    if (scroller.scrollTop >= maxScroll){ stopAuto(); return; }
+    // smoothing: curSpeed → targetSpeed
+    const alpha = 1 - Math.exp(-SMOOTH_K * dt);
+    curSpeed += (targetSpeed - curSpeed) * alpha;
 
+    // iOS-friendly scroll
+    const maxScroll = scroller.scrollHeight - scroller.clientHeight - 1;
+    _fracCarry += curSpeed * dt;
+    const stepInt = _fracCarry > 0 ? Math.floor(_fracCarry) : Math.ceil(_fracCarry);
+    if (stepInt !== 0){
+      scroller.scrollTop = Math.min(maxScroll, Math.max(0, scroller.scrollTop + stepInt));
+      _fracCarry -= stepInt;
+    }
+
+    if (scroller.scrollTop >= maxScroll){ stopAuto(); return; }
     rafId = requestAnimationFrame(step);
   }
 
+  // ----- engine control -----
   function startAuto(){
     if (running) return;
     scroller = pickScroller();
     if (!scroller) return;
-    running = true; lastTs = 0; showPill();
+    running = true; lastTs = 0;
+    _fracCarry = 0;
+    curSpeed = targetSpeed;       // mulai dari nilai saat ini
+    showPill();
     rafId = requestAnimationFrame(step);
   }
   function stopAuto(){
     running = false;
     if (rafId) cancelAnimationFrame(rafId);
-    rafId = 0; lastTs = 0; hidePill();
+    rafId = 0; lastTs = 0;
+    _fracCarry = 0;
+    hidePill();
   }
   function toggleAuto(){ running ? stopAuto() : startAuto(); }
+  window.cv_toggleAuto = toggleAuto; // export biar tombol Auto manapun bisa panggil
 
   // ----- router/view hooks -----
   window.addEventListener('cv:view', (e)=>{
     const onPerf = e?.detail?.name === 'perf';
     if (onPerf){
       ensureUI();
-      hidePill();                // muncul saat user tekan "Auto"
+      hidePill(); // muncul saat user tekan "Auto"
     } else {
       stopAuto();
     }
   });
 
-  // Init ketika halaman sudah posisikan di perf
+  // init saat halaman siap
   if (document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', ensureUI);
   } else {
     ensureUI();
   }
-
-  // NOTE: Tidak membuat tombol Exit baru.
-  // Exit bawaan aplikasi (#perf_exitImm) tetap berfungsi normal.
 })();
 </script>
 </body>
