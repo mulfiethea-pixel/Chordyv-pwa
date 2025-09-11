@@ -3544,82 +3544,155 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
 })();
 </script>
 <script>
-/* ==== ChordyV — Safe-iOS Patch (Performance Auto-Scroll & Remote) ==== */
-/* Tempelkan blok ini persis sebelum </body>. Tidak mengubah logic lain. */
+/* ==== ChordyV — iOS Immersive (tanpa Fullscreen) + Remote Auto-Scroll ==== */
 (function(){
-  function applySafeIOSPatch(){
-    /* 1) Fullscreen fallback di iOS:
-          anggap "immersive" saat body.onlyText aktif agar remote tampil */
-    window.isFullscreen = function(){
-      return !!(
-        document.fullscreenElement ||
-        document.webkitFullscreenElement ||
-        document.msFullscreenElement ||
-        document.body.classList.contains('onlyText') // iOS/PWA fallback
-      );
-    };
+  const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-    /* 2) Saat tombol Full Screen diklik:
-          - masuk UI onlyText dulu (tanpa nunggu API fullscreen)
-          - sinkronkan visibilitas remote
-          - lalu coba request fullscreen (kalau gagal, tetap aman) */
-    const rootEl = document.documentElement || document.body;
-    const btnFull = document.getElementById('perf_full');
-    if (btnFull){
-      btnFull.addEventListener('click', () => {
+  // --- Scroller fallback yang benar untuk Safari/iOS
+  function pickScroller(){
+    return (
+      document.getElementById('perf_area') ||
+      document.scrollingElement ||
+      document.documentElement ||
+      document.body
+    );
+  }
+
+  // --- Remote minimal: Start/Stop & Speed ± (px/s)
+  function ensureRemote(){
+    let el = document.getElementById('as_remote');
+    if (el) return el;
+
+    el = document.createElement('div');
+    el.id = 'as_remote';
+    el.style.cssText = [
+      'position:fixed',
+      'right:16px',
+      'bottom:calc(16px + env(safe-area-inset-bottom,0px))',
+      'z-index:2147483647',
+      'display:flex',
+      'gap:8px',
+      'align-items:center',
+      'background:rgba(15,23,42,.9)',
+      'color:#fff',
+      'border-radius:14px',
+      'padding:8px 10px',
+      'box-shadow:0 10px 24px rgba(0,0,0,.35)',
+      'backdrop-filter:saturate(1.2) blur(6px)',
+      'font:600 13px system-ui, -apple-system, Segoe UI, Roboto, sans-serif'
+    ].join(';');
+
+    el.innerHTML = `
+      <button id="as_play"  style="border:none;border-radius:10px;padding:6px 10px;cursor:pointer">Start</button>
+      <button id="as_stop"  style="border:none;border-radius:10px;padding:6px 10px;cursor:pointer">Stop</button>
+      <div style="display:inline-flex;gap:6px;align-items:center">
+        <button id="as_slow" style="border:none;border-radius:10px;padding:6px 10px;cursor:pointer">−</button>
+        <span id="as_speed_val" style="min-width:48px;display:inline-block;text-align:center">40 px/s</span>
+        <button id="as_fast" style="border:none;border-radius:10px;padding:6px 10px;cursor:pointer">＋</button>
+      </div>
+    `;
+
+    // pastikan tombol terlihat di theme/performance yang buat button transparan
+    [...el.querySelectorAll('button')].forEach(b=>{
+      b.style.background = 'rgba(255,255,255,.12)';
+      b.style.color = '#fff';
+    });
+
+    document.body.appendChild(el);
+    return el;
+  }
+
+  // --- Mesin autoscroll sederhana (tidak bergantung engine lain)
+  const Auto = {
+    scroller: null,
+    speed: parseInt(localStorage.getItem('cv_ios_scroll_speed')||'40',10), // px/detik
+    raf: 0, last: 0, running: false,
+
+    setSpeed(v){
+      this.speed = Math.max(10, Math.min(300, v|0));
+      localStorage.setItem('cv_ios_scroll_speed', String(this.speed));
+      const lab = document.getElementById('as_speed_val');
+      lab && (lab.textContent = `${this.speed} px/s`);
+    },
+    start(){
+      this.scroller = pickScroller();
+      if(!this.scroller) return;
+      if(this.running) return;
+      this.running = true;
+      this.last = performance.now();
+      const loop = (t)=>{
+        if(!this.running) return;
+        const dt = Math.max(0, (t - this.last) / 1000);
+        this.last = t;
+
+        const atBottom = (this.scroller.scrollTop + this.scroller.clientHeight + 2) >= this.scroller.scrollHeight;
+        if(atBottom){ this.stop(); return; }
+
+        this.scroller.scrollTop += this.speed * dt; // px
+        this.raf = requestAnimationFrame(loop);
+      };
+      this.raf = requestAnimationFrame(loop);
+    },
+    stop(){
+      this.running = false;
+      if(this.raf){ cancelAnimationFrame(this.raf); this.raf = 0; }
+    }
+  };
+
+  function mountRemoteIfNeeded(){
+    if(!isiOS) return; // Android/desktop tetap pakai cara lama kamu
+    const remote = ensureRemote();
+    // Tampilkan remote hanya di view Performance
+    remote.style.display = 'none';
+    window.addEventListener('cv:view', (e)=>{
+      const onPerf = e?.detail?.name === 'perf';
+      remote.style.display = onPerf ? 'flex' : 'none';
+
+      if(onPerf){
+        // Paksa layout "immersive" tanpa Fullscreen
         document.body.classList.add('onlyText');
-        // kalau fungsi ada di app kamu, panggil agar remote tampil
-        window.syncASVisibility && window.syncASVisibility();
 
-        const req = rootEl.requestFullscreen
-                || rootEl.webkitRequestFullscreen
-                || rootEl.msRequestFullscreen;
-        try {
-          req && req.call(rootEl);
-        } catch(e){}
-      });
-    }
-
-    /* 3) Fallback scroller yang benar di Safari/iOS.
-          Prioritaskan #perf_area, kalau tak ada pakai scrollingElement/body. */
-    function pickScroller(){
-      return (
-        document.getElementById('perf_area') ||
-        document.scrollingElement ||
-        document.documentElement ||
-        document.body
-      );
-    }
-    // setel global yang dipakai engine autoscroll kamu
-    window.perfScrollEl = pickScroller();
-
-    // pastikan #perf_area jelas bisa di-scroll agar konsisten lintas browser
-    const perfArea = document.getElementById('perf_area');
-    if (perfArea){
-      perfArea.style.overflow = 'auto';
-      perfArea.style.maxHeight = '100dvh';
-      perfArea.style.webkitOverflowScrolling = 'touch';
-    }
-
-    /* 4) Tiap view Performance dibuka ulang → resync remote & scroller */
-    window.addEventListener('cv:view', (e) => {
-      if (e?.detail?.name === 'perf'){
-        window.perfScrollEl = pickScroller();
-        window.syncASVisibility && window.syncASVisibility();
+        // Pastikan area bisa scroll nyaman di iOS
+        const perfArea = document.getElementById('perf_area');
+        if (perfArea){
+          perfArea.style.overflow = 'auto';
+          perfArea.style.maxHeight = '100dvh';
+          perfArea.style.webkitOverflowScrolling = 'touch';
+        }
+      }else{
+        Auto.stop();
       }
     });
 
-    /* 5) Jika ada perubahan fullscreen nyata → resync remote */
-    ['fullscreenchange','webkitfullscreenchange','msfullscreenchange']
-      .forEach(ev => document.addEventListener(ev, () => {
-        window.syncASVisibility && window.syncASVisibility();
-      }));
+    // Wire up controls
+    remote.querySelector('#as_play') .addEventListener('click', ()=>Auto.start());
+    remote.querySelector('#as_stop') .addEventListener('click', ()=>Auto.stop());
+    remote.querySelector('#as_slow') .addEventListener('click', ()=>Auto.setSpeed(Auto.speed - 10));
+    remote.querySelector('#as_fast') .addEventListener('click', ()=>Auto.setSpeed(Auto.speed + 10));
+
+    // Set label awal
+    Auto.setSpeed(Auto.speed);
+
+    // Override tombol "⛶ Full Screen" khusus iOS → jadikan toggle immersive saja
+    const btnFull = document.getElementById('perf_full');
+    if(btnFull){
+      btnFull.addEventListener('click', (ev)=>{
+        if(!isiOS) return;            // biarkan non-iOS jalan seperti biasa
+        ev.preventDefault();
+        // toggle onlyText tanpa memanggil Fullscreen API
+        const on = document.body.classList.toggle('onlyText');
+        // kalau keluar immersive, hentikan autoscroll
+        if(!on) Auto.stop();
+      }, { capture:true }); // tangkap duluan supaya mencegah handler lama
+    }
   }
 
-  if (document.readyState === 'loading')
-    document.addEventListener('DOMContentLoaded', applySafeIOSPatch);
-  else
-    applySafeIOSPatch();
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', mountRemoteIfNeeded);
+  } else {
+    mountRemoteIfNeeded();
+  }
 })();
 </script>
 </body>
