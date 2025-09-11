@@ -2223,16 +2223,33 @@ wrap.innerHTML = `
     const perf=document.getElementById('perf_area');
 const metaEl = document.getElementById('perf_meta');
 
+// ==== PATCH: PERFORMANCE HEADER ONLY ====
 function loadPerfMeta(){
-  try { return JSON.parse(localStorage.getItem('cv_perf_meta')||'null'); }
-  catch { return null; }
+  try { return JSON.parse(localStorage.getItem('cv_perf_meta')||'{}'); }
+  catch(e){ return null; }
 }
+
+function cv_formatBeat(m){
+  // 1) Kalau sudah ada string beat dari mana pun, pakai itu.
+  if (m?.beatStr && typeof m.beatStr === 'string') return m.beatStr;
+
+  // 2) Fallback berbasis preset editor:
+  //    Editor cuma punya 2/4, 3/4, 4/4, 6/8 → kalau beat=6 artinya 6/8.
+  const num = m?.beat || 4;
+  if (num === 6) return '6/8';
+  return `${num}/4`;
+}
+
+// ==== END PATCH ====
 
 function showPerfMeta(){
   if(!metaEl) return;
   const m = loadPerfMeta();
   if(!m){ metaEl.textContent = ''; return; }
-  metaEl.textContent = `${m.title || '(Untitled)'} • Key: ${m.key || 'C'} • Beat: ${(m.beat||4)}/4`;
+
+  const textBeat = cv_formatBeat(m); // <- sekarang fallback: 6 → "6/8", atau pakai beatStr
+  metaEl.textContent =
+    `${m.title || '(Untitled)'} • Key: ${m.key || 'C'} • Beat: ${textBeat}`;
 }
     const tDown=document.getElementById('perf_tDown');
     const tUp=document.getElementById('perf_tUp');
@@ -2496,7 +2513,35 @@ backLib.addEventListener('click', ()=>{
     document.addEventListener('fullscreenchange', onFsChange);
     document.addEventListener('webkitfullscreenchange', onFsChange);
     document.addEventListener('MSFullscreenChange', onFsChange);
+// ==== Show auto-scroll remote only in Full Screen (Performance) ====
+const asRemote = document.getElementById('as_remote');
 
+function isFullscreen(){
+  return !!(document.fullscreenElement
+         || document.webkitFullscreenElement
+         || document.msFullscreenElement);
+}
+function isPerfView(e){
+  // kalau dipanggil via cv:view, cek detailnya; kalau tidak, cek body class/view state kamu
+  return e?.detail?.name ? (e.detail.name === 'perf') : true;
+}
+function syncASVisibility(){
+  if (!asRemote) return;
+  // tampilkan hanya jika sedang Full Screen
+  if (isFullscreen()) asRemote.classList.remove('hidden');
+  else                asRemote.classList.add('hidden');
+}
+
+// Panggil saat masuk Performance & setiap FS berubah
+syncASVisibility();                  // render awal perf
+document.addEventListener('fullscreenchange', syncASVisibility);
+document.addEventListener('webkitfullscreenchange', syncASVisibility);
+document.addEventListener('MSFullscreenChange', syncASVisibility);
+
+// Saat view berganti, pastikan disembunyikan jika keluar dari perf
+window.addEventListener('cv:view', (e)=>{
+  if (!isPerfView(e)) asRemote?.classList.add('hidden');
+});
   }); // <== penutup cv_onViewInit('perf', …)
   </script>
 
@@ -3297,6 +3342,206 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
     const newBtn = document.querySelector('#editorView .actions .btn.new, #editorView .actions [data-role="new"], #editorView .actions [aria-label="+"]');
     if (newBtn) newBtn.click();
   });
+</script>
+<!-- === AUTO-SCROLL REMOTE (FAB Expand) === -->
+<div id="as_remote" class="as-remote hidden" aria-label="Auto scroll control">
+  <button id="as_play" class="as-btn as-play" aria-pressed="false" title="Play / Stop">
+    <span class="as-ico">▶</span>
+  </button>
+<button id="as_plus" class="as-btn as-plus" title="Faster (+)">
+  <span class="as-ico">＋</span>
+</button>
+<div id="as_speedLabel" class="as-label">30</div>
+<button id="as_minus" class="as-btn as-minus" title="Slower (−)">
+  <span class="as-ico">−</span>
+</button>
+</div>
+
+<style>
+.as-label{
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: var(--as-gap);
+  text-shadow: 0 1px 3px rgba(0,0,0,.5);
+  font-variant-numeric: tabular-nums;
+}
+  :root{
+    --as-size: 44px;
+    --as-gap: 8px;
+    --as-ico-size: 18px;
+    --as-shadow: 0 6px 18px rgba(0,0,0,.25);
+  }
+
+  .as-remote{
+    position: fixed;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 9999;
+    pointer-events: auto;
+    opacity: .6;
+    transition: opacity .2s;
+  }
+  .as-remote.expanded{ opacity: 1; }
+
+  .as-remote.hidden{ display:none !important; }
+
+  .as-btn{
+    width: var(--as-size);
+    height: var(--as-size);
+    border-radius: 50%;
+    border: 0;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    background: linear-gradient(145deg, rgba(14,165,233,.85), rgba(56,189,248,.85));
+    color: #fff;
+    box-shadow: var(--as-shadow);
+    margin-bottom: var(--as-gap);
+    font-size: var(--as-ico-size);
+    font-weight: 700;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .15s ease, filter .15s ease;
+  }
+  .as-btn:hover{ filter: brightness(1.05); }
+  .as-btn:active{ transform: scale(.95); }
+
+  /* saat collapsed: hanya tombol Play yg kelihatan */
+  .as-remote:not(.expanded) #as_plus,
+  .as-remote:not(.expanded) #as_minus{
+    display:none;
+  }
+
+  /* state playing */
+  .as-play[aria-pressed="true"] .as-ico{ content:"⏸"; }
+  .as-play[aria-pressed="true"]{ background: linear-gradient(145deg, #06b6d4, #67e8f9); }
+</style>
+
+<script>
+(function(){
+  // ====== KONFIG ======
+  const AS_IDLE   = 4000;   // ms: auto-collapse setelah idle (ubah sesukamu)
+  const AS_MIN    = 5;      // px/s minimum
+  const AS_MAX    = 120;    // px/s maksimum
+  const AS_STEP   = 2;      // px/s tiap tekan +/-
+
+  // ====== ELEMENTS ======
+  const asRemote = document.getElementById('as_remote');
+  const btnPlay  = document.getElementById('as_play');
+  const btnPlus  = document.getElementById('as_plus');
+  const btnMinus = document.getElementById('as_minus');
+  const perfScrollEl = document.getElementById('perf_area') || document.documentElement;
+
+  // ====== STATE ======
+  let AS_on = false;
+  let AS_speed = parseFloat(localStorage.getItem('cv_as_speed') || '30');
+  let AS_raf = null, idleTimer = null;
+
+  // ====== UTIL ======
+  function updateSpeedLabel(){
+    const lbl = document.getElementById('as_speedLabel');
+    if (lbl) lbl.textContent = Math.round(AS_speed);
+  }
+  function isFullscreen(){
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  }
+  function fromRemote(ev){
+    return ev.target && ev.target.closest && ev.target.closest('#as_remote');
+  }
+
+  // ====== SHOW/HIDE DI FULLSCREEN ======
+  function syncASVisibility(){
+    if(!asRemote) return;
+    if(isFullscreen()) asRemote.classList.remove('hidden');
+    else asRemote.classList.add('hidden');
+    collapse();
+  }
+  document.addEventListener('fullscreenchange', syncASVisibility);
+  document.addEventListener('webkitfullscreenchange', syncASVisibility);
+  document.addEventListener('MSFullscreenChange',    syncASVisibility);
+
+  // ====== EXPAND/COLLAPSE ======
+  function expand(){
+    asRemote.classList.add('expanded');
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(collapse, AS_IDLE);
+  }
+  function collapse(){
+    asRemote.classList.remove('expanded');
+    clearTimeout(idleTimer);
+  }
+
+  // ====== ENGINE ======
+  function AS_start(){
+    if(AS_on) return;
+    AS_on = true;
+    btnPlay.setAttribute('aria-pressed','true');
+    btnPlay.querySelector('.as-ico').textContent = '⏸';
+
+    let lastTs = 0;
+    const step = (ts)=>{
+      if(!AS_on) return;
+      if(!lastTs) lastTs = ts;
+      const dt = (ts - lastTs) / 1000; lastTs = ts;
+
+      perfScrollEl.scrollTop += AS_speed * dt;
+
+      const atBottom = (perfScrollEl.scrollTop + perfScrollEl.clientHeight + 1) >= perfScrollEl.scrollHeight;
+      if(atBottom){ AS_stop(); return; }
+
+      AS_raf = requestAnimationFrame(step);
+    };
+    AS_raf = requestAnimationFrame(step);
+  }
+  function AS_stop(){
+    AS_on = false;
+    if(AS_raf) cancelAnimationFrame(AS_raf), AS_raf = null;
+    btnPlay.setAttribute('aria-pressed','false');
+    btnPlay.querySelector('.as-ico').textContent = '▶';
+  }
+
+  // ====== SPEED ======
+  function changeSpeed(d){
+    AS_speed = Math.min(AS_MAX, Math.max(AS_MIN, AS_speed + d));
+    localStorage.setItem('cv_as_speed', String(AS_speed));
+    updateSpeedLabel();
+    if(AS_on) expand(); // tetap jalan; hanya update speed & jaga expanded
+  }
+
+  // ====== HANDLERS (PAUSE 2x KLIK) ======
+  btnPlay.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    if(AS_on){
+      // sedang berjalan → klik pertama (collapsed) hanya expand; klik kedua (expanded) baru stop
+      if(asRemote.classList.contains('expanded')) AS_stop();
+      else expand();
+    } else {
+      // sedang off → start + expand
+      AS_start(); expand();
+    }
+  });
+  btnPlus .addEventListener('click', (e)=>{ e.stopPropagation(); changeSpeed( AS_STEP); });
+  btnMinus.addEventListener('click', (e)=>{ e.stopPropagation(); changeSpeed(-AS_STEP); });
+
+  // ====== USER OVERRIDE (stop HANYA saat gesture scroll/kb di LUAR remote) ======
+  function onUserInteract(ev){ if(fromRemote(ev)) return; if(AS_on) AS_stop(); }
+  window.addEventListener('wheel',     onUserInteract, {passive:true});
+  window.addEventListener('touchmove', onUserInteract, {passive:true});
+  window.addEventListener('keydown', (e)=>{
+    if(fromRemote(e)) return;
+    if(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' '].includes(e.key)) onUserInteract(e);
+  }, {passive:true});
+  // (SENGAJA tidak pakai 'scroll' & 'mousedown' agar tidak konflik)
+
+  // ====== INIT ======
+  syncASVisibility();
+  updateSpeedLabel();
+})();
 </script>
 </body>
 </html>
