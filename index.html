@@ -3590,5 +3590,47 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
   moRemote.observe(asRemote, { attributes: true, attributeFilter: ['class', 'aria-hidden'] });
 })();
 </script>
+...
+
+  <!-- iOS-only fixes -->
+  <style>
+  @supports (-webkit-touch-callout: none) {
+    body.onlyText #perf_area{
+      height: 100vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    html, body { scroll-behavior: auto; }
+  }
+  </style>
+
+  <script>
+  (function () {
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+             || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!isIOS) return;
+
+    var asRemote = document.getElementById('as_remote');
+
+    function ensureRemoteVisible() {
+      if (asRemote && document.body.classList.contains('onlyText')) {
+        asRemote.classList.remove('hidden');
+        asRemote.removeAttribute('aria-hidden');
+      }
+    }
+
+    ensureRemoteVisible();
+
+    window.addEventListener('cv:view', function (e) {
+      if (e.detail && e.detail.name === 'perf') {
+        requestAnimationFrame(ensureRemoteVisible);
+        setTimeout(ensureRemoteVisible, 60);
+      }
+    });
+
+    document.addEventListener('fullscreenchange', ensureRemoteVisible);
+    document.addEventListener('webkitfullscreenchange', ensureRemoteVisible);
+  })();
+  </script>
 </body>
 </html>
