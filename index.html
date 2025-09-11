@@ -3543,94 +3543,109 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
   updateSpeedLabel();
 })();
 </script>
-<script>
-/* iOS OnlyText visibility shim — non-invasive */
+  <script>
+/* iOS: keep auto-scroll running even when remote is hidden/collapsed */
 (function () {
   var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
            || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (!isIOS) return;
 
-  var asRemote = document.getElementById('as_remote');
-  if (!asRemote) return;
+  // --- STATE ---
+  var active = false;           // status auto-scroll menurut pengguna (▶/stop)
+  var userPaused = false;       // pengguna menghentikan manual
+  var perf = document.getElementById('perf_area');
 
-  function ensureVisibleIfOnlyText() {
-    if (document.body.classList.contains('onlyText')) {
-      asRemote.classList.remove('hidden');
-      asRemote.removeAttribute('aria-hidden');
-    }
+  // Pastikan kontainer memang scroller (sesuai patch sebelumnya)
+  function onlyText() { return document.body.classList.contains('onlyText'); }
+  function inPerfView(detail){ return detail && detail.name === 'perf'; }
+
+  // --- HOOK fungsi kamu (tanpa ubah Android) ---
+  var _start = window.cvStartAutoScroll;
+  var _stop  = window.cvStopAutoScroll;
+
+  window.cvStartAutoScroll = function(speed){
+    userPaused = false;     // pengguna minta jalan
+    active = true;
+    // panggil engine asli kamu (kontainer-scroll)
+    if (typeof _start === 'function') _start(speed);
+  };
+
+  window.cvStopAutoScroll = function(){
+    userPaused = true;      // pengguna minta berhenti
+    active = false;
+    if (typeof _stop === 'function') _stop();
+  };
+
+  // --- JANGAN BERHENTI HANYA KARENA REMOTE TERSEMBUNYI ---
+  var asRemote = document.getElementById('as_remote');
+  if (asRemote) {
+    new MutationObserver(function(){
+      // Jika remote di-hide/collapsed saat kita masih aktif,
+      // JANGAN stop; bila engine keburu stop oleh script lain, kita re-start.
+      if (onlyText() && active && !userPaused) {
+        // cek: kalau tidak sedang scroll (engine kamu biasanya set flag internal),
+        // kita panggil start lagi dengan kecepatan terakhir.
+        // Jika kamu punya getter speed, panggil di sini; kalau tidak, biarkan tanpa arg.
+        requestAnimationFrame(function(){ if (typeof _start === 'function') _start(); });
+      }
+    }).observe(asRemote, { attributes: true, attributeFilter: ['class','style','aria-hidden'] });
   }
 
-  // 1) Jalankan segera
-  ensureVisibleIfOnlyText();
-
-  // 2) Observe perubahan class <body> (saat enterOnlyTextUI() jalan)
-  var moBody = new MutationObserver(ensureVisibleIfOnlyText);
-  moBody.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-
-  // 3) Re-run setelah pindah ke Performance view
-  window.addEventListener('cv:view', function (e) {
-    if (e.detail && e.detail.name === 'perf') {
-      requestAnimationFrame(ensureVisibleIfOnlyText);
-      setTimeout(ensureVisibleIfOnlyText, 50);
-      setTimeout(ensureVisibleIfOnlyText, 250);
+  // --- BERHENTI HANYA PADA KONDISI YANG KITA INGINKAN ---
+  // 1) Ganti view → stop
+  window.addEventListener('cv:view', function(e){
+    if (!inPerfView(e.detail)) {
+      active = false; userPaused = true;
+      if (typeof _stop === 'function') _stop();
+    } else {
+      // saat masuk Performance lagi, jika sebelumnya aktif & bukan userPaused, lanjutkan
+      if (onlyText() && active && !userPaused && typeof _start === 'function') {
+        requestAnimationFrame(function(){ _start(); });
+      }
     }
   }, { passive: true });
 
-  // 4) Kalau user tekan tombol Fullscreen (di iPad no-op), tetap coba tampilkan
-  document.addEventListener('fullscreenchange', ensureVisibleIfOnlyText);
-  document.addEventListener('webkitfullscreenchange', ensureVisibleIfOnlyText);
-
-  // 5) Penjaga terakhir: kalau ada script lain yang nge-hide lagi
-  var moRemote = new MutationObserver(function(muts){
-    if (document.body.classList.contains('onlyText') && asRemote.classList.contains('hidden')) {
-      asRemote.classList.remove('hidden');
-      asRemote.removeAttribute('aria-hidden');
+  // 2) App/tab tidak aktif → stop sementara
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) {
+      if (typeof _stop === 'function') _stop();
+    } else {
+      // balik aktif lagi bila memang statusnya aktif & bukan userPaused
+      if (onlyText() && active && !userPaused && typeof _start === 'function') _start();
     }
   });
-  moRemote.observe(asRemote, { attributes: true, attributeFilter: ['class', 'aria-hidden'] });
+
+  // 3) Interaksi pengguna → stop (hormati pengguna)
+  ['pointerdown','wheel','touchstart','keydown','scroll'].forEach(function(evt){
+    window.addEventListener(evt, function(ev){
+      // kalau interaksi berasal dari tombol remote (play/plus/minus), jangan stop
+      var el = ev.target;
+      if (el && (el.closest && el.closest('#as_remote'))) return;
+      if (typeof _stop === 'function') _stop();
+      active = false; userPaused = true;
+    }, { passive: true });
+  });
+
+  // 4) Mentok bawah kontainer → stop
+  function atBottom(){
+    var scroller = perf || document.scrollingElement || document.documentElement;
+    return scroller.scrollTop + scroller.clientHeight + 1 >= scroller.scrollHeight;
+  }
+  // cek berkala ringan (tidak ganggu performa)
+  setInterval(function(){
+    if (onlyText() && active && !userPaused && atBottom()) {
+      if (typeof _stop === 'function') _stop();
+      active = false; userPaused = true;
+    }
+  }, 500);
+
+  // Bonus: blur input saat tekan ▶ agar iOS tidak “menahan” scroll
+  var btnPlay = document.getElementById('as_play');
+  if (btnPlay) btnPlay.addEventListener('click', function(){
+    var af = document.activeElement;
+    if (af && (af.tagName === 'INPUT' || af.tagName === 'TEXTAREA' || af.isContentEditable)) af.blur();
+  });
 })();
 </script>
-...
-
-  <!-- iOS-only fixes -->
-  <style>
-  @supports (-webkit-touch-callout: none) {
-    body.onlyText #perf_area{
-      height: 100vh;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    html, body { scroll-behavior: auto; }
-  }
-  </style>
-
-  <script>
-  (function () {
-    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-             || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    if (!isIOS) return;
-
-    var asRemote = document.getElementById('as_remote');
-
-    function ensureRemoteVisible() {
-      if (asRemote && document.body.classList.contains('onlyText')) {
-        asRemote.classList.remove('hidden');
-        asRemote.removeAttribute('aria-hidden');
-      }
-    }
-
-    ensureRemoteVisible();
-
-    window.addEventListener('cv:view', function (e) {
-      if (e.detail && e.detail.name === 'perf') {
-        requestAnimationFrame(ensureRemoteVisible);
-        setTimeout(ensureRemoteVisible, 60);
-      }
-    });
-
-    document.addEventListener('fullscreenchange', ensureRemoteVisible);
-    document.addEventListener('webkitfullscreenchange', ensureRemoteVisible);
-  })();
-  </script>
 </body>
 </html>
