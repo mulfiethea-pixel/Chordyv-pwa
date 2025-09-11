@@ -3543,108 +3543,83 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
   updateSpeedLabel();
 })();
 </script>
-  <script>
-/* iOS: keep auto-scroll running even when remote is hidden/collapsed */
-(function () {
-  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-           || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  if (!isIOS) return;
+<script>
+/* ==== ChordyV — Safe-iOS Patch (Performance Auto-Scroll & Remote) ==== */
+/* Tempelkan blok ini persis sebelum </body>. Tidak mengubah logic lain. */
+(function(){
+  function applySafeIOSPatch(){
+    /* 1) Fullscreen fallback di iOS:
+          anggap "immersive" saat body.onlyText aktif agar remote tampil */
+    window.isFullscreen = function(){
+      return !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.msFullscreenElement ||
+        document.body.classList.contains('onlyText') // iOS/PWA fallback
+      );
+    };
 
-  // --- STATE ---
-  var active = false;           // status auto-scroll menurut pengguna (▶/stop)
-  var userPaused = false;       // pengguna menghentikan manual
-  var perf = document.getElementById('perf_area');
+    /* 2) Saat tombol Full Screen diklik:
+          - masuk UI onlyText dulu (tanpa nunggu API fullscreen)
+          - sinkronkan visibilitas remote
+          - lalu coba request fullscreen (kalau gagal, tetap aman) */
+    const rootEl = document.documentElement || document.body;
+    const btnFull = document.getElementById('perf_full');
+    if (btnFull){
+      btnFull.addEventListener('click', () => {
+        document.body.classList.add('onlyText');
+        // kalau fungsi ada di app kamu, panggil agar remote tampil
+        window.syncASVisibility && window.syncASVisibility();
 
-  // Pastikan kontainer memang scroller (sesuai patch sebelumnya)
-  function onlyText() { return document.body.classList.contains('onlyText'); }
-  function inPerfView(detail){ return detail && detail.name === 'perf'; }
+        const req = rootEl.requestFullscreen
+                || rootEl.webkitRequestFullscreen
+                || rootEl.msRequestFullscreen;
+        try {
+          req && req.call(rootEl);
+        } catch(e){}
+      });
+    }
 
-  // --- HOOK fungsi kamu (tanpa ubah Android) ---
-  var _start = window.cvStartAutoScroll;
-  var _stop  = window.cvStopAutoScroll;
+    /* 3) Fallback scroller yang benar di Safari/iOS.
+          Prioritaskan #perf_area, kalau tak ada pakai scrollingElement/body. */
+    function pickScroller(){
+      return (
+        document.getElementById('perf_area') ||
+        document.scrollingElement ||
+        document.documentElement ||
+        document.body
+      );
+    }
+    // setel global yang dipakai engine autoscroll kamu
+    window.perfScrollEl = pickScroller();
 
-  window.cvStartAutoScroll = function(speed){
-    userPaused = false;     // pengguna minta jalan
-    active = true;
-    // panggil engine asli kamu (kontainer-scroll)
-    if (typeof _start === 'function') _start(speed);
-  };
+    // pastikan #perf_area jelas bisa di-scroll agar konsisten lintas browser
+    const perfArea = document.getElementById('perf_area');
+    if (perfArea){
+      perfArea.style.overflow = 'auto';
+      perfArea.style.maxHeight = '100dvh';
+      perfArea.style.webkitOverflowScrolling = 'touch';
+    }
 
-  window.cvStopAutoScroll = function(){
-    userPaused = true;      // pengguna minta berhenti
-    active = false;
-    if (typeof _stop === 'function') _stop();
-  };
-
-  // --- JANGAN BERHENTI HANYA KARENA REMOTE TERSEMBUNYI ---
-  var asRemote = document.getElementById('as_remote');
-  if (asRemote) {
-    new MutationObserver(function(){
-      // Jika remote di-hide/collapsed saat kita masih aktif,
-      // JANGAN stop; bila engine keburu stop oleh script lain, kita re-start.
-      if (onlyText() && active && !userPaused) {
-        // cek: kalau tidak sedang scroll (engine kamu biasanya set flag internal),
-        // kita panggil start lagi dengan kecepatan terakhir.
-        // Jika kamu punya getter speed, panggil di sini; kalau tidak, biarkan tanpa arg.
-        requestAnimationFrame(function(){ if (typeof _start === 'function') _start(); });
+    /* 4) Tiap view Performance dibuka ulang → resync remote & scroller */
+    window.addEventListener('cv:view', (e) => {
+      if (e?.detail?.name === 'perf'){
+        window.perfScrollEl = pickScroller();
+        window.syncASVisibility && window.syncASVisibility();
       }
-    }).observe(asRemote, { attributes: true, attributeFilter: ['class','style','aria-hidden'] });
+    });
+
+    /* 5) Jika ada perubahan fullscreen nyata → resync remote */
+    ['fullscreenchange','webkitfullscreenchange','msfullscreenchange']
+      .forEach(ev => document.addEventListener(ev, () => {
+        window.syncASVisibility && window.syncASVisibility();
+      }));
   }
 
-  // --- BERHENTI HANYA PADA KONDISI YANG KITA INGINKAN ---
-  // 1) Ganti view → stop
-  window.addEventListener('cv:view', function(e){
-    if (!inPerfView(e.detail)) {
-      active = false; userPaused = true;
-      if (typeof _stop === 'function') _stop();
-    } else {
-      // saat masuk Performance lagi, jika sebelumnya aktif & bukan userPaused, lanjutkan
-      if (onlyText() && active && !userPaused && typeof _start === 'function') {
-        requestAnimationFrame(function(){ _start(); });
-      }
-    }
-  }, { passive: true });
-
-  // 2) App/tab tidak aktif → stop sementara
-  document.addEventListener('visibilitychange', function(){
-    if (document.hidden) {
-      if (typeof _stop === 'function') _stop();
-    } else {
-      // balik aktif lagi bila memang statusnya aktif & bukan userPaused
-      if (onlyText() && active && !userPaused && typeof _start === 'function') _start();
-    }
-  });
-
-  // 3) Interaksi pengguna → stop (hormati pengguna)
-  ['pointerdown','wheel','touchstart','keydown','scroll'].forEach(function(evt){
-    window.addEventListener(evt, function(ev){
-      // kalau interaksi berasal dari tombol remote (play/plus/minus), jangan stop
-      var el = ev.target;
-      if (el && (el.closest && el.closest('#as_remote'))) return;
-      if (typeof _stop === 'function') _stop();
-      active = false; userPaused = true;
-    }, { passive: true });
-  });
-
-  // 4) Mentok bawah kontainer → stop
-  function atBottom(){
-    var scroller = perf || document.scrollingElement || document.documentElement;
-    return scroller.scrollTop + scroller.clientHeight + 1 >= scroller.scrollHeight;
-  }
-  // cek berkala ringan (tidak ganggu performa)
-  setInterval(function(){
-    if (onlyText() && active && !userPaused && atBottom()) {
-      if (typeof _stop === 'function') _stop();
-      active = false; userPaused = true;
-    }
-  }, 500);
-
-  // Bonus: blur input saat tekan ▶ agar iOS tidak “menahan” scroll
-  var btnPlay = document.getElementById('as_play');
-  if (btnPlay) btnPlay.addEventListener('click', function(){
-    var af = document.activeElement;
-    if (af && (af.tagName === 'INPUT' || af.tagName === 'TEXTAREA' || af.isContentEditable)) af.blur();
-  });
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', applySafeIOSPatch);
+  else
+    applySafeIOSPatch();
 })();
 </script>
 </body>
