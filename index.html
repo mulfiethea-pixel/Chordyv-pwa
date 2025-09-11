@@ -3543,5 +3543,46 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
   updateSpeedLabel();
 })();
 </script>
+<script>
+/* iOS visibility shim — non-invasive */
+(function () {
+  // Deteksi iOS/iPadOS (termasuk iPadOS Safari yang ngaku "Mac" dgn touch)
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+           || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!isIOS) return;
+
+  var asRemote = document.getElementById('as_remote');
+  if (!asRemote) return;
+
+  function iosEnsureRemote() {
+    // Tampilkan remote kalau kamu sudah masuk Only Text,
+    // walaupun perangkat tidak benar-benar masuk fullscreen.
+    if (document.body.classList.contains('onlyText')) {
+      asRemote.classList.remove('hidden');
+      asRemote.removeAttribute('aria-hidden');
+    }
+  }
+
+  // 1) Jalankan segera (kalau user sudah di Performance view)
+  iosEnsureRemote();
+
+  // 2) Re-run saat kamu pindah view ke Performance
+  window.addEventListener('cv:view', function (e) {
+    if (e.detail && e.detail.name === 'perf') {
+      // beri satu frame supaya class onlyText/DOM beres dulu
+      requestAnimationFrame(iosEnsureRemote);
+    }
+  });
+
+  // 3) Re-run kalau ada perubahan fullscreen (beberapa iPad return no-op)
+  document.addEventListener('fullscreenchange', iosEnsureRemote);
+  document.addEventListener('webkitfullscreenchange', iosEnsureRemote);
+
+  // 4) Last-resort guard: kalau ada code lain yang nyembunyiin lagi,
+  //    kita balikin tampil saat class pada asRemote berubah.
+  var mo = new MutationObserver(iosEnsureRemote);
+  mo.observe(asRemote, { attributes: true, attributeFilter: ['class'] });
+})();
+</script>
 </body>
 </html>
