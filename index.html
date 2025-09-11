@@ -3425,24 +3425,24 @@ btnPause = document.getElementById('perf_pause');
 
     // Bind tombol +/-
     if (btnInc){
-      btnInc.addEventListener('mousedown', ()=>holdStart(+2, incRef));
+      btnInc.addEventListener('mousedown', ()=>holdStart(+1, incRef));
       btnInc.addEventListener('mouseup',   ()=>holdStop(incRef));
       btnInc.addEventListener('mouseleave',()=>holdStop(incRef));
-      btnInc.addEventListener('touchstart', (e)=>{ e.preventDefault(); holdStart(+2, incRef); }, {passive:false});
+      btnInc.addEventListener('touchstart', (e)=>{ e.preventDefault(); holdStart(+1, incRef); }, {passive:false});
       btnInc.addEventListener('touchend',   ()=>holdStop(incRef));
       btnInc.addEventListener('touchcancel',()=>holdStop(incRef));
       // single tap fallback
-      btnInc.addEventListener('click', ()=> setSpeed(speed+2));
+      btnInc.addEventListener('click', ()=> setSpeed(speed+1));
     }
     if (btnDec){
-      btnDec.addEventListener('mousedown', ()=>holdStart(-2, decRef));
+      btnDec.addEventListener('mousedown', ()=>holdStart(-1, decRef));
       btnDec.addEventListener('mouseup',   ()=>holdStop(decRef));
       btnDec.addEventListener('mouseleave',()=>holdStop(decRef));
-      btnDec.addEventListener('touchstart', (e)=>{ e.preventDefault(); holdStart(-2, decRef); }, {passive:false});
+      btnDec.addEventListener('touchstart', (e)=>{ e.preventDefault(); holdStart(-1, decRef); }, {passive:false});
       btnDec.addEventListener('touchend',   ()=>holdStop(decRef));
       btnDec.addEventListener('touchcancel',()=>holdStop(decRef));
       // single tap fallback
-      btnDec.addEventListener('click', ()=> setSpeed(speed-2));
+      btnDec.addEventListener('click', ()=> setSpeed(speed-1));
     }
   }
 
