@@ -217,21 +217,41 @@ body.theme-navy #cv_header{
     button[data-beat][aria-pressed="true"]{
       background:var(--accent)!important;color:var(--accent-fg)!important;border-color:transparent!important;
     }
-
-    /* Library: 1 kolom, font 13px, highlight judul */
-    #libraryView .list{margin-top:6px;max-height:52vh;overflow:auto;border:1px solid var(--border);border-radius:12px}
-    #libraryView .item{padding:10px 12px;border-top:1px solid var(--border);background:var(--card);cursor:pointer}
-    #libraryView .item:first-child{border-top:0;border-top-left-radius:12px;border-top-right-radius:12px}
-    #libraryView .item:last-child{border-bottom-left-radius:12px;border-bottom-right-radius:12px}
-    #libraryView .item h3{margin:0;font-size:13px;line-height:1.35}
-    #libraryView .item .sub{display:none}
-    #libraryView .item.active{background:var(--accent);color:var(--accent-fg)}
-    #libraryView .item.active h3{color:var(--accent-fg)}
-    #libraryView .counter{font-size:12px;color:var(--muted)}
-    .inline{display:flex;gap:10px;align-items:flex-end;flex-wrap:nowrap}
-    .inline .grow{flex:1;min-width:180px}
-    @media (max-width:520px){.inline{flex-wrap:wrap}.inline .grow{min-width:unset;flex:1 1 100%}}
-
+/* Library: tabel list lagu */
+#libraryView .table-wrap{
+  margin-top:6px; max-height:52vh; overflow:auto; border:1px solid var(--border); border-radius:12px;
+}
+#libraryView .lib-table{ width:100%; border-collapse:separate; border-spacing:0; font-size:13px; }
+#libraryView thead th {
+  position: sticky;
+  top: 0;
+  background: linear-gradient(135deg, var(--accent) 0%, #4c84ff 100%);
+  color: var(--accent-fg);
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 600;
+  border-bottom: none;
+}
+#libraryView thead th .icon {
+  fill: currentColor;
+}
+#libraryView .lib-table tbody tr{
+  cursor:pointer; background:var(--card);
+}
+#libraryView .lib-table tbody td{
+  padding:10px 12px; border-top:1px solid var(--border);
+}
+#libraryView .lib-table tbody tr:first-child td{ border-top:0; }
+#libraryView .lib-table tbody tr.active{
+  background:var(--accent); color:var(--accent-fg);
+}
+/* Atur proporsi kolom tabel */
+#libraryView thead tr,
+#libraryView .lib-table tbody tr {
+  display: grid;
+  grid-template-columns: 40% 20% 20% 20%; /* Songs 40%, Keys/Beat/Folder 20% */
+}
+#libraryView .lib-table tbody tr.active td{ color:var(--accent-fg); }
  /* =================== PERFORMANCE (2 WARNA) =================== */
 
 /* Latar view ikut tema */
@@ -523,6 +543,21 @@ body.onlyText #perf_exitImm{
   border-radius: 12px;
   height: 38px;
   padding: 8px 12px;
+}
+#libraryView .icon{
+  width:14px;
+  height:14px;
+  margin-right:6px;
+  vertical-align:middle;
+  fill:currentColor; /* ikut warna teks */
+}
+#libraryView .icon-label{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+#libraryView .icon-label select{
+  height:28px;
 }
 
 /* Opsional: center-kan Search & kontrol pada layar kecil */
@@ -1915,10 +1950,12 @@ document.getElementById('ed_btnLibrary')?.addEventListener('click', () => {
   </script>
 <!-- ===== FEATURE: LIBRARY ===== -->
 <!-- =================== LIBRARY VIEW + MODULE =================== -->
-  <script>
-  cv_onViewInit('lib', ()=>{
-    const wrap=document.getElementById('libraryView');
-    wrap.innerHTML = `
+ <script>
+cv_onViewInit('lib', ()=>{
+  const wrap = document.getElementById('libraryView');
+
+  // ---------- VIEW HTML ----------
+  wrap.innerHTML = `
   <div class="card">
     <!-- Baris 1: Search -->
     <div class="row">
@@ -1927,193 +1964,234 @@ document.getElementById('ed_btnLibrary')?.addEventListener('click', () => {
       </div>
     </div>
 
-    <!-- Baris 2: Tombol Folder + Select Keys/Folders dalam SATU baris -->
-<div class="row compact" style="margin-top:10px">
-  <!-- Group 1: Folder actions -->
-  <div class="seg tight">
-    <button id="lib_btnAddFolder" class="btn">+ Add Folder</button>
-    <button id="lib_btnRenameFolder" class="btn">Rename</button>
-    <button id="lib_btnDeleteFolder" class="btn">Delete</button>
-  </div>
+    <!-- Baris 2: Folder actions + Filters -->
+    <div class="row compact" style="margin-top:10px">
+      <!-- Group 1: Folder actions -->
+      <div class="seg tight">
+        <button id="lib_btnAddFolder" class="btn">+ Add Folder</button>
+        <button id="lib_btnRenameFolder" class="btn">Rename</button>
+        <button id="lib_btnDeleteFolder" class="btn">Delete</button>
+      </div>
 
-  <!-- Group 2: Filters (rapet) -->
-  <div class="seg tight">
-    <select id="lib_key"></select>
-    <select id="lib_folder"></select>
-  </div>
+      <!-- Group 2: Filters (Keys • Beat • Folder) -->
+      <div class="seg tight">
+        <select id="lib_key"></select>
+        <select id="lib_beat"></select>
+        <select id="lib_folder"></select>
+      </div>
 
-  <div class="grow"></div>
-  <div id="lib_counter" class="counter">0 songs • 0 folders</div>
-</div>
+      <div class="grow"></div>
+      <div id="lib_counter" class="counter">0 songs • 0 folders</div>
+    </div>
   </div>
 
   <div class="card" style="margin-top:12px">
-    <div id="list" class="list"></div>
+    <!-- LIST → TABLE -->
+    <div class="table-wrap">
+      <table id="lib_table" class="lib-table">
+     <thead>
+  <tr>
+    <th><svg class="icon"><use href="#i-song-fill"/></svg> Songs</th>
+    <th><svg class="icon"><use href="#i-keys-fill"/></svg> Keys</th>
+    <th><svg class="icon"><use href="#i-beat-fill"/></svg> Beat</th>
+    <th><svg class="icon"><use href="#i-folder-fill"/></svg> Folder</th>
+  </tr>
+</thead>
+        <tbody id="lib_tbody"><!-- rows di-render via JS --></tbody>
+      </table>
+    </div>
 
     <div class="actions" style="margin-top:10px; display:flex; gap:10px; align-items:center">
-  <!-- Group: Open/Edit/Move/Delete jadi kapsul -->
-  <div class="seg tight">
-    <button id="lib_btnOpen"   class="btn" disabled>Open</button>
-    <button id="lib_btnEdit"   class="btn" disabled>Edit</button>
-    <button id="lib_btnMove"   class="btn" disabled>Move</button>
-    <button id="lib_btnDelete" class="btn" disabled>Delete</button>
-  </div>
-
-  <!-- FAB tetap terpisah -->
-  <button id="lib_btnNewSong" class="cv-fab" title="New song"></button>
-  <div class="grow"></div>
-</div>
+      <div class="seg tight">
+        <button id="lib_btnOpen"   class="btn" disabled>Open</button>
+        <button id="lib_btnEdit"   class="btn" disabled>Edit</button>
+        <button id="lib_btnMove"   class="btn" disabled>Move</button>
+        <button id="lib_btnDelete" class="btn" disabled>Delete</button>
+      </div>
+      <button id="lib_btnNewSong" class="cv-fab" title="New song"></button>
+      <div class="grow"></div>
+    </div>
 
     <div class="tip" style="margin-top:8px;font-size:12px;color:var(--muted)">
       Tip: double-tap a song to Open (Performance).
     </div>
   </div>
-`;
+  `;
 
-  let db=cv_loadDB(), folders=cv_loadFolders();
-let selectedId=null, filterText='', filterFolder='Folders', filterKey='Keys', lastTap=0, tappedId=null;
+  // ---------- STATE ----------
+  let db = cv_loadDB();
+  let folders = cv_loadFolders();
 
-    const searchEl=document.getElementById('lib_search');
-    const folderEl=document.getElementById('lib_folder');
-    const listEl=document.getElementById('list');
-    const counterEl=document.getElementById('lib_counter');
+  let selectedId = null;
+  let filterText = '';
+  let filterFolder = 'Folders';
+  let filterKey = 'Keys';
+  let filterBeat = 'Beats';
+  let lastTap = 0, tappedId = null;
 
-    const btnAddFolder=document.getElementById('lib_btnAddFolder');
-    const btnRenameFolder=document.getElementById('lib_btnRenameFolder');
-    const btnDeleteFolder=document.getElementById('lib_btnDeleteFolder');
+  // ---------- REFS ----------
+  const searchEl   = document.getElementById('lib_search');
+  const folderEl   = document.getElementById('lib_folder');
+  const counterEl  = document.getElementById('lib_counter');
 
-    const btnOpen=document.getElementById('lib_btnOpen');
-    const btnEdit=document.getElementById('lib_btnEdit');
-    const btnMove=document.getElementById('lib_btnMove');
-    const btnDelete=document.getElementById('lib_btnDelete');
-const btnNewSong = document.getElementById('lib_btnNewSong');
-btnNewSong.addEventListener('click', ()=>{
-  localStorage.removeItem('cv_edit_id');     // pastikan tidak ada id
-  localStorage.removeItem('cv_edit_temp');   // buang buffer
-  localStorage.setItem('cv_edit_new','1');   // ← FLAG: minta editor kosong
-  cv_switchView('ed');
-});
+  const btnAddFolder    = document.getElementById('lib_btnAddFolder');
+  const btnRenameFolder = document.getElementById('lib_btnRenameFolder');
+  const btnDeleteFolder = document.getElementById('lib_btnDeleteFolder');
 
-    function renderFolders(){
-  const opts = ['Folders', ...folders]; // <-- tambahkan spread
-  folderEl.innerHTML = opts.map(n => `<option>${cv_escapeHtml(n)}</option>`).join('');
-  folderEl.value = filterFolder;
-}
-function renderKeys(){
-  const NAT_KEYS = ["C","G","D","A","E","B","F#","C#","F","Bb","Eb","Ab","Db","Gb","Cb"];
-  const keyEl = document.getElementById('lib_key');
-  keyEl.innerHTML = ['Keys', ...NAT_KEYS].map(k => `<option>${k}</option>`).join('');
-  keyEl.value = filterKey;
-  keyEl.onchange = () => {        // ⬅️ ganti dari addEventListener
-    filterKey = keyEl.value;
-    renderList();
-  };
-}
- function renderList(){
-  listEl.innerHTML = '';
+  const btnOpen   = document.getElementById('lib_btnOpen');
+  const btnEdit   = document.getElementById('lib_btnEdit');
+  const btnMove   = document.getElementById('lib_btnMove');
+  const btnDelete = document.getElementById('lib_btnDelete');
+  const btnNewSong = document.getElementById('lib_btnNewSong');
 
-const items = Object.entries(db)
-  .map(([id, s]) => ({ ...s, id }))
-  .filter(s =>
-    (!filterText || (s.title||'').toLowerCase().includes(filterText)) &&
-    (filterFolder === 'Folders' || (s.folder||'') === filterFolder) &&
-    (filterKey === 'Keys' || (s.key || '') === filterKey)   // ⬅️ pakai ini
-  )
-  .sort((a,b)=>(a.title||'').localeCompare(b.title||''));
-  let stillValid=false;
-  items.forEach(song=>{
-    const el=document.createElement('div');
-    el.className='item'; el.dataset.id=song.id;
-    el.innerHTML=`<h3>${cv_escapeHtml(song.title||'(Untitled)')}</h3><div class="sub"></div>`;
+  const keyEl   = document.getElementById('lib_key');
+  const beatEl  = document.getElementById('lib_beat');
+  const tbodyEl = document.getElementById('lib_tbody');
 
-    el.addEventListener('click', async ()=>{
-      const now=Date.now();
-      if(now-lastTap<320 && tappedId===song.id){
-        openSong(song.id); lastTap=0; tappedId=null; return;
-      }
-      lastTap=now; tappedId=song.id;
-      select(song.id, el);
-    });
-
-    if(song.id===selectedId){ el.classList.add('active'); stillValid=true; }
-    listEl.appendChild(el);
+  // ---------- ACTION: New Song FAB ----------
+  btnNewSong.addEventListener('click', ()=>{
+    localStorage.removeItem('cv_edit_id');
+    localStorage.removeItem('cv_edit_temp');
+    localStorage.setItem('cv_edit_new','1');
+    cv_switchView('ed');
   });
-  if(!stillValid){ selectedId=null; }
-  updateActions(items.length);
-  counterEl.textContent=`${Object.keys(db).length} songs • ${folders.length} folders`;
-}
 
-    function select(id, el){
-      [...listEl.children].forEach(x=>x.classList.remove('active'));
-      el.classList.add('active'); selectedId=id; updateActions(1);
+  // ---------- HELPERS ----------
+  // tampilkan 2/4, 3/4, 4/4, 6/8
+  function displayBeat(v){
+    if (v == null) return '';
+    if (typeof v === 'string' && v.includes('/')) return v;
+    const n = parseInt(v,10);
+    if (Number.isNaN(n)) return String(v);
+    if (n === 6) return '6/8';
+    if (n === 2 || n === 3 || n === 4) return `${n}/4`;
+    return `${n}/4`;
+  }
+
+  // normalisasi nilai beat untuk pembanding/filter
+  function normalizeBeat(v){
+    if (v == null) return null;
+    if (typeof v === 'string'){
+      if (v.includes('/')){
+        const left = parseInt(v.split('/')[0],10);
+        return Number.isNaN(left) ? null : left;
+      }
+      const n = parseInt(v,10);
+      return Number.isNaN(n) ? null : n;
     }
+    const n = parseInt(v,10);
+    return Number.isNaN(n) ? null : n;
+  }
 
-    function updateActions(){
-      const on = !!selectedId;
-      btnOpen.disabled = !on;
-      [btnEdit,btnMove,btnDelete].forEach(b=>b.disabled=!on);
-    }
+  // ---------- RENDER: dropdown ----------
+  function renderFolders(){
+    const opts = ['Folders', ...folders];
+    folderEl.innerHTML = opts.map(n => `<option>${cv_escapeHtml(n)}</option>`).join('');
+    folderEl.value = filterFolder;
+  }
 
-    // Folder ops
-    btnAddFolder.addEventListener('click', async ()=>{
-      const name=await cvPrompt('Folder name?',''); if(!name) return;
-      if(folders.includes(name)){ cvToast('Folder already exists.'); return; }
-      folders.push(name); cv_saveFolders(folders); renderFolders();
+  function renderKeys(){
+    const NAT_KEYS = ["C","G","D","A","E","B","F#","C#","F","Bb","Eb","Ab","Db","Gb","Cb"];
+    keyEl.innerHTML = ['Keys', ...NAT_KEYS].map(k => `<option>${k}</option>`).join('');
+    keyEl.value = filterKey;
+  }
+
+  function renderBeats(){
+    const BEATS = ['Beats','2/4','3/4','4/4','6/8'];
+    beatEl.innerHTML = BEATS.map(b => `<option>${b}</option>`).join('');
+    beatEl.value = filterBeat;
+  }
+
+  // ---------- RENDER: table ----------
+  function renderList(){
+    if (!tbodyEl) return;
+    tbodyEl.innerHTML = '';
+
+    const items = Object.entries(db)
+      .map(([id, s]) => ({ ...s, id }))
+      .filter(s => {
+        if (filterText && !(s.title||'').toLowerCase().includes(filterText)) return false;
+        if (filterFolder !== 'Folders' && (s.folder||'') !== filterFolder) return false;
+        if (filterKey !== 'Keys' && (s.key||'') !== filterKey) return false;
+        if (filterBeat !== 'Beats'){
+          const wanted = normalizeBeat(filterBeat);
+          const actual = normalizeBeat(s.beat);
+          if (wanted !== actual) return false;
+        }
+        return true;
+      })
+      .sort((a,b)=> (a.title||'').localeCompare(b.title||''));
+
+    let stillValid = false;
+
+    items.forEach(song=>{
+      const tr = document.createElement('tr');
+      tr.dataset.id = song.id;
+      tr.innerHTML = `
+        <td>${cv_escapeHtml(song.title || '(Untitled)')}</td>
+        <td>${cv_escapeHtml(song.key || '')}</td>
+        <td>${cv_escapeHtml(displayBeat(song.beat))}</td>
+        <td>${cv_escapeHtml(song.folder || '')}</td>
+      `;
+
+      tr.addEventListener('click', ()=>{
+        const now = Date.now();
+        if (now - lastTap < 320 && tappedId === song.id){
+          openSong(song.id); lastTap = 0; tappedId = null; return;
+        }
+        lastTap = now; tappedId = song.id;
+        select(song.id, tr);
+      });
+
+      if (song.id === selectedId){ tr.classList.add('active'); stillValid = true; }
+      tbodyEl.appendChild(tr);
     });
-    btnRenameFolder.addEventListener('click', async ()=>{
-      if(filterFolder==='Folders'){ cvToast('Select a folder to rename.'); return; }
-      const newName=await cvPrompt('New folder name?', filterFolder);
-      if(!newName||newName===filterFolder) return;
-      if(folders.includes(newName)){ cvToast('A folder with that name already exists.'); return; }
-      folders=folders.map(f=>f===filterFolder?newName:f); cv_saveFolders(folders);
-      const db0=cv_loadDB(); Object.values(db0).forEach(s=>{ if((s.folder||'')===filterFolder) s.folder=newName; });
-      cv_saveDB(db0); db=db0; filterFolder=newName; renderFolders(); renderList();
-    });
-    btnDeleteFolder.addEventListener('click', async ()=>{
-      if(filterFolder==='Folders'){ cvToast('Select a folder to delete.'); return; }
-      const hasSongs=Object.values(db).some(s=>(s.folder||'')===filterFolder);
-      const msg=`Delete folder "${filterFolder}"?`+(hasSongs?`\nSongs inside will be moved to (no folder).`:``);
-      if(!await cvConfirm(msg)) return;
-      Object.values(db).forEach(s=>{ if((s.folder||'')===filterFolder) s.folder=''; });
-      cv_saveDB(db); folders=folders.filter(f=>f!==filterFolder); cv_saveFolders(folders);
-      filterFolder='Folders'; renderFolders(); renderList();
-    });
 
-    // List actions
-    function openSong(id){
-  if(!db[id]) return;
-  const s = db[id];
-  localStorage.setItem('cv_perf_raw', (s.raw||'').trim());
-  localStorage.setItem('cv_perf_id', id);
+    if (!stillValid){ selectedId = null; }
+    updateActions(items.length);
+    counterEl.textContent = `${Object.keys(db).length} songs • ${folders.length} folders`;
+  }
 
-  // ← kirim meta untuk Performance
-  const meta = {
-    id,
-    title: s.title || '(Untitled)',
-    key:   s.key   || 'C',
-    beat:  s.beat  || 4
-  };
-  localStorage.setItem('cv_perf_meta', JSON.stringify(meta));
+  // ---------- SELECT & ACTIONS ----------
+  function select(id, rowEl){
+    [...tbodyEl.querySelectorAll('tr')].forEach(x=>x.classList.remove('active'));
+    rowEl.classList.add('active');
+    selectedId = id;
+    updateActions(1);
+  }
+  function updateActions(){
+    const on = !!selectedId;
+    btnOpen.disabled = !on;
+    [btnEdit, btnMove, btnDelete].forEach(b=> b.disabled = !on);
+  }
 
-  cv_switchView('perf');
-}
-    btnOpen.addEventListener('click', async ()=>{
-      if(!selectedId){ cvToast('Select a song first.'); return; }
-      openSong(selectedId);
-    });
-    btnEdit.addEventListener('click', async ()=>{
-      if(!selectedId){ cvToast('Select a song first.'); return; }
-      localStorage.setItem('cv_edit_id',selectedId); cv_switchView('ed');
-    });
-  // Ganti handler Move dengan dropdown mini
-  btnMove.addEventListener('click', (ev) => {
-    if (!selectedId) { cvToast('Select a song first.'); return; }
-    if (!folders || folders.length === 0) {
-      cvToast('No folders yet. Add one first.');
-      return;
-    }
+  // ---------- LIST ACTIONS ----------
+  function openSong(id){
+    if(!db[id]) return;
+    const s = db[id];
+    localStorage.setItem('cv_perf_raw', (s.raw||'').trim());
+    localStorage.setItem('cv_perf_id', id);
+    const meta = {
+      id, title: s.title || '(Untitled)',
+      key: s.key || 'C',
+      beat: s.beat || 4
+    };
+    localStorage.setItem('cv_perf_meta', JSON.stringify(meta));
+    cv_switchView('perf');
+  }
+  btnOpen.addEventListener('click', ()=>{
+    if(!selectedId){ cvToast('Select a song first.'); return; }
+    openSong(selectedId);
+  });
+  btnEdit.addEventListener('click', ()=>{
+    if(!selectedId){ cvToast('Select a song first.'); return; }
+    localStorage.setItem('cv_edit_id', selectedId);
+    cv_switchView('ed');
+  });
+  btnMove.addEventListener('click', (ev)=>{
+    if (!selectedId){ cvToast('Select a song first.'); return; }
+    if (!folders || folders.length === 0){ cvToast('No folders yet. Add one first.'); return; }
 
-    // Buat popup
     const old = document.getElementById('cv_movePopup');
     if (old) old.remove();
 
@@ -2141,19 +2219,16 @@ const items = Object.entries(db)
         <button id="cv_moveOk" class="primary btn">Move</button>
       </div>
     `;
-
     document.body.appendChild(popup);
     const sel = popup.querySelector('#cv_moveSelect');
     sel.focus();
 
-    // Tutup saat klik luar / Esc
     const close = () => { popup.remove(); document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); };
     const onDoc = (e) => { if (!popup.contains(e.target)) close(); };
     const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'Enter') doMove(); };
     document.addEventListener('mousedown', onDoc);
     document.addEventListener('keydown', onKey);
 
-    // Aksi tombol
     popup.querySelector('#cv_moveCancel').addEventListener('click', close);
     popup.querySelector('#cv_moveOk').addEventListener('click', doMove);
 
@@ -2168,36 +2243,67 @@ const items = Object.entries(db)
       cvToast('Moved.');
     }
   });
-btnDelete.addEventListener('click', async () => {
-  if (!selectedId) { cvToast('Select a song first.'); return; }
-  const t = db[selectedId]?.title || '(Untitled)';
-  if (!await cvConfirm(`Delete "${t}"? This cannot be undone.`)) return;
-
-  delete db[selectedId];
-  cv_saveDB(db);
-  selectedId = null;
-  renderList();      // refresh daftar & reset tombol
-});
-
-    // Search & filter
-    const applySearch=()=>{ filterText=searchEl.value.trim().toLowerCase(); renderList(); };
-    searchEl.addEventListener('input', applySearch);
-    folderEl.addEventListener('change', async ()=>{ filterFolder=folderEl.value; renderList(); });
-
-    renderFolders(); renderList();
-// --- Revisi Poin 1: Library selalu sinkron dengan storage ---
-// Tempel di AKHIR modul Library (setelah renderFolders(); renderList();)
-window.addEventListener('cv:view', (e) => {
-  if (e.detail?.name === 'lib') {
-    db = cv_loadDB();            // reload songs dari localStorage
-    folders = cv_loadFolders();  // reload folders dari localStorage
-    renderFolders();
-renderKeys();
+  btnDelete.addEventListener('click', async ()=>{
+    if (!selectedId){ cvToast('Select a song first.'); return; }
+    const t = db[selectedId]?.title || '(Untitled)';
+    if (!await cvConfirm(`Delete "${t}"? This cannot be undone.`)) return;
+    delete db[selectedId];
+    cv_saveDB(db);
+    selectedId = null;
     renderList();
-  }
-});
   });
-  </script>
+
+  // ---------- FOLDER OPS ----------
+  btnAddFolder.addEventListener('click', async ()=>{
+    const name = await cvPrompt('Folder name?',''); if(!name) return;
+    if (folders.includes(name)){ cvToast('Folder already exists.'); return; }
+    folders.push(name); cv_saveFolders(folders); renderFolders();
+  });
+  btnRenameFolder.addEventListener('click', async ()=>{
+    if (filterFolder==='Folders'){ cvToast('Select a folder to rename.'); return; }
+    const newName = await cvPrompt('New folder name?', filterFolder);
+    if (!newName || newName === filterFolder) return;
+    if (folders.includes(newName)){ cvToast('A folder with that name already exists.'); return; }
+    folders = folders.map(f=> f===filterFolder ? newName : f); cv_saveFolders(folders);
+    const db0 = cv_loadDB(); Object.values(db0).forEach(s=>{ if((s.folder||'')===filterFolder) s.folder=newName; });
+    cv_saveDB(db0); db = db0; filterFolder = newName; renderFolders(); renderList();
+  });
+  btnDeleteFolder.addEventListener('click', async ()=>{
+    if (filterFolder==='Folders'){ cvToast('Select a folder to delete.'); return; }
+    const hasSongs = Object.values(db).some(s => (s.folder||'') === filterFolder);
+    const msg = `Delete folder "${filterFolder}"?` + (hasSongs ? `\nSongs inside will be moved to (no folder).` : ``);
+    if (!await cvConfirm(msg)) return;
+    Object.values(db).forEach(s=>{ if((s.folder||'')===filterFolder) s.folder=''; });
+    cv_saveDB(db); folders = folders.filter(f=> f !== filterFolder); cv_saveFolders(folders);
+    filterFolder = 'Folders'; renderFolders(); renderList();
+  });
+
+  // ---------- FILTER EVENTS ----------
+  const applySearch = () => { filterText = searchEl.value.trim().toLowerCase(); renderList(); };
+  searchEl.addEventListener('input', applySearch);
+  folderEl.addEventListener('change', ()=>{ filterFolder = folderEl.value; renderList(); });
+  keyEl.addEventListener('change',   ()=>{ filterKey    = keyEl.value;    renderList(); });
+  beatEl.addEventListener('change',  ()=>{ filterBeat   = beatEl.value;   renderList(); });
+
+  // ---------- INIT ----------
+  renderFolders();
+  renderKeys();
+  renderBeats();
+  renderList();
+
+  // ---------- RESYNC SAAT VIEW LIBRARY DIBUKA ----------
+  window.addEventListener('cv:view', (e)=>{
+    if (e.detail?.name === 'lib'){
+      db = cv_loadDB();
+      folders = cv_loadFolders();
+      renderFolders();
+      renderKeys();
+      renderBeats();
+      renderList();
+    }
+  });
+});
+</script>
 <!-- ===== FEATURE: PERFORMANCE ===== -->
 <!-- =================== PERFORMANCE VIEW + MODULE =================== -->
   <script>
@@ -2241,6 +2347,17 @@ wrap.innerHTML = `
     const perf=document.getElementById('perf_area');
 const metaEl = document.getElementById('perf_meta');
 
+// Helper: format beat 2/4, 3/4, 4/4, 6/8
+function displayBeat(v){
+  if (v == null) return '';
+  if (typeof v === 'string' && v.includes('/')) return v; // sudah "x/y"
+  const n = parseInt(v, 10);
+  if (Number.isNaN(n)) return String(v);
+  if (n === 6) return '6/8';
+  if (n === 2 || n === 3 || n === 4) return `${n}/4`;
+  return `${n}/4`; // fallback aman
+}
+
 function loadPerfMeta(){
   try { return JSON.parse(localStorage.getItem('cv_perf_meta')||'null'); }
   catch { return null; }
@@ -2250,7 +2367,8 @@ function showPerfMeta(){
   if(!metaEl) return;
   const m = loadPerfMeta();
   if(!m){ metaEl.textContent = ''; return; }
-  metaEl.textContent = `${m.title || '(Untitled)'} • Key: ${m.key || 'C'} • Beat: ${(m.beat||4)}/4`;
+  metaEl.textContent =
+    `${m.title || '(Untitled)'} • Key: ${m.key || 'C'} • Beat: ${displayBeat(m.beat)}`;
 }
     const tDown=document.getElementById('perf_tDown');
     const tUp=document.getElementById('perf_tUp');
@@ -3543,5 +3661,24 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
   }
 })();
 </script>
+<!-- SVG SPRITE: Custom Vienaya Icons -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <!-- SONG -->
+  <symbol id="i-song-fill" viewBox="0 0 24 24">
+    <path d="M10 4v10.55a4 4 0 1 0 2 3.45V8h6V4h-8Z" fill="currentColor"/>
+  </symbol>
+  <!-- KEYS -->
+  <symbol id="i-keys-fill" viewBox="0 0 24 24">
+    <path d="M9 3h2v18H9V3Zm6 0h2v18h-2V3ZM3 9h18v2H3V9Zm0 6h18v2H3v-2Z" fill="currentColor"/>
+  </symbol>
+  <!-- BEAT -->
+  <symbol id="i-beat-fill" viewBox="0 0 24 24">
+    <path d="M6 21h12l-4-16h-4l-4 16Zm6-11 7-4-1-2-7 4v2Z" fill="currentColor"/>
+  </symbol>
+  <!-- FOLDER -->
+  <symbol id="i-folder-fill" viewBox="0 0 24 24">
+    <path d="M10 4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6Z" fill="currentColor"/>
+  </symbol>
+</svg>
 </body>
 </html>
