@@ -286,48 +286,91 @@ body.theme-navy #cv_header{
   appearance: none;
 }
 
-/* === Toolbar Filters (Keys / Beats / Folders) — join & match style === */
+/* === Toolbar filters transparan === */
 #libraryView .seg.tight .icon-label{
   display:inline-flex !important;
   align-items:center !important;
-  gap:6px !important;
-  background: var(--chip) !important;          /* samakan dengan tombol */
-  border: 1px solid var(--border) !important;  /* samakan dengan tombol */
-  border-radius: 0 !important;                 /* biar bisa “nyatu” */
-  height: 36px !important;                     /* match tombol */
-  padding: 6px 10px !important;                /* match tombol */
+  gap:4px !important;
+  background: transparent !important;   /* transparan */
+  border: none !important;              /* hilangkan border */
+  border-radius: 0 !important;          /* biar netral */
+  height: auto !important;              /* ikut isi */
+  padding: 0 !important;
 }
 
-/* sambung rapat antar kapsul */
-#libraryView .seg.tight > * + *{ margin-left:-1px !important; }
-
-/* sudut hanya di item pertama & terakhir */
-#libraryView .seg.tight .icon-label:first-child{
-  border-top-left-radius:12px !important;
-  border-bottom-left-radius:12px !important;
-}
-#libraryView .seg.tight .icon-label:last-child{
-  border-top-right-radius:12px !important;
-  border-bottom-right-radius:12px !important;
-}
-
-/* ikon & select di dalam kapsul */
+/* Ikon tetap kecil dan rapi */
 #libraryView .seg.tight .icon-label .icon{
   width:14px !important;
   height:14px !important;
   margin:0 !important;
   fill: currentColor !important;
 }
+
+/* === Hapus border untuk toolbar Keys / Beats / Folders === */
+#libraryView .icon-label {
+  border: none !important;
+  background: transparent !important; /* full transparan */
+}
+
+#libraryView .seg.tight {
+  border: none !important;   /* hapus kapsul luar */
+}
+
+#libraryView .seg.tight > * {
+  border: none !important;   /* hapus garis pemisah antar item */
+  background: transparent !important; 
+}
+/* === Kecilkan font dropdown Keys / Beats / Folders === */
+#libraryView .seg.tight .icon-label select {
+  font-size: 13px !important;   /* lebih kecil dari default */
+  height: 22px !important;      /* sesuaikan supaya proporsional */
+  line-height: 1.2 !important;
+}
+/* Rapetin isi dropdown filter Keys / Beats / Folders */
+#libraryView .seg.tight .icon-label select {
+  padding: 0 4px !important;    /* kiri-kanan lebih sempit */
+  min-width: 72px !important;   /* lebih kecil dari 96px */
+  max-width: 100px !important;  /* biar nggak melar */
+  height: 22px !important;      /* lebih pendek */
+  line-height: 1.2 !important;
+  font-size: 13px !important;   /* biar teks kecil rapi */
+  border-radius: 6px !important;/* opsional: radius kecil biar nggak aneh */
+}
+/* 1) Hilangkan border/outline default select */
 #libraryView .seg.tight .icon-label select{
-  border:none !important;
-  background:transparent !important;  /* hindari “kapsul di dalam kapsul” */
-  height:24px !important;
-  line-height:1.2 !important;
-  padding:0 !important;
-  width:auto !important;
-  min-width:112px !important;         /* mengikuti aturan seg.tight */
-  max-width:160px !important;         /* mengikuti aturan seg.tight */
-  appearance:none !important;
+  border: none !important;
+  outline: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 2) Efek hover/active/focus seperti chip button */
+#libraryView .seg.tight .icon-label{
+  border-radius: 12px;               /* kalau mau tetap transparan, biarin tanpa border */
+  transition: background .15s ease, box-shadow .15s ease;
+}
+
+#libraryView .seg.tight .icon-label:hover{
+  background: rgba(148,163,184,.12); /* halus saat hover */
+}
+
+#libraryView .seg.tight .icon-label:active{
+  background: rgba(148,163,184,.18);
+  transform: translateY(0);          /* cocokkan behavior tombolmu */
+}
+
+/* === Toolbar filter transparan tanpa border highlight === */
+#libraryView .seg.tight .icon-label select {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
  /* =================== PERFORMANCE (2 WARNA) =================== */
 
