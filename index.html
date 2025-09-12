@@ -252,6 +252,83 @@ body.theme-navy #cv_header{
   grid-template-columns: 40% 20% 20% 20%; /* Songs 40%, Keys/Beat/Folder 20% */
 }
 #libraryView .lib-table tbody tr.active td{ color:var(--accent-fg); }
+/* ===== Toolbar filters with icons (wrapper) ===== */
+#libraryView .icon-label{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background: var(--chip);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  height: 36px;                 /* samakan dengan tombol lain */
+  padding: 6px 10px;
+}
+
+/* Ikon di toolbar */
+#libraryView .icon-label .icon{
+  width:14px;
+  height:14px;
+  margin:0;                     /* biar center */
+  vertical-align:middle;
+  fill: currentColor;
+}
+
+/* Select di dalam kapsul ikon */
+#libraryView .icon-label select{
+  border: none;
+  background: transparent;      /* jangan bikin kapsul di dalam kapsul */
+  height: 28px;                 /* sudah dipakai di CSS kamu juga */
+  line-height: 1.3;
+  padding: 0;                   /* hapus padding ganda */
+  color: inherit;
+  min-width: 96px;              /* tetap ada ruang teks */
+  max-width: 128px;
+  appearance: none;
+}
+
+/* === Toolbar Filters (Keys / Beats / Folders) — join & match style === */
+#libraryView .seg.tight .icon-label{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  background: var(--chip) !important;          /* samakan dengan tombol */
+  border: 1px solid var(--border) !important;  /* samakan dengan tombol */
+  border-radius: 0 !important;                 /* biar bisa “nyatu” */
+  height: 36px !important;                     /* match tombol */
+  padding: 6px 10px !important;                /* match tombol */
+}
+
+/* sambung rapat antar kapsul */
+#libraryView .seg.tight > * + *{ margin-left:-1px !important; }
+
+/* sudut hanya di item pertama & terakhir */
+#libraryView .seg.tight .icon-label:first-child{
+  border-top-left-radius:12px !important;
+  border-bottom-left-radius:12px !important;
+}
+#libraryView .seg.tight .icon-label:last-child{
+  border-top-right-radius:12px !important;
+  border-bottom-right-radius:12px !important;
+}
+
+/* ikon & select di dalam kapsul */
+#libraryView .seg.tight .icon-label .icon{
+  width:14px !important;
+  height:14px !important;
+  margin:0 !important;
+  fill: currentColor !important;
+}
+#libraryView .seg.tight .icon-label select{
+  border:none !important;
+  background:transparent !important;  /* hindari “kapsul di dalam kapsul” */
+  height:24px !important;
+  line-height:1.2 !important;
+  padding:0 !important;
+  width:auto !important;
+  min-width:112px !important;         /* mengikuti aturan seg.tight */
+  max-width:160px !important;         /* mengikuti aturan seg.tight */
+  appearance:none !important;
+}
  /* =================== PERFORMANCE (2 WARNA) =================== */
 
 /* Latar view ikut tema */
@@ -1960,7 +2037,7 @@ cv_onViewInit('lib', ()=>{
     <!-- Baris 1: Search -->
     <div class="row">
       <div class="grow">
-        <input id="lib_search" type="text" placeholder="Search songs..."/>
+        <input id="lib_search" type="text" placeholder="Search song"/>
       </div>
     </div>
 
@@ -1975,10 +2052,19 @@ cv_onViewInit('lib', ()=>{
 
       <!-- Group 2: Filters (Keys • Beat • Folder) -->
       <div class="seg tight">
-        <select id="lib_key"></select>
-        <select id="lib_beat"></select>
-        <select id="lib_folder"></select>
-      </div>
+  <div class="icon-label">
+    <svg class="icon"><use href="#i-keys-fill"/></svg>
+    <select id="lib_key"></select>
+  </div>
+  <div class="icon-label">
+    <svg class="icon"><use href="#i-beat-fill"/></svg>
+    <select id="lib_beat"></select>
+  </div>
+  <div class="icon-label">
+    <svg class="icon"><use href="#i-folder-fill"/></svg>
+    <select id="lib_folder"></select>
+  </div>
+</div>
 
       <div class="grow"></div>
       <div id="lib_counter" class="counter">0 songs • 0 folders</div>
@@ -1991,8 +2077,8 @@ cv_onViewInit('lib', ()=>{
       <table id="lib_table" class="lib-table">
      <thead>
   <tr>
-    <th><svg class="icon"><use href="#i-song-fill"/></svg> Songs</th>
-    <th><svg class="icon"><use href="#i-keys-fill"/></svg> Keys</th>
+    <th><svg class="icon"><use href="#i-song-fill"/></svg> Song</th>
+    <th><svg class="icon"><use href="#i-keys-fill"/></svg> Key</th>
     <th><svg class="icon"><use href="#i-beat-fill"/></svg> Beat</th>
     <th><svg class="icon"><use href="#i-folder-fill"/></svg> Folder</th>
   </tr>
