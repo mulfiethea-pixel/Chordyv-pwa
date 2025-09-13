@@ -372,6 +372,65 @@ body.theme-navy #cv_header{
   -moz-appearance: none !important;
   -webkit-tap-highlight-color: transparent !important;
 }
+/* ===== Library Clean Background Separation ===== */
+
+/* Card utama (wrapper Search, Toolbar, Tabel, Action) */
+#libraryView .card {
+  border: none !important;          /* hilangin garis luar */
+  background: #f9fafb !important;   /* abu sangat tipis */
+  box-shadow: none !important;      /* biar flat */
+  border-radius: 14px !important;   /* sudut tetap lembut */
+  padding: 16px;
+}
+
+/* Bagian toolbar (Open / Edit / Move / Delete) */
+#libraryView .card .actions {
+  background: #fdfdfd !important;   /* abu lebih tipis lagi */
+  border-radius: 12px;
+  padding: 10px;
+}
+
+/* Tabel */
+#libraryView .lib-table {
+  border-collapse: collapse;
+}
+#libraryView .lib-table th,
+#libraryView .lib-table td {
+  border: none !important;          /* hilangin garis row */
+}
+#libraryView .table-wrap {
+  border: none !important;          /* hilangin border luar */
+  background: #ffffff !important;   /* putih bersih untuk isi tabel */
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04); /* halus banget */
+}
+/* ===== Clean Background: Dark/Navy Mode ===== */
+body.theme-navy #libraryView .card {
+  background: #0f172a !important;   /* navy dasar, lebih terang sedikit dari body */
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body.theme-navy #libraryView .table-wrap {
+  background: #1e293b !important;   /* abu-navy lebih terang buat isi tabel */
+  border: none !important;
+}
+
+body.theme-navy #libraryView .lib-table th {
+  background: linear-gradient(135deg,#2563eb,#3b82f6) !important;
+  color: #fff !important;
+}
+
+body.theme-navy #libraryView .lib-table td {
+  border: none !important;
+  background: transparent !important; /* biar nyatu */
+  color: #e2e8f0 !important;          /* abu terang */
+}
+
+/* Action bar di bawah tabel */
+body.theme-navy #libraryView .card .actions {
+  background: #0b1734 !important;     /* sedikit lebih gelap dari card */
+}
  /* =================== PERFORMANCE (2 WARNA) =================== */
 
 /* Latar view ikut tema */
@@ -855,6 +914,143 @@ header .head #titleBar{
   white-space: nowrap;
   font-size: 18px;
   font-weight: 700;
+}
+/* ===== Editor Clean Background ===== */
+
+/* Hilangkan border card */
+#editorView .card {
+  border: none !important;
+  background: #f9fafb !important;    /* abu tipis */
+  box-shadow: none !important;
+  border-radius: 14px !important;
+  padding: 16px;
+  margin-bottom: 14px;              /* biar antar blok ada spasi */
+}
+
+/* Area textarea */
+#editorView #ed_content {
+  background: #fdfdfd !important;   /* lebih tipis dari card */
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 12px;
+  min-height: 40vh;
+  font-family: inherit;
+}
+
+/* Toolbar Save | Library | Open */
+#editorView .seg.tight {
+  background: transparent !important;
+  border: none !important;
+}
+
+#editorView .seg.tight > button {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 12px !important;
+}
+
+#editorView .seg.tight > button:hover {
+  background: rgba(148,163,184,.12) !important; /* hover halus */
+}
+/* ===== Editor — Clean Background (Dark/Navy) ===== */
+body.theme-navy #editorView .card {
+  border: none !important;
+  background: #0f172a !important;       /* lapis card: navy lebih terang dr body */
+  box-shadow: none !important;
+  border-radius: 14px !important;
+  padding: 16px !important;
+}
+
+/* Grup kecil di dalam card (chip bar, toolbar, dsb.) */
+body.theme-navy #editorView .section,
+body.theme-navy #editorView .inner,
+body.theme-navy #editorView .group {
+  background: #0b1734 !important;       /* lapis di dalam card: sedikit lebih gelap */
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 10px !important;
+}
+
+/* Text inputs, selects, textarea */
+body.theme-navy #editorView input[type="text"],
+body.theme-navy #editorView input[type="search"],
+body.theme-navy #editorView select,
+body.theme-navy #editorView textarea {
+  background: #1e293b !important;       /* isi field: paling terang di editor */
+  color: #e5e7eb !important;
+  border: none !important;
+  border-radius: 12px !important;
+  outline: none !important;
+}
+
+/* Placeholder */
+body.theme-navy #editorView ::placeholder {
+  color: #cbd5e1 !important;
+  opacity: .8;
+}
+
+/* Chip tombol (preset beat, simbol, dll.) */
+body.theme-navy #editorView .chip,
+body.theme-navy #editorView .seg.tight > button {
+  background: transparent !important;   /* flat/ghost */
+  color: #e2e8f0 !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  transition: background .18s ease;
+}
+body.theme-navy #editorView .chip:hover,
+body.theme-navy #editorView .seg.tight > button:hover {
+  background: rgba(226,232,240,.08) !important; /* hover halus */
+}
+
+/* Toolbar Save | Library | Open (flat, transparan) */
+body.theme-navy #editorView .seg.tight {
+  display: inline-flex;
+  gap: 6px;
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+}
+
+/* Tombol utama (Save) tetap accent */
+body.theme-navy #editorView .seg.tight > .primary,
+body.theme-navy #editorView .btn.primary {
+  background: var(--accent, #2563eb) !important;
+  color: var(--accent-fg, #fff) !important;
+  border: none !important;
+}
+
+/* Area konten (textarea besar) */
+body.theme-navy #editorView #ed_content,
+body.theme-navy #editorView textarea#ed_content {
+  background: #0b1734 !important;       /* beda tipis dari card */
+  color: #e5e7eb !important;
+  border: none !important;
+  border-radius: 12px !important;
+}
+
+/* Label & teks kecil */
+body.theme-navy #editorView label,
+body.theme-navy #editorView .muted,
+body.theme-navy #editorView .hint {
+  color: #cbd5e1 !important;
+}
+
+/* Divider garis halus (kalau ada <hr>) */
+body.theme-navy #editorView hr {
+  border: 0;
+  height: 1px;
+  background: rgba(226,232,240,.08);
+}
+
+/* Tooltip/dropdown (kalau dipakai) */
+body.theme-navy .popover,
+body.theme-navy .menu {
+  background: #0b1734 !important;
+  color: #e5e7eb !important;
+  border: 1px solid rgba(226,232,240,.08) !important;
+  border-radius: 12px !important;
 }
 
 /* biar konsisten di tema navy juga */
@@ -1425,6 +1621,34 @@ header .head #titleBar img{ height:24px;width:auto;display:block;vertical-align:
 #editorView .toolbar .active:hover{
   background: var(--accent) !important;
 }
+/* === Samakan Editor toolbar (Save | Library | Open) dengan Library === */
+#editorView .seg.tight {
+  display: inline-flex !important;
+  gap: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+}
+
+#editorView .seg.tight > button {
+  height: 36px !important;
+  padding: 6px 10px !important;
+  border: none !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: background .18s ease;
+}
+
+#editorView .seg.tight > button:hover {
+  background: rgba(148,163,184,.12) !important;
+}
+
+#editorView .seg.tight > .primary {
+  background: var(--accent) !important;
+  color: var(--accent-fg) !important;
+}
 /* ===== Header icon contrast (light ↔ navy) ===== */
 
 /* Variabel default (tema terang) */
@@ -1519,6 +1743,15 @@ body.theme-navy {
 #perf_area .bar *,
 #perf_area .melodi * {
   color: var(--perf-chord) !important;
+}
+#perf_area sup.note {
+  font-size: 0.7em;
+  vertical-align: super;
+  line-height: 0;
+}
+#perf_area sup.note svg {
+  display: inline-block;
+  vertical-align: super;
 }
 </style>
 </head>
@@ -1822,15 +2055,25 @@ else
       </div>
 
       <div class="card">
-        <div class="shortcut-bar">
-          <button id="ed_btnPipe">|</button>
-          <button id="ed_btnBar">Bar</button>
-          <button id="ed_btnRest">-</button>
-          <button id="ed_btnRepeat">%</button>
-          <button id="ed_btnSharp">#</button>
-          <button id="ed_btnFlat">♭</button>
-          <button id="ed_btnSlash">/</button>
-        </div>
+
+  <!-- Bar khusus notasi -->
+  <div class="note-bar" style="margin-bottom:8px;">
+    <button id="ed_note_halfbeat"   title="Not 1/2 ketuk (eighth)">♪</button>
+    <button id="ed_note_quarterbeat" title="Not 1/4 ketuk (sixteenth)">♬</button>
+  </div>
+
+  <!-- Bar tombol editor -->
+  <div class="shortcut-bar">
+    <button id="ed_btnPipe">|</button>
+    <button id="ed_btnBar">Bar</button>
+    <button id="ed_btnRest">-</button>
+    <button id="ed_btnRepeat">%</button>
+    <button id="ed_btnSharp">#</button>
+    <button id="ed_btnFlat">♭</button>
+    <button id="ed_btnSlash">/</button>
+  </div>
+
+</div>
 
         <label>content (Chords / Melody / Text)</label>
         <textarea id="ed_content" spellcheck="false" placeholder="Write chords / melody / text..."></textarea>
@@ -1977,6 +2220,10 @@ document.getElementById('ed_btnPipe').addEventListener('click',()=>insertAt(' | 
     document.getElementById('ed_btnSharp').addEventListener('click',()=>insertAt('#'));
     document.getElementById('ed_btnFlat').addEventListener('click',()=>insertAt('♭'));
     document.getElementById('ed_btnSlash').addEventListener('click',()=>insertAt(' / '));
+document.getElementById('ed_note_halfbeat')
+  .addEventListener('click', () => insertAt('(♪)'));
+document.getElementById('ed_note_quarterbeat')
+  .addEventListener('click', () => insertAt('(♬)'));
 
     document.getElementById('ed_btnNew').addEventListener('click', async ()=>{
       if((titleEl.value.trim()||contentEl.value.trim()) && !await cvConfirm('Clear the editor?')) return;
@@ -2670,12 +2917,42 @@ function perfRender(rawFromArg){
   if (isEmptyLike(src)) return showPlaceholder();
 
   const html = markupPerformance(src, steps, useSharps);
-  if (isEmptyLike(html.replace(/<[^>]+>/g,''))) return showPlaceholder();
+if (isEmptyLike(html.replace(/<[^>]+>/g,''))) return showPlaceholder();
+// ♫ 1/2 ketuk (eighth) — 1 flag
+const NOTE_SVG_HALF =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 128" width="14" height="14" aria-hidden="true">' +
+    '<ellipse cx="20" cy="104" rx="18" ry="12" fill="currentColor"/>' +
+    '<rect x="34" y="8" width="6" height="96" fill="currentColor"/>' +
+    // 1 flag
+    '<path d="M40 8 C64 20, 64 36, 40 44" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+  '</svg>';
 
-  perf.innerHTML = html;
-  document.documentElement.style.setProperty('--font-perf', fontPerf+'px');
-  tSteps.textContent = String(steps);
-  syncAccUI();
+// ♬ 1/4 ketuk (sixteenth) — 2 flag
+const NOTE_SVG_QUARTERBEAT =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 128" width="14" height="14" aria-hidden="true">' +
+    '<ellipse cx="20" cy="104" rx="18" ry="12" fill="currentColor"/>' +
+    '<rect x="34" y="8" width="6" height="96" fill="currentColor"/>' +
+    // 2 flag
+    '<path d="M40 8  C64 20, 64 36, 40 44" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+    '<path d="M40 28 C64 40, 64 56, 40 64" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+  '</svg>';
+
+// mapping token -> superscript SVG (tetap sama)
+function applyNoteSuperscript(s) {
+  return s
+    .replace(/\(♪\)/g, '<sup class="note">' + NOTE_SVG_HALF + '</sup>')
+    .replace(/\(♬\)/g, '<sup class="note">' + NOTE_SVG_QUARTERBEAT + '</sup>');
+}
+
+function applyNoteSuperscript(s) {
+  return s
+    .replace(/\(♪\)/g, '<sup class="note">' + NOTE_SVG_HALF + '</sup>')
+    .replace(/\(♬\)/g, '<sup class="note">' + NOTE_SVG_QUARTERBEAT + '</sup>');
+}
+perf.innerHTML = applyNoteSuperscript(html);
+document.documentElement.style.setProperty('--font-perf', fontPerf+'px');
+tSteps.textContent = String(steps);
+syncAccUI();
 }
     // Controls
     tDown.addEventListener('click', async ()=>{ steps--; perfRender(); savePerfState(); });
@@ -2817,6 +3094,11 @@ function sanitizeNode(node){
     guard(document.getElementById('perf_area'));
   }
 })();
+function applyNoteSuperscript(s) {
+  return s
+    .replace(/\(♪\)/g, '<sup class="note"><img src="icons/note-half.svg" alt="♪"></sup>')
+    .replace(/\(♬\)/g, '<sup class="note"><img src="icons/note-quarter.svg" alt="♬"></sup>');
+}
 </script>
 
 <!-- ===== UI COMPONENT: TOAST ===== -->
