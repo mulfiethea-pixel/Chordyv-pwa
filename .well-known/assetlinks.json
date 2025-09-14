@@ -1,1 +1,12 @@
-
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.chordyv.app",
+      "sha256_cert_fingerprints": [
+        "1F:4D:3C:99:E0:E5:C4:C2:CA:84:B1:02:CC:30:31:F7:61:4A:AD:2F:FA:2C:4B:78:C4:86:E8:50:0C:89:BE:18"
+      ]
+    }
+  }
+]
