@@ -4091,5 +4091,118 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
     <path d="M10 4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6Z" fill="currentColor"/>
   </symbol>
 </svg>
+<script>
+(() => {
+  // --- Konfigurasi ---
+  const ROOT_VIEW = 'lib';           // anggap 'lib' sebagai halaman awal/root
+  const EXIT_WINDOW_MS = 1500;       // waktu double-back
+  const VALID = new Set(['ed','lib','perf']); // daftar view yang ada
+
+  // --- Ambil switchView asli ---
+  const _origSwitch = (window.cv_switchView || window.switchView);
+  if (!_origSwitch) return; // kalau tidak ada, stop
+
+  let fromPop = false;      // flag untuk mencegah push saat proses back
+  let exitArmed = false;    // status double-back
+  let exitTimer = null;
+
+  // Ganti switchView agar otomatis push ke history
+  function switchViewWithHistory(name, opts = {}) {
+    const push = (opts.push !== false) && !fromPop;
+    _origSwitch(name); // render UI seperti biasa
+
+    if (push) {
+      // dorong state layar ke history tanpa mengubah URL
+      history.pushState({ screen: name }, "");
+    }
+  }
+
+  // Ekspor kembali agar semua pemanggil pakai yang baru
+  window.switchView = switchViewWithHistory;
+  window.cv_switchView = switchViewWithHistory;
+
+  // Helper: tampilkan toast (fallback ke console kalau belum ada)
+  function toast(msg) {
+    if (typeof window.cvToast === 'function') window.cvToast(msg);
+    else console.log('[toast]', msg);
+  }
+
+  // Inisialisasi history:
+  // 1) set entry awal sebagai screen current (agar Back pertama tidak keluar app)
+  // 2) tambahkan "guard" di atasnya untuk mekanisme double-back
+  function initHistory() {
+    // Deteksi view aktif saat ini dari DOM (class "active") atau fallback ROOT_VIEW
+    let current = ROOT_VIEW;
+    try {
+      const active = document.querySelector('.view.active')?.id || '';
+      if (active.includes('editor')) current = 'ed';
+      if (active.includes('library')) current = 'lib';
+      if (active.includes('performance')) current = 'perf';
+    } catch {}
+
+    if (!VALID.has(current)) current = ROOT_VIEW;
+
+    // Ganti state sekarang menjadi {screen: current}
+    history.replaceState({ screen: current }, "");
+    // Tambahkan guard di atasnya
+    history.pushState({ guard: true }, "");
+  }
+
+  // Handler Back
+  window.addEventListener('popstate', (e) => {
+    const st = e.state || {};
+
+    // 1) Jika pop ke guard: ini adalah "percobaan keluar app"
+    if (st.guard) {
+      if (!exitArmed) {
+        exitArmed = true;
+        clearTimeout(exitTimer);
+        exitTimer = setTimeout(() => (exitArmed = false), EXIT_WINDOW_MS);
+        toast("Tekan sekali lagi untuk keluar");
+        // Dorong lagi guard supaya stack tetap terlindungi
+        history.pushState({ guard: true }, "");
+        return;
+      }
+      // Kedua kalinya dalam window → biarkan sistem keluar (jangan push guard lagi)
+      return;
+    }
+
+    // 2) Jika pop ke screen tertentu → render layar itu tanpa push lagi
+    if (st.screen && VALID.has(st.screen)) {
+      fromPop = true;
+      _origSwitch(st.screen);
+      fromPop = false;
+
+      // Kalau sampai di ROOT_VIEW dan belum armed → aktifkan guard + toast agar tidak langsung keluar
+      if (st.screen === ROOT_VIEW && !exitArmed) {
+        exitArmed = true;
+        clearTimeout(exitTimer);
+        exitTimer = setTimeout(() => (exitArmed = false), EXIT_WINDOW_MS);
+        toast("Tekan sekali lagi untuk keluar");
+        history.pushState({ guard: true }, "");
+      }
+      return;
+    }
+
+    // 3) Fallback: kalau state tidak jelas, kembalikan ke ROOT_VIEW
+    fromPop = true;
+    _origSwitch(ROOT_VIEW);
+    fromPop = false;
+    history.pushState({ guard: true }, "");
+  });
+
+  // Opsional: jika kamu punya tombol back in-app, panggil ini
+  window.cv_goBack = function () {
+    history.back();
+  };
+
+  // Jalankan setelah DOM siap (pastikan router kamu sudah jalan duluan)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHistory, { once: true });
+  } else {
+    initHistory();
+  }
+})();
+</script>
 </body>
 </html>
