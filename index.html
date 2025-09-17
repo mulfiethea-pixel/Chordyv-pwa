@@ -4097,16 +4097,16 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
 
 <script>
- // --- Config project kamu ---
-const firebaseConfig = {
-  apiKey: "AIzaSyAhlfX1bkxg3f58u7i_bFMpG_rZya8hqeI",
-  authDomain: "auth.chordyv.com", // ⬅️ ubah ke custom domain
-  projectId: "chordyv-4c72d",
-  storageBucket: "chordyv-4c72d.firebasestorage.app",
-  messagingSenderId: "575225159933",
-  appId: "1:575225159933:web:fbe8931ddebe991f4b9e94",
-  measurementId: "G-00EKC1XLJ9"
-};
+  // --- Config project kamu (biarin sesuai yang dari Firebase Console) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyAhlfX1bkxg3f58u7i_bFMpG_rZya8hqeI",
+    authDomain: "chordyv-4c72d.firebaseapp.com",
+    projectId: "chordyv-4c72d",
+    storageBucket: "chordyv-4c72d.firebasestorage.app",
+    messagingSenderId: "575225159933",
+    appId: "1:575225159933:web:fbe8931ddebe991f4b9e94",
+    measurementId: "G-00EKC1XLJ9"
+  };
 
   // --- Init Firebase + Auth ---
   firebase.initializeApp(firebaseConfig);
