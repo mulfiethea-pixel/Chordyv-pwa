@@ -4022,28 +4022,6 @@ window.addEventListener('cv:pro', e=>{
   });
 </script>
 <script>
-  // Dengarkan perubahan dokumen user secara real-time
-  firebase.auth().onAuthStateChanged((user)=>{
-    if(!user) return;
-
-    firebase.firestore().collection('users').doc(user.uid)
-      .onSnapshot((doc)=>{
-        const d = doc.data() || {};
-        const plan = String(d.plan || '').toLowerCase();
-        const premium = !!d.isPremium || plan === 'premium' || plan === 'pro';
-
-        // TODO: sesuaikan selector sesuai elemenmu
-        const tierEl = document.querySelector('#accountTier'); // misal label "Free User / Pro User"
-        if (tierEl) tierEl.textContent = premium ? 'Pro User' : 'Free User';
-
-        const upgradeBtn = document.querySelector('#upgradeBtn'); // misal tombol upgrade
-        if (upgradeBtn) upgradeBtn.style.display = premium ? 'none' : 'block';
-
-        console.log('Firestore → premium:', premium, 'plan:', plan);
-      });
-  });
-</script>
-<script>
   firebase.auth().onAuthStateChanged((user)=>{
     if(!user) return;
 
@@ -4067,59 +4045,26 @@ window.addEventListener('cv:pro', e=>{
   });
 </script>
 <script>
-  // Ambil elemen dengan fallback (karena di file kamu ada 2 variasi id)
-  const proLabel = document.querySelector('#cv_proStatus, #accountTier');
-  const upgradeBtn = document.querySelector('#cv_btnUpgrade, #cv_upgradeBtn');
+firebase.auth().onAuthStateChanged((user)=>{
+  // fungsi bantu: set state + kabari UI
+  const emit = (isPro)=>{
+    window.cvIsPro = !!isPro;
+    window.dispatchEvent(new CustomEvent('cv:pro', { detail:{ isPro: window.cvIsPro } }));
+    console.log("Status user →", window.cvIsPro ? "Premium" : "Free");
+  };
 
-  function setUIPremium(premium){
-    if (proLabel) proLabel.textContent = premium ? 'Pro User' : 'Free User';
+  // LOGOUT → paksa free dan kabari UI
+  if (!user){ emit(false); return; }
 
-    if (!upgradeBtn) return;
-
-    // Pastikan tombol SELALU terlihat (baik Free maupun Pro)
-    upgradeBtn.hidden = false;
-    upgradeBtn.style.display = 'block';        // paksa tampil
-    upgradeBtn.classList.remove('hidden');     // kalau ada class hidden
-    upgradeBtn.removeAttribute('inert');       // jaga-jaga
-
-    if (premium){
-      // Award mode (tidak bisa diklik)
-      upgradeBtn.textContent = '👑 Premium User';
-      upgradeBtn.disabled = true;
-      upgradeBtn.style.pointerEvents = 'none';
-      upgradeBtn.style.cursor = 'default';
-      upgradeBtn.onclick = null;
-      // styling opsional
-      upgradeBtn.classList.add('is-premium');
-      upgradeBtn.classList.remove('primary');
-    } else {
-      // Tombol upgrade aktif
-      upgradeBtn.textContent = '✨ Upgrade to Pro';
-      upgradeBtn.disabled = false;
-      upgradeBtn.style.pointerEvents = '';
-      upgradeBtn.style.cursor = '';
-      upgradeBtn.classList.remove('is-premium');
-      upgradeBtn.classList.add('primary');
-      if (typeof window.upgradeToPro === 'function') {
-        upgradeBtn.onclick = window.upgradeToPro;
-      }
-    }
-    window.cvIsPro = !!premium;
-  }
-
-  firebase.auth().onAuthStateChanged((user)=>{
-    // logout → paksa free dan tampilkan tombol
-    if(!user){ setUIPremium(false); return; }
-
-    // login → sinkron ke Firestore (real-time)
-    firebase.firestore().collection('users').doc(user.uid)
-      .onSnapshot((doc)=>{
-        const d = doc.data() || {};
-        const plan = String(d.plan || '').toLowerCase();
-        const premium = !!d.isPremium || plan === 'premium' || plan === 'pro';
-        setUIPremium(premium);
-      });
-  });
+  // LOGIN → dengarkan dokumen user realtime
+  firebase.firestore().collection('users').doc(user.uid)
+    .onSnapshot((doc)=>{
+      const d = doc.data() || {};
+      const plan = String(d.plan || '').toLowerCase();
+      const premium = !!d.isPremium || plan === 'premium' || plan === 'pro';
+      emit(premium); // UI kamu akan update via updateUpgradeUI()
+    });
+});
 </script>
 </body>
 </html>
