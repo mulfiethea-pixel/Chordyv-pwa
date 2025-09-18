@@ -4066,5 +4066,58 @@ window.addEventListener('cv:pro', e=>{
       });
   });
 </script>
+<script>
+  // Fungsi untuk update tampilan tombol + label
+  window.cvRefreshUI = function(){
+    const label = document.querySelector('#cv_proStatus');   // label "Free User / Pro User"
+    const btn   = document.getElementById("cv_btnUpgrade");  // tombol Upgrade
+
+    if (label) label.textContent = window.cvIsPro ? "Pro User" : "Free User";
+
+    if (!btn) return;
+
+    if (window.cvIsPro){
+      // Mode Premium → tombol jadi award
+      btn.classList.remove("primary");
+      btn.classList.add("ghost");
+      btn.disabled = true;
+      btn.textContent = "⭐ Premium User";
+      btn.style.pointerEvents = "none";
+      btn.style.cursor = "default";
+      btn.onclick = null;
+    } else {
+      // Mode Free → tombol upgrade aktif
+      btn.classList.remove("ghost");
+      btn.classList.add("primary");
+      btn.disabled = false;
+      btn.textContent = "✨ Upgrade to Pro";
+      btn.style.pointerEvents = "";
+      btn.style.cursor = "";
+      if (typeof window.upgradeToPro === "function") {
+        btn.onclick = window.upgradeToPro;
+      }
+    }
+  };
+
+  // Listener login/logout
+  firebase.auth().onAuthStateChanged((user)=>{
+    if(!user){
+      // Logout → paksa free
+      window.cvIsPro = false;
+      if (window.cvRefreshUI) window.cvRefreshUI();
+      return;
+    }
+
+    // Login → sinkron Firestore realtime
+    firebase.firestore().collection('users').doc(user.uid)
+      .onSnapshot((doc)=>{
+        const d = doc.data() || {};
+        const plan = String(d.plan || "").toLowerCase();
+        window.cvIsPro = !!d.isPremium || plan === "premium" || plan === "pro";
+        if (window.cvRefreshUI) window.cvRefreshUI();
+        console.log("Status user →", window.cvIsPro ? "Premium" : "Free");
+      });
+  });
+</script>
 </body>
 </html>
