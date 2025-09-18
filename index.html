@@ -4067,55 +4067,57 @@ window.addEventListener('cv:pro', e=>{
   });
 </script>
 <script>
-  // Fungsi untuk update tampilan tombol + label
-  window.cvRefreshUI = function(){
-    const label = document.querySelector('#cv_proStatus');   // label "Free User / Pro User"
-    const btn   = document.getElementById("cv_btnUpgrade");  // tombol Upgrade
+  // Ambil elemen dengan fallback (karena di file kamu ada 2 variasi id)
+  const proLabel = document.querySelector('#cv_proStatus, #accountTier');
+  const upgradeBtn = document.querySelector('#cv_btnUpgrade, #cv_upgradeBtn');
 
-    if (label) label.textContent = window.cvIsPro ? "Pro User" : "Free User";
+  function setUIPremium(premium){
+    if (proLabel) proLabel.textContent = premium ? 'Pro User' : 'Free User';
 
-    if (!btn) return;
+    if (!upgradeBtn) return;
 
-    if (window.cvIsPro){
-      // Mode Premium → tombol jadi award
-      btn.classList.remove("primary");
-      btn.classList.add("ghost");
-      btn.disabled = true;
-      btn.textContent = "⭐ Premium User";
-      btn.style.pointerEvents = "none";
-      btn.style.cursor = "default";
-      btn.onclick = null;
+    // Pastikan tombol SELALU terlihat (baik Free maupun Pro)
+    upgradeBtn.hidden = false;
+    upgradeBtn.style.display = 'block';        // paksa tampil
+    upgradeBtn.classList.remove('hidden');     // kalau ada class hidden
+    upgradeBtn.removeAttribute('inert');       // jaga-jaga
+
+    if (premium){
+      // Award mode (tidak bisa diklik)
+      upgradeBtn.textContent = '👑 Premium User';
+      upgradeBtn.disabled = true;
+      upgradeBtn.style.pointerEvents = 'none';
+      upgradeBtn.style.cursor = 'default';
+      upgradeBtn.onclick = null;
+      // styling opsional
+      upgradeBtn.classList.add('is-premium');
+      upgradeBtn.classList.remove('primary');
     } else {
-      // Mode Free → tombol upgrade aktif
-      btn.classList.remove("ghost");
-      btn.classList.add("primary");
-      btn.disabled = false;
-      btn.textContent = "✨ Upgrade to Pro";
-      btn.style.pointerEvents = "";
-      btn.style.cursor = "";
-      if (typeof window.upgradeToPro === "function") {
-        btn.onclick = window.upgradeToPro;
+      // Tombol upgrade aktif
+      upgradeBtn.textContent = '✨ Upgrade to Pro';
+      upgradeBtn.disabled = false;
+      upgradeBtn.style.pointerEvents = '';
+      upgradeBtn.style.cursor = '';
+      upgradeBtn.classList.remove('is-premium');
+      upgradeBtn.classList.add('primary');
+      if (typeof window.upgradeToPro === 'function') {
+        upgradeBtn.onclick = window.upgradeToPro;
       }
     }
-  };
+    window.cvIsPro = !!premium;
+  }
 
-  // Listener login/logout
   firebase.auth().onAuthStateChanged((user)=>{
-    if(!user){
-      // Logout → paksa free
-      window.cvIsPro = false;
-      if (window.cvRefreshUI) window.cvRefreshUI();
-      return;
-    }
+    // logout → paksa free dan tampilkan tombol
+    if(!user){ setUIPremium(false); return; }
 
-    // Login → sinkron Firestore realtime
+    // login → sinkron ke Firestore (real-time)
     firebase.firestore().collection('users').doc(user.uid)
       .onSnapshot((doc)=>{
         const d = doc.data() || {};
-        const plan = String(d.plan || "").toLowerCase();
-        window.cvIsPro = !!d.isPremium || plan === "premium" || plan === "pro";
-        if (window.cvRefreshUI) window.cvRefreshUI();
-        console.log("Status user →", window.cvIsPro ? "Premium" : "Free");
+        const plan = String(d.plan || '').toLowerCase();
+        const premium = !!d.isPremium || plan === 'premium' || plan === 'pro';
+        setUIPremium(premium);
       });
   });
 </script>
