@@ -23,6 +23,13 @@
 
       --font-perf:28px;
     }
+    /* =================== BEHAVIOR FIXES =================== */
+    /* Matikan pull-to-refresh / overscroll biar lebih app-like */
+    html, body {
+      height: 100%;                 /* biarin tetap ada */
+      overscroll-behavior: none;    /* cegah overscroll semua arah */
+      overscroll-behavior-y: contain; /* penting buat Android/Chrome */
+    }
     body{margin:0;background:var(--bg);color:var(--fg);
       font:16px/1.55 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Inter, "Noto Sans", sans-serif;
 }
