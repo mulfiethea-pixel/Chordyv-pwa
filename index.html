@@ -4241,5 +4241,25 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
     }, { merge: true });
   });
 </script>
+<script>
+  // Ambil status user dari Firestore setiap kali login/berubah
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (!user) return;
+
+    const snap = await firebase.firestore().collection("users").doc(user.uid).get();
+    const data = snap.data() || {};
+
+    // Expose ke global supaya gampang dipakai di HTML/JS lain
+    window.userPlan = data.plan || "free";
+    window.isPremium = !!data.isPremium;
+
+    // Contoh: kalau kamu punya tombol premium, kunci kalau masih free
+    const premiumBtn = document.getElementById("premiumBtn");
+    if (premiumBtn) premiumBtn.disabled = !window.isPremium;
+
+    // Debug: cek di console
+    console.log("Plan:", window.userPlan, "isPremium:", window.isPremium);
+  });
+</script>
 </body>
 </html>
