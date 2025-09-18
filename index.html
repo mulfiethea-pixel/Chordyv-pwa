@@ -4035,9 +4035,6 @@ window.addEventListener('cv:pro', e=>{
         const tierEl = document.querySelector('#cv_proStatus');   // label Free/Pro
         if (tierEl) tierEl.textContent = premium ? 'Pro User' : 'Free User';
 
-        const upgradeBtn = document.querySelector('#cv_btnUpgrade'); // tombol upgrade
-        if (upgradeBtn) upgradeBtn.style.display = premium ? 'none' : 'block';
-
         // kalau perlu dipakai logic lain:
         window.cvIsPro = premium;
         console.log('Firestore → premium:', premium, 'plan:', plan);
