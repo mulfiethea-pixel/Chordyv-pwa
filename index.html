@@ -4196,5 +4196,54 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
   // --- Inisialisasi awal ---
   document.addEventListener("DOMContentLoaded", () => setLoggedOutUI());
 </script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ---- GANTI dengan config Firebase project kamu ----
+  const firebaseConfig = {
+    apiKey: "API_KEY_KAMU",
+    authDomain: "PROJECT_ID.firebaseapp.com",
+    projectId: "PROJECT_ID",
+    storageBucket: "PROJECT_ID.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  // --- Pastikan dokumen user ada ---
+  async function ensureUserDoc(user) {
+    if (!user) return;
+    const ref = doc(db, "users", user.uid);
+    const snap = await getDoc(ref);
+    await setDoc(ref, {
+      email: user.email || "",
+      displayName: user.displayName || "",
+      isPremium: snap.exists() ? (snap.data().isPremium ?? false) : false,
+      plan: snap.exists() ? (snap.data().plan ?? "free") : "free",
+      createdAt: snap.exists() ? (snap.data().createdAt ?? serverTimestamp()) : serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  }
+
+  // --- Login Google (contoh tombol) ---
+  async function loginWithGoogle() {
+    const provider = new GoogleAuthProvider();
+    const res = await signInWithPopup(auth, provider);
+    await ensureUserDoc(res.user);
+  }
+
+  // --- Kalau user sudah login dari sebelumnya ---
+  onAuthStateChanged(auth, async (user) => {
+    if (user) await ensureUserDoc(user);
+  });
+
+  // Expose fungsi ke global supaya bisa dipanggil dari tombol HTML
+  window.loginWithGoogle = loginWithGoogle;
+</script>
 </body>
 </html>
