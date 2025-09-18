@@ -4223,5 +4223,23 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
     }
   }
 </script>
+<script>
+  const db = firebase.firestore();
+
+  // Tulis/merge users/{uid} setiap kali user berhasil login
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (!user) return;
+    const ref = db.collection("users").doc(user.uid);
+    const snap = await ref.get();
+    await ref.set({
+      email: user.email || "",
+      displayName: user.displayName || "",
+      isPremium: snap.exists ? (snap.data().isPremium ?? false) : false,
+      plan: snap.exists ? (snap.data().plan ?? "free") : "free",
+      createdAt: snap.exists ? (snap.data().createdAt ?? firebase.firestore.FieldValue.serverTimestamp()) : firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  });
+</script>
 </body>
 </html>
