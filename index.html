@@ -4095,6 +4095,7 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
 <!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
 
 <script>
   // --- Config project kamu (biarin sesuai yang dari Firebase Console) ---
@@ -4196,55 +4197,31 @@ document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
   // --- Inisialisasi awal ---
   document.addEventListener("DOMContentLoaded", () => setLoggedOutUI());
 </script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<script>
+  const db = firebase.firestore();
 
-  // ---- GANTI dengan config Firebase project kamu ----
-const firebaseConfig = {
-  apiKey: "AIzaSyAhlfX1bkxg3f58u7i_bFMpG_rZya8hqeI",
-  authDomain: "auth.chordyv.com",
-  projectId: "chordyv-4c72d",
-  storageBucket: "chordyv-4c72d.appspot.com",
-  messagingSenderId: "575225159933",
-  appId: "1:575225159933:web:fbe8931ddebe991f4b9e94",
-  measurementId: "G-00EKC1XLJ9"
-};
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
-
-  // --- Pastikan dokumen user ada ---
   async function ensureUserDoc(user) {
     if (!user) return;
-    const ref = doc(db, "users", user.uid);
-    const snap = await getDoc(ref);
-    await setDoc(ref, {
+    const ref = db.collection("users").doc(user.uid);
+    const snap = await ref.get();
+    await ref.set({
       email: user.email || "",
       displayName: user.displayName || "",
-      isPremium: snap.exists() ? (snap.data().isPremium ?? false) : false,
-      plan: snap.exists() ? (snap.data().plan ?? "free") : "free",
-      createdAt: snap.exists() ? (snap.data().createdAt ?? serverTimestamp()) : serverTimestamp(),
-      updatedAt: serverTimestamp()
+      isPremium: snap.exists ? (snap.data().isPremium ?? false) : false,
+      plan: snap.exists ? (snap.data().plan ?? "free") : "free",
+      createdAt: snap.exists ? (snap.data().createdAt ?? firebase.firestore.FieldValue.serverTimestamp()) : firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
   }
 
-  // --- Login Google (contoh tombol) ---
-  async function loginWithGoogle() {
-    const provider = new GoogleAuthProvider();
-    const res = await signInWithPopup(auth, provider);
-    await ensureUserDoc(res.user);
+  // Hubungkan ke fungsi login compat kamu
+  const oldSignInWithGoogle = signInWithGoogle;
+  signInWithGoogle = async function() {
+    const res = await oldSignInWithGoogle();
+    if (auth.currentUser) {
+      await ensureUserDoc(auth.currentUser);
+    }
   }
-
-  // --- Kalau user sudah login dari sebelumnya ---
-  onAuthStateChanged(auth, async (user) => {
-    if (user) await ensureUserDoc(user);
-  });
-
-  // Expose fungsi ke global supaya bisa dipanggil dari tombol HTML
-  window.loginWithGoogle = loginWithGoogle;
 </script>
 </body>
 </html>
