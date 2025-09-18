@@ -1200,42 +1200,6 @@ body.theme-navy #cv_modalUpgrade p.sub{ color:#a7b2c7; }
 body.theme-navy #cv_modalUpgrade .benefit{ background:#0b1324; }
 </style>
 <script>
-  // default
-  window.cvIsPro = false;
-
-  firebase.auth().onAuthStateChanged((user)=>{
-    if(!user) return;
-    firebase.firestore().collection('users').doc(user.uid)
-      .onSnapshot((doc)=>{
-        const d = doc.data() || {};
-        const plan = String(d.plan || '').toLowerCase();
-        window.cvIsPro = !!d.isPremium || plan === 'premium' || plan === 'pro';
-        // kalau ada UI yang perlu disesuaikan, panggil fungsi refresh di sini
-        if (window.cvRefreshUI) window.cvRefreshUI();
-      });
-  });
-</script>
-<script>
-  // Default status user
-  window.cvIsPro = false;
-
-  // Sync dengan Firestore
-  firebase.auth().onAuthStateChanged((user)=>{
-    if(!user) return;
-    firebase.firestore().collection('users').doc(user.uid)
-      .onSnapshot((doc)=>{
-        const d = doc.data() || {};
-        const plan = String(d.plan || '').toLowerCase();
-        window.cvIsPro = !!d.isPremium || plan === 'premium' || plan === 'pro';
-
-        // Kalau ada fungsi refresh UI, panggil
-        if (window.cvRefreshUI) window.cvRefreshUI();
-
-        console.log("Status user →", window.cvIsPro ? "Premium" : "Free");
-      });
-  });
-</script>
-<script>
   /* CORE STORAGE & UTIL */
   (()=> {
     const DB_KEY='cv_songs', FOLD_KEY='cv_folders';
@@ -4075,6 +4039,29 @@ window.addEventListener('cv:pro', e=>{
         const upgradeBtn = document.querySelector('#upgradeBtn'); // misal tombol upgrade
         if (upgradeBtn) upgradeBtn.style.display = premium ? 'none' : 'block';
 
+        console.log('Firestore → premium:', premium, 'plan:', plan);
+      });
+  });
+</script>
+<script>
+  firebase.auth().onAuthStateChanged((user)=>{
+    if(!user) return;
+
+    firebase.firestore().collection('users').doc(user.uid)
+      .onSnapshot((doc)=>{
+        const d = doc.data() || {};
+        const plan = String(d.plan || '').toLowerCase();
+        const premium = !!d.isPremium || plan === 'premium' || plan === 'pro';
+
+        // update UI yang bener:
+        const tierEl = document.querySelector('#cv_proStatus');   // label Free/Pro
+        if (tierEl) tierEl.textContent = premium ? 'Pro User' : 'Free User';
+
+        const upgradeBtn = document.querySelector('#cv_btnUpgrade'); // tombol upgrade
+        if (upgradeBtn) upgradeBtn.style.display = premium ? 'none' : 'block';
+
+        // kalau perlu dipakai logic lain:
+        window.cvIsPro = premium;
         console.log('Firestore → premium:', premium, 'plan:', plan);
       });
   });
