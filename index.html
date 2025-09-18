@@ -1200,15 +1200,40 @@ body.theme-navy #cv_modalUpgrade p.sub{ color:#a7b2c7; }
 body.theme-navy #cv_modalUpgrade .benefit{ background:#0b1324; }
 </style>
 <script>
-const CV_PRO_KEY = 'cv_isPro';
-window.cvIsPro = localStorage.getItem(CV_PRO_KEY) === '1';
+  // default
+  window.cvIsPro = false;
 
-window.setPro = function(v){
-  window.cvIsPro = !!v;
-  localStorage.setItem(CV_PRO_KEY, window.cvIsPro ? '1' : '0');
-  // optional: broadcast event kalau ada UI lain yang mau update
-  window.dispatchEvent(new CustomEvent('cv:pro', { detail:{ isPro: window.cvIsPro } }));
-};
+  firebase.auth().onAuthStateChanged((user)=>{
+    if(!user) return;
+    firebase.firestore().collection('users').doc(user.uid)
+      .onSnapshot((doc)=>{
+        const d = doc.data() || {};
+        const plan = String(d.plan || '').toLowerCase();
+        window.cvIsPro = !!d.isPremium || plan === 'premium' || plan === 'pro';
+        // kalau ada UI yang perlu disesuaikan, panggil fungsi refresh di sini
+        if (window.cvRefreshUI) window.cvRefreshUI();
+      });
+  });
+</script>
+<script>
+  // Default status user
+  window.cvIsPro = false;
+
+  // Sync dengan Firestore
+  firebase.auth().onAuthStateChanged((user)=>{
+    if(!user) return;
+    firebase.firestore().collection('users').doc(user.uid)
+      .onSnapshot((doc)=>{
+        const d = doc.data() || {};
+        const plan = String(d.plan || '').toLowerCase();
+        window.cvIsPro = !!d.isPremium || plan === 'premium' || plan === 'pro';
+
+        // Kalau ada fungsi refresh UI, panggil
+        if (window.cvRefreshUI) window.cvRefreshUI();
+
+        console.log("Status user →", window.cvIsPro ? "Premium" : "Free");
+      });
+  });
 </script>
 <script>
   /* CORE STORAGE & UTIL */
@@ -3494,235 +3519,6 @@ window.addEventListener('cv:pro', e=>{
   // Backward-compat alias (biar pemanggil lama tetap jalan)
   window.showUpgradeModal = openUpgrade;
   window.hideUpgradeModal = closeUpgrade;
-</script>
-<!-- === DEBUG / SELF-TEST HARNESS (HP friendly) — with Slide Toggle === -->
-<style>
-  :root{
-    --dbg-z: 99999;
-    --dbg-accent: #2563eb;
-    --dbg-bg: rgba(0,0,0,.65);
-    --dbg-track: #111827;
-    --dbg-knob: #1f2937;
-  }
-
-  /* Debug Bar */
-  #cv_debugBar {
-    position:fixed;left:12px;bottom:70px;z-index:var(--dbg-z);
-    background:var(--dbg-bg);color:#fff;padding:8px 10px;
-    border-radius:10px;display:flex;gap:6px;align-items:center;
-    box-shadow:0 6px 20px rgba(0,0,0,.35);
-    backdrop-filter:saturate(120%) blur(4px);
-  }
-  #cv_debugBar[hidden]{ display:none !important; }
-
-  #cv_debugBar button{
-    padding:6px 8px;border-radius:8px;
-    border:1px solid #444;background:#1f2937;
-    color:#fff;cursor:pointer;font-size:12px;white-space:nowrap;
-  }
-  #cv_debugBar .ok{background:#2563eb}
-  #cv_debugBar .warn{background:#a16207}
-  #cv_debugBar .danger{background:#b91c1c}
-
-  /* Slide Toggle (track + knob) */
-  #cv_debugSlider {
-    position:fixed;right:16px;bottom:20px;z-index:var(--dbg-z);
-    width:118px;height:44px;border-radius:999px;
-    background:var(--dbg-track);
-    border:1px solid #374151;
-    display:flex;align-items:center;
-    padding:6px;box-sizing:border-box;
-    user-select:none;touch-action:none; /* enable smooth pointer events */
-    box-shadow:0 8px 24px rgba(0,0,0,.35);
-  }
-  #cv_dbgLabel{
-    font-size:12px;color:#cbd5e1;opacity:.85;margin-left:10px;
-    letter-spacing:.3px;pointer-events:none;user-select:none;
-  }
-  #cv_debugKnob{
-    width:36px;height:36px;border-radius:50%;
-    background:var(--dbg-knob);
-    border:1px solid #374151;
-    display:flex;align-items:center;justify-content:center;
-    font-size:18px;cursor:pointer;flex:0 0 auto;
-    transform:translateX(0); /* 0..(trackW - padding*2 - knobW - labelSpace) */
-    transition:transform .18s ease;
-  }
-  /* Visual ON state */
-  #cv_debugSlider.on{
-    outline:2px solid color-mix(in srgb, var(--dbg-accent) 75%, transparent);
-  }
-  #cv_debugSlider.on #cv_debugKnob{
-    background:var(--dbg-accent);
-    border-color:var(--dbg-accent);
-    color:#fff;
-  }
-
-  /* Reduced-motion friendly */
-  @media (prefers-reduced-motion: reduce){
-    #cv_debugKnob{ transition:none; }
-  }
-</style>
-
-<div id="cv_debugBar" hidden>
-  <button id="dbg_free" class="warn">Set Free</button>
-  <button id="dbg_pro" class="ok">Set Pro</button>
-  <button id="dbg_reset" class="danger">Reset</button>
-  <button id="dbg_test_free" class="warn">Test Free</button>
-  <button id="dbg_test_pro" class="ok">Test Pro</button>
-</div>
-
-<!-- Slide Toggle -->
-<div id="cv_debugSlider" aria-label="Debug Toggle" role="switch" aria-checked="false">
-  <div id="cv_debugKnob">🐞</div>
-  <div id="cv_dbgLabel">DEBUG</div>
-</div>
-
-<script>
-/* === Slide Toggle Logic === */
-const dbgBar = document.getElementById('cv_debugBar');
-const slider = document.getElementById('cv_debugSlider');
-const knob   = document.getElementById('cv_debugKnob');
-const label  = document.getElementById('cv_dbgLabel');
-
-function dbgLog(...a){ console.log('[SELFTEST]', ...a); }
-
-let dragging = false;
-let startX = 0;
-let currentX = 0;
-let knobX = 0;   // current knob translateX
-let maxX = 0;    // computed based on track width
-let labelSpace = 58; // space we reserve so label always visible
-
-function computeMax(){
-  const trackW = slider.clientWidth;
-  const pad = 6; // from CSS
-  const knobW = knob.clientWidth;
-  maxX = Math.max(0, trackW - pad*2 - knobW - labelSpace);
-}
-computeMax();
-window.addEventListener('resize', computeMax);
-
-function applyKnob(x, withTransition=false){
-  knob.style.transition = withTransition ? 'transform .18s ease' : 'none';
-  knob.style.transform = `translateX(${x}px)`;
-  knobX = x;
-}
-
-function setOnState(isOn){
-  slider.classList.toggle('on', isOn);
-  slider.setAttribute('aria-checked', String(isOn));
-  dbgBar.hidden = !isOn;
-}
-
-function snap(){
-  // If passed halfway, snap to ON; else OFF
-  const isOn = knobX > maxX/2;
-  applyKnob(isOn ? maxX : 0, true);
-  setOnState(isOn);
-}
-
-function onPointerDown(e){
-  dragging = true;
-  startX = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
-  currentX = startX;
-  knob.style.transition = 'none';
-}
-function onPointerMove(e){
-  if(!dragging) return;
-  const x = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
-  const dx = x - startX;
-  let next = Math.min(maxX, Math.max(0, knobX + dx));
-  applyKnob(next, false);
-  startX = x; // incremental dragging
-}
-function onPointerUp(){
-  if(!dragging) return;
-  dragging = false;
-  snap();
-}
-
-function toggleClick(){
-  // simple tap toggles state
-  const turningOn = knobX === 0;
-  applyKnob(turningOn ? maxX : 0, true);
-  setOnState(turningOn);
-}
-
-/* Pointer (mouse+touch) events */
-knob.addEventListener('mousedown', onPointerDown);
-window.addEventListener('mousemove', onPointerMove);
-window.addEventListener('mouseup', onPointerUp);
-
-knob.addEventListener('touchstart', onPointerDown, {passive:true});
-window.addEventListener('touchmove', onPointerMove, {passive:true});
-window.addEventListener('touchend', onPointerUp, {passive:true});
-
-/* Tap anywhere on slider to toggle */
-slider.addEventListener('click', (e)=>{
-  // Avoid double handling when finishing a drag
-  if(dragging) return;
-  toggleClick();
-});
-
-/* Keyboard accessibility */
-slider.tabIndex = 0;
-slider.addEventListener('keydown', (e)=>{
-  if(e.key === ' ' || e.key === 'Enter'){
-    e.preventDefault();
-    toggleClick();
-  } else if(e.key === 'ArrowRight'){
-    applyKnob(maxX, true); setOnState(true);
-  } else if(e.key === 'ArrowLeft'){
-    applyKnob(0, true); setOnState(false);
-  }
-});
-
-/* === Utilities you already have === */
-function clickIf(id){
-  const el=document.getElementById(id);
-  if(!el){ dbgLog('MISS',id); return false; }
-  el.dispatchEvent(new MouseEvent('click',{bubbles:true}));
-  return true;
-}
-
-async function dbgReset(){
-  localStorage.removeItem('cv_songs');
-  localStorage.removeItem('cv_folders');
-  localStorage.removeItem('cv_edit_id');
-  dbgLog('RESET done');
-}
-
-/* ==== Test scenarios (unchanged) ==== */
-async function testFree(){
-  setPro(false); await dbgReset();
-  let db=cv_loadDB()||{};
-  for(let i=1;i<=5;i++){ db['s_test'+i]={title:'Test '+i,key:'C',beat:4,folder:'',raw:'C | F | G |'}; }
-  cv_saveDB(db);
-  dbgLog('Seeded 5 songs');
-  if (typeof cv_switchView==='function') cv_switchView('ed');
-  document.getElementById('ed_title').value='Test 6';
-  document.getElementById('ed_content').value='C | F | G |';
-  clickIf('ed_btnSave');   // expect modal save-limit
-  clickIf('cv_btnExport'); // expect modal export
-  clickIf('cv_btnImport'); // expect modal import
-}
-async function testPro(){
-  setPro(true);
-  if (typeof cv_switchView==='function') cv_switchView('ed');
-  document.getElementById('ed_title').value='Pro Save OK';
-  document.getElementById('ed_content').value='C | Am | F | G |';
-  clickIf('ed_btnSave');   // expect toast Saved
-  clickIf('cv_btnExport'); // expect download
-  dbgLog('Import (Pro): pilih file manual → expect Import completed');
-}
-
-/* Wire buttons (unchanged) */
-document.getElementById('dbg_free')?.addEventListener('click', ()=>{ setPro(false); dbgLog('set Free'); });
-document.getElementById('dbg_pro')?.addEventListener('click', ()=>{ setPro(true); dbgLog('set Pro'); });
-document.getElementById('dbg_reset')?.addEventListener('click', dbgReset);
-document.getElementById('dbg_test_free')?.addEventListener('click', testFree);
-document.getElementById('dbg_test_pro')?.addEventListener('click', testPro);
 </script>
 <script>
   // Proxy klik FAB ke tombol "New" lama (kalau ada di bar aksi)
