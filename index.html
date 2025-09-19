@@ -16,15 +16,23 @@
   <title>V — Editor • Library • Performance (SPA)</title>
 
   <style>
-    :root {
-      --safe-top: env(safe-area-inset-top, 0px);
-    }
-    body {
-      padding-top: var(--safe-top);
-    }
-    #cv_header {
-      padding-top: var(--safe-top);
-    }
+:root{
+  --safe-top: env(safe-area-inset-top, 0px);
+  --header-top: #0f172a; /* warna paling atas gradasi header kamu */
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  top:0; left:0; right:0;
+  height: var(--safe-top);
+  background: var(--header-top);
+  z-index: 9999;
+  pointer-events:none;
+}
+
+body{ padding-top: var(--safe-top) !important; }
+#cv_header{ padding-top: var(--safe-top) !important; }
     /* =================== GLOBAL THEME (default WHITE) =================== */
     :root{
       --bg:#ffffff; --fg:#0f172a; --card:#ffffff; --muted:#475569; --border:#e5e7eb;
