@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "io.github.mulfiethea_pixel.twa",
-        "sha256_cert_fingerprints": ["B2:5E:92:D2:DF:E6:03:BD:21:5F:EF:DB:98:FD:CF:21:11:68:EE:97:E6:79:C6:8E:EB:5A:17:73:6C:AD:A6:F6"]
+        "sha256_cert_fingerprints": ["38:F9:1D:FC:30:8D:CC:75:7B:24:B1:6E:33:29:E2:68:4E:D3:6D:73:73:6B:37:F5:47:22:D2:B8:7A:28:F4:F5"]
       }
     }]
