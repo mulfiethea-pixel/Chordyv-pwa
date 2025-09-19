@@ -2,19 +2,30 @@
 <html lang="id">
 <head>
   <meta charset="utf-8"/>
-<base href="/Chordyv-pwa/">
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<meta name="theme-color" content="#0F172A">
-<!-- Aktifkan mode web app di iOS -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ChordyV">
+  <base href="/Chordyv-pwa/">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#0F172A">
+  <!-- Aktifkan mode web app di iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ChordyV">
 
-<!-- Icon khusus iOS (180x180 px, dengan background navy/putih) -->
-<link rel="apple-touch-icon" sizes="180x180" href="/Chordyv-pwa/ios-180x180.png">
- <link rel="manifest" href="manifest.webmanifest">
- <title>V — Editor • Library • Performance (SPA)</title>
-<style>
+  <!-- Icon khusus iOS (180x180 px, dengan background navy/putih) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/Chordyv-pwa/ios-180x180.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>V — Editor • Library • Performance (SPA)</title>
+
+  <style>
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+    }
+    body {
+      padding-top: var(--safe-top);
+    }
+    #cv_header {
+      padding-top: var(--safe-top);
+    }
+  </style>
     /* =================== GLOBAL THEME (default WHITE) =================== */
     :root{
       --bg:#ffffff; --fg:#0f172a; --card:#ffffff; --muted:#475569; --border:#e5e7eb;
