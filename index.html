@@ -3480,12 +3480,18 @@ window.addEventListener('cv:pro', e=>{
     m.classList.remove('show');
     m.setAttribute('aria-hidden','true');
   }
-  // Buttons
-  document.getElementById('cv_btnMaybeLater')?.addEventListener('click', closeUpgrade);
-  document.getElementById('cv_btnGetPro')?.addEventListener('click', ()=>{
-    setPro(true);   // switch ke Pro (untuk demo/dev)
-    closeUpgrade();
-  });
+// Buttons (modal)
+document.getElementById('cv_btnMaybeLater')?.addEventListener('click', closeUpgrade);
+document.getElementById('cv_btnGetPro')?.addEventListener('click', async (e)=>{
+  e.preventDefault();
+  try{
+    await window.purchasePro?.();  // panggil dialog Google Play
+    closeUpgrade();                // tutup modal setelah sukses/keluar
+  }catch(err){
+    console.error(err);
+    // modal tetap terbuka kalau gagal/batal
+  }
+});
 
   // Backward-compat alias (biar pemanggil lama tetap jalan)
   window.showUpgradeModal = openUpgrade;
@@ -3862,7 +3868,6 @@ window.addEventListener('cv:pro', e=>{
 <!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
 
 <script>
   // --- Config project kamu (biarin sesuai yang dari Firebase Console) ---
@@ -3965,110 +3970,94 @@ window.addEventListener('cv:pro', e=>{
   document.addEventListener("DOMContentLoaded", () => setLoggedOutUI());
 </script>
 <script>
-  const db = firebase.firestore();
-
-  async function ensureUserDoc(user) {
-    if (!user) return;
-    const ref = db.collection("users").doc(user.uid);
-    const snap = await ref.get();
-    await ref.set({
-      email: user.email || "",
-      displayName: user.displayName || "",
-      isPremium: snap.exists ? (snap.data().isPremium ?? false) : false,
-      plan: snap.exists ? (snap.data().plan ?? "free") : "free",
-      createdAt: snap.exists ? (snap.data().createdAt ?? firebase.firestore.FieldValue.serverTimestamp()) : firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-  }
-
-  // Hubungkan ke fungsi login compat kamu
-  const oldSignInWithGoogle = signInWithGoogle;
-  signInWithGoogle = async function() {
-    const res = await oldSignInWithGoogle();
-    if (auth.currentUser) {
-      await ensureUserDoc(auth.currentUser);
-    }
-  }
-</script>
-<script>
-  const db = firebase.firestore();
-
-  // Tulis/merge users/{uid} setiap kali user berhasil login
-  firebase.auth().onAuthStateChanged(async (user) => {
-    if (!user) return;
-    const ref = db.collection("users").doc(user.uid);
-    const snap = await ref.get();
-    await ref.set({
-      email: user.email || "",
-      displayName: user.displayName || "",
-      isPremium: snap.exists ? (snap.data().isPremium ?? false) : false,
-      plan: snap.exists ? (snap.data().plan ?? "free") : "free",
-      createdAt: snap.exists ? (snap.data().createdAt ?? firebase.firestore.FieldValue.serverTimestamp()) : firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-  });
-</script>
-<script>
-  // Ambil status user dari Firestore setiap kali login/berubah
-  firebase.auth().onAuthStateChanged(async (user) => {
-    if (!user) return;
-
-    const snap = await firebase.firestore().collection("users").doc(user.uid).get();
-    const data = snap.data() || {};
-
-    // Expose ke global supaya gampang dipakai di HTML/JS lain
-    window.userPlan = data.plan || "free";
-    window.isPremium = !!data.isPremium;
-
-    // Contoh: kalau kamu punya tombol premium, kunci kalau masih free
-    const premiumBtn = document.getElementById("premiumBtn");
-    if (premiumBtn) premiumBtn.disabled = !window.isPremium;
-
-    // Debug: cek di console
-    console.log("Plan:", window.userPlan, "isPremium:", window.isPremium);
-  });
-</script>
-<script>
-  firebase.auth().onAuthStateChanged((user)=>{
-    if(!user) return;
-
-    firebase.firestore().collection('users').doc(user.uid)
-      .onSnapshot((doc)=>{
-        const d = doc.data() || {};
-        const plan = String(d.plan || '').toLowerCase();
-        const premium = !!d.isPremium || plan === 'premium' || plan === 'pro';
-
-        // update UI yang bener:
-        const tierEl = document.querySelector('#cv_proStatus');   // label Free/Pro
-        if (tierEl) tierEl.textContent = premium ? 'Pro User' : 'Free User';
-
-        // kalau perlu dipakai logic lain:
-        window.cvIsPro = premium;
-        console.log('Firestore → premium:', premium, 'plan:', plan);
-      });
-  });
-</script>
-<script>
+/* ===== AUTH ONLY (tanpa Firestore) ===== */
 firebase.auth().onAuthStateChanged((user)=>{
-  // fungsi bantu: set state + kabari UI
-  const emit = (isPro)=>{
-    window.cvIsPro = !!isPro;
-    window.dispatchEvent(new CustomEvent('cv:pro', { detail:{ isPro: window.cvIsPro } }));
-    console.log("Status user →", window.cvIsPro ? "Premium" : "Free");
-  };
-
-  // LOGOUT → paksa free dan kabari UI
-  if (!user){ emit(false); return; }
-
-  // LOGIN → dengarkan dokumen user realtime
-  firebase.firestore().collection('users').doc(user.uid)
-    .onSnapshot((doc)=>{
-      const d = doc.data() || {};
-      const plan = String(d.plan || '').toLowerCase();
-      const premium = !!d.isPremium || plan === 'premium' || plan === 'pro';
-      emit(premium); // UI kamu akan update via updateUpgradeUI()
-    });
+  if (!user){
+    window.cvIsPro = false;
+    if (window.cvRefreshUI) window.cvRefreshUI();
+    return;
+  }
+  // saat user login, cek entitlement dari Play
+  window.restorePro?.();
 });
+
+/* ===== PLAY BILLING: cek & beli ===== */
+/* GANTI dengan productId kamu di Play Console */
+const CV_SKU = 'premium_monthly';
+
+window.restorePro = async function(){
+  try{
+    if (!('getDigitalGoodsService' in window)) {
+      window.cvIsPro = false;
+      if (window.cvRefreshUI) window.cvRefreshUI();
+      return;
+    }
+    const svc = await getDigitalGoodsService('https://play.google.com/billing');
+    const purchases = await svc.listPurchases();
+    const active = Array.isArray(purchases) && purchases.some(p => p.sku === CV_SKU);
+
+    window.cvIsPro = !!active;
+
+    // Jika kamu punya updater UI sendiri, panggil
+    if (window.cvRefreshUI) window.cvRefreshUI();
+
+    // Fallback langsung: update label & tombol jika id-nya ada
+    const lbl = document.querySelector('#cv_proStatus, #accountTier');
+    const btn = document.querySelector('#cv_btnUpgrade, #cv_upgradeBtn');
+    if (lbl) lbl.textContent = window.cvIsPro ? 'Pro User' : 'Free User';
+    if (btn){
+      btn.hidden = false;
+      btn.style.display = 'block';
+      if (window.cvIsPro){
+        btn.textContent = '👑 Premium User';
+        btn.disabled = true;
+        btn.style.pointerEvents = 'none';
+        btn.onclick = null;
+      } else {
+        btn.textContent = '✨ Upgrade to Pro';
+        btn.disabled = false;
+        btn.style.pointerEvents = '';
+        btn.onclick = window.purchasePro; // klik → dialog Play Store
+      }
+    }
+    console.log('[Billing] Entitlement:', window.cvIsPro ? 'Premium' : 'Free');
+  }catch(e){
+    console.warn('[Billing] restore failed:', e);
+    window.cvIsPro = false;
+    if (window.cvRefreshUI) window.cvRefreshUI();
+  }
+};
+
+window.purchasePro = async function(){
+  let req;
+  try{
+    if (!('getDigitalGoodsService' in window)) {
+      alert('Billing tidak tersedia di perangkat ini'); return;
+    }
+    const svc = await getDigitalGoodsService('https://play.google.com/billing');
+    await svc.getDetails([CV_SKU]); // opsional: ambil info harga/judul
+
+    req = new PaymentRequest([{
+      supportedMethods: 'https://play.google.com/billing',
+      data: { sku: CV_SKU }
+    }]);
+
+    const resp = await req.show();
+    await resp.complete('success');
+
+    // Setelah bayar, cek ulang entitlement dari Play
+    await window.restorePro();
+    alert('Terima kasih! Premium aktif.');
+  }catch(e){
+    console.error(e);
+    try{ await req?.complete('fail'); }catch{}
+    alert('Pembelian dibatalkan / gagal.');
+  }
+};
+
+// Auto-restore saat app kembali ke foreground & saat load pertama
+document.addEventListener('visibilitychange', ()=>{ if (!document.hidden) window.restorePro(); });
+window.addEventListener('load', window.restorePro);
 </script>
 </body>
 </html>
