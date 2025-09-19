@@ -21,6 +21,7 @@
   --header-top: #0f172a; /* warna paling atas gradasi header kamu */
 }
 
+/* strip di area status bar agar nyambung dengan header */
 body::before{
   content:"";
   position:fixed;
@@ -31,6 +32,7 @@ body::before{
   pointer-events:none;
 }
 
+/* dorong konten turun setinggi status bar */
 body{ padding-top: var(--safe-top) !important; }
 #cv_header{ padding-top: var(--safe-top) !important; }
     /* =================== GLOBAL THEME (default WHITE) =================== */
@@ -1656,6 +1658,22 @@ body.theme-navy {
   vertical-align: super;
 }
 </style>
+<script>
+(function(){
+  function ensureSafeTop(){
+    const v = getComputedStyle(document.documentElement)
+               .getPropertyValue('--safe-top').trim();
+    const px = parseFloat(v);
+    if (!(px > 0)) {
+      // Android TWA sering 0 → pakai fallback 24px
+      document.documentElement.style.setProperty('--safe-top', '24px');
+    }
+  }
+  ensureSafeTop();
+  // jaga-jaga kalau orientation berubah
+  window.addEventListener('resize', ensureSafeTop);
+})();
+</script>
 </head>
 
 <body>
