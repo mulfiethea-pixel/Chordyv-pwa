@@ -1,40 +1,20 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="utf-8"/>
-  <base href="/Chordyv-pwa/">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <meta name="theme-color" content="#0F172A">
-  <!-- Aktifkan mode web app di iOS -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="ChordyV">
-
-  <!-- Icon khusus iOS (180x180 px, dengan background navy/putih) -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/Chordyv-pwa/ios-180x180.png">
-  <link rel="manifest" href="manifest.webmanifest">
-  <title>V — Editor • Library • Performance (SPA)</title>
-
-  <style>
-:root{
-  --safe-top: env(safe-area-inset-top, 0px);
-  --header-top: #0f172a; /* warna paling atas gradasi header kamu */
-}
-
-/* strip di area status bar agar nyambung dengan header */
-body::before{
-  content:"";
-  position:fixed;
-  top:0; left:0; right:0;
-  height: var(--safe-top);
-  background: var(--header-top);
-  z-index: 9999;
-  pointer-events:none;
-}
-
-/* dorong konten turun setinggi status bar */
-body{ padding-top: var(--safe-top) !important; }
-#cv_header{ padding-top: var(--safe-top) !important; }
+<!DOCTYPE html>  
+<html lang="id">  
+<head>  
+  <meta charset="utf-8"/>  
+<base href="/Chordyv-pwa/">  
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>  
+<meta name="theme-color" content="#0F172A">  
+<!-- Aktifkan mode web app di iOS -->  
+<meta name="apple-mobile-web-app-capable" content="yes">  
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">  
+<meta name="apple-mobile-web-app-title" content="ChordyV">  
+  
+<!-- Icon khusus iOS (180x180 px, dengan background navy/putih) -->  
+<link rel="apple-touch-icon" sizes="180x180" href="/Chordyv-pwa/ios-180x180.png">  
+ <link rel="manifest" href="manifest.webmanifest">  
+ <title>V — Editor • Library • Performance (SPA)</title>  
+<style>
     /* =================== GLOBAL THEME (default WHITE) =================== */
     :root{
       --bg:#ffffff; --fg:#0f172a; --card:#ffffff; --muted:#475569; --border:#e5e7eb;
@@ -1658,22 +1638,6 @@ body.theme-navy {
   vertical-align: super;
 }
 </style>
-<script>
-(function(){
-  function ensureSafeTop(){
-    const v = getComputedStyle(document.documentElement)
-               .getPropertyValue('--safe-top').trim();
-    const px = parseFloat(v);
-    if (!(px > 0)) {
-      // Android TWA sering 0 → pakai fallback 24px
-      document.documentElement.style.setProperty('--safe-top', '24px');
-    }
-  }
-  ensureSafeTop();
-  // jaga-jaga kalau orientation berubah
-  window.addEventListener('resize', ensureSafeTop);
-})();
-</script>
 </head>
 
 <body>
