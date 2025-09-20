@@ -4,6 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
+<meta name="cv-build" content="2025.09.20.1">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -4074,6 +4075,14 @@ window.purchasePro = async function(){
 // Auto-restore saat app kembali ke foreground & saat load pertama
 document.addEventListener('visibilitychange', ()=>{ if (!document.hidden) window.restorePro(); });
 window.addEventListener('load', window.restorePro);
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  const ver = document.querySelector('meta[name="cv-build"]').content;
+  navigator.serviceWorker.register('./sw.js?v=' + ver)
+    .then(r => console.log('SW registered, version', ver))
+    .catch(err => console.error('SW failed', err));
+}
 </script>
 </body>
 </html>
