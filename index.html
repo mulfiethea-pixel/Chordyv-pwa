@@ -2641,128 +2641,144 @@ const fReset= document.getElementById('perf_fontReset');
     const backLib=document.getElementById('perf_backLib');
     const backEd=document.getElementById('perf_backEd');
 
-    /* Theory helpers */
-    const SHARP=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-    const FLAT =["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
-    const NAME_TO_SEMI = new Map();
-    SHARP.forEach((n,i)=>NAME_TO_SEMI.set(n,i));
-    FLAT.forEach((n,i)=>NAME_TO_SEMI.set(n,i));
-    const mod = (n,m)=>((n%m)+m)%m;
+<!-- === Performance / Theory helpers (REVISED) === -->
+  /* Theory helpers */
+  const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  const FLAT  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+  const NAME_TO_SEMI = new Map();
+  SHARP.forEach((n,i)=>NAME_TO_SEMI.set(n,i));
+  FLAT.forEach((n,i)=>NAME_TO_SEMI.set(n,i));
+  const mod = (n,m)=>((n%m)+m)%m;
 
-    const semiToName = (s, useSharps = true) => {
-      const name = (useSharps ? SHARP : FLAT)[mod(s,12)];
-      return useSharps ? name : name.replace(/b/g, '♭');
-    };
+  const semiToName = (s, useSharps = true) => {
+    const name = (useSharps ? SHARP : FLAT)[mod(s,12)];
+    return useSharps ? name : name.replace(/b/g, '♭');
+  };
 
-    // --- SANITIZER ---
-    function sanitizeRaw(raw) {
-      return String(raw)
-        .replace(/[\u2044\u2215]/g, '/')      
-        .replace(/[¦|︱︲｜]/g, '|')           
-        .replace(/[–—−]/g, '-')               
-        .replace(/…/g, '...')                 
-        .replace(/♯/g, '#').replace(/♭/g, 'b')
-        .replace(/\u00A0/g, ' ')              
-        .replace(/[\u200B-\u200D\uFEFF]/g, '')
-        .replace(/[\uFF21-\uFF3A]/g, c => String.fromCharCode(c.charCodeAt(0)-0xFEE0))
-        .replace(/[\uFF41-\uFF5A]/g, c => String.fromCharCode(c.charCodeAt(0)-0xFEE0))
-        .replace(/[ \t]+/g, ' ')
-        .replace(/\r\n?/g, '\n');
-    }
-
-    const normalizeNote = s => (s ? s.replace(/♯/g, '#').replace(/♭/g, 'b').toUpperCase() : s);
-
-    function parseChordToken(tok){
-      if(!tok) return null;
-      const mTrail = tok.match(/^(.+?)([.,…]+)?$/);
-      const core  = mTrail ? mTrail[1] : tok;
-      const trail = (mTrail && mTrail[2]) ? mTrail[2] : '';
-      const m = core.match(/^([A-G](?:#|b|♯|♭)?)([^/\s]*)(?:\/([A-G](?:#|b|♯|♭)?))?$/);
-      if(!m) return null;
-      const root = normalizeNote(m[1]);
-      const rest = m[2] || '';
-      const bass = m[3] ? normalizeNote(m[3]) : null;
-      return { root, rest, bass, trail };
-    }
-
-    const isBarSym  = s => (s==='|' || s==='.' || s==='-' || s==='%');
-    const isMelody  = s => /^\d[\d.\-]*$/.test(s);
-
-    let useSharps=(localStorage.getItem('cv_perf_acc')||'sharp')==='sharp';
-    let steps=parseInt(localStorage.getItem('cv_perf_steps')||'0')||0;
-    let fontPerf=parseInt(localStorage.getItem('cv_perf_font')||'28')||28;
-
-   // === DEFINISI CHORD YANG LEBIH KETAT ===
-function markupPerformance(src, steps, useSharps){
-  // === teori kecil ===
-  const SHARP=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-  const FLAT =["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
-  const NAME_TO_SEMI=new Map(); SHARP.forEach((n,i)=>NAME_TO_SEMI.set(n,i)); FLAT.forEach((n,i)=>NAME_TO_SEMI.set(n,i));
-  const mod=(n,m)=>((n%m)+m)%m;
-  const semiToName=(s,sharp)=> (sharp?SHARP:FLAT)[mod(s,12)].replace(/b/g,'♭');
-  const normalize=(s)=> String(s||'').replace(/♯/g,'#').replace(/♭/g,'b').toUpperCase();
-
-  // === ATURAN CHORD: "berdiri sendiri" (tidak menempel huruf/angka di kiri/kanan) ===
-  // Token chord: Root kapital A–G, opsional accidental, lalu combo bebas TANPA spasi (huruf/angka/simbol umum),
-  // opsional slash-bass. Tidak boleh menempel huruf/angka di kiri/kanan.
-// --- CHORD TOKEN (ketat) ---
-const CH_NAME  = String.raw`[A-G](?:#|b|♯|♭)?`;
-const CH_EXT   = String.raw`(?:maj|min|dim|half|hd|aug|sus|add|m|M)?`;
-const CH_ALTER = String.raw`(?:[#b+\-]?\d+|no\d+|add\d+|sus[24]|b5|#5|b9|#9|b11|#11|b13|#13)*`;
-const CH_QUAL  = `${CH_EXT}${CH_ALTER}`;
-const CH_CORE  = `${CH_NAME}${CH_QUAL}(?:\\/${CH_NAME})?`;
-const CHORD_G  = new RegExp(`(^|[^A-Za-z0-9#♭♯/])(${CH_CORE})(?=$|[^A-Za-z0-9#♭♯/])`, 'gu');
-
-  function transposeToken(ch){
-    const m = ch.match(/^([A-G](?:#|b|♯|♭)?)([A-Za-z0-9+°øΔ]*)(?:\/([A-G](?:#|b|♯|♭)?))?$/);
-    if(!m) return ch;
-    const r = normalize(m[1]);
-    const rest = m[2] || '';
-    const bass = m[3] ? normalize(m[3]) : null;
-    const semiR = NAME_TO_SEMI.get(r);
-    if (semiR == null) return ch;
-    const r2 = semiToName(semiR + steps, useSharps);
-    const b2 = bass!=null ? semiToName(NAME_TO_SEMI.get(bass)+steps, useSharps) : null;
-    return r2 + rest + (b2 ? '/'+b2 : '');
+  // --- SANITIZER ---
+  function sanitizeRaw(raw) {
+    return String(raw)
+      .replace(/[\u2044\u2215]/g, '/')      // weird slashes → /
+      .replace(/[¦|︱︲｜]/g, '|')           // bars → |
+      .replace(/[–—−]/g, '-')               // dashes → -
+      .replace(/…/g, '...')                 // ellipsis
+      .replace(/♯/g, '#').replace(/♭/g, 'b')// music symbols to ASCII
+      .replace(/\u00A0/g, ' ')              // nbsp
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')// zero width
+      .replace(/[\uFF21-\uFF3A]/g, c => String.fromCharCode(c.charCodeAt(0)-0xFEE0)) // width A-Z
+      .replace(/[\uFF41-\uFF5A]/g, c => String.fromCharCode(c.charCodeAt(0)-0xFEE0)) // width a-z
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\r\n?/g, '\n');
   }
 
-  const lines = src.split(/\r?\n/);
-  const out = lines.map(line=>{
-    const raw = String(line||'');
-    if (!raw.trim()) return ''; // baris kosong
+  // --- REVISED: kapitalin A–G saja; accidental (#/b) jangan diubah ---
+  const normalizeNote = (s) => {
+    if (!s) return s;
+    const t = String(s).replace(/♯/g,'#').replace(/♭/g,'b');
+    const m = t.match(/^([A-Ga-g])([#b]?)/);
+    return m ? (m[1].toUpperCase() + (m[2] || '')) : t.toUpperCase();
+  };
 
-    // 1) Tandai CHORD sesuai aturan (pre-boundary dijaga, chord dibungkus)
-    let s = raw.replace(CHORD_G, (_all, pre, tok) => {
-      const t = transposeToken(tok);
-      return `${pre}<span class="chord">${t}</span>`;
-    });
+  function parseChordToken(tok){
+    if(!tok) return null;
+    const mTrail = tok.match(/^(.+?)([.,…]+)?$/);
+    const core  = mTrail ? mTrail[1] : tok;
+    const trail = (mTrail && mTrail[2]) ? mTrail[2] : '';
+    const m = core.match(/^([A-G](?:#|b|♯|♭)?)([^/\s]*)(?:\/([A-G](?:#|b|♯|♭)?))?$/);
+    if(!m) return null;
+    const root = normalizeNote(m[1]);
+    const rest = m[2] || '';
+    const bass = m[3] ? normalizeNote(m[3]) : null;
+    return { root, rest, bass, trail };
+  }
 
-    // 2) Format bar/isi bar/melodi (tidak mengubah teks biasa)
-    s = s
-      .replace(/(\|)/g, '<span class="bar">$1</span>')
-      .replace(/(\%)/g, '<span class="bar">$1</span>')
-      .replace(/(^|\s)(\.+)(?=\s|$)/g, '$1<span class="bar">$2</span>')
-      .replace(/(^|\s)(-+)(?=\s|$)/g, '$1<span class="bar">$2</span>')
-      .replace(/(^|\s)(\d[\d.\-]*)(?=\s|$)/g, '$1<span class="melodi">$2</span>');
+  const isBarSym  = s => (s==='|' || s==='.' || s==='-' || s==='%');
+  const isMelody  = s => /^\d[\d.\-]*$/.test(s);
 
-    // 3) Jika SATU baris tidak mengandung chord/bar/melodi sama sekali → tekankan sebagai teks-line
-    const isMusicish = /class="chord"|class="bar"|class="melodi"/.test(s);
-    if (!isMusicish) return `<span class="teks-line">${cv_escapeHtml(raw)}</span>`;
-// 4) Bungkus potongan teks (huruf) yang tersisa dalam baris campuran → merah
-s = s
-  .split(/(<[^>]+>)/) // pisah tag vs teks polos
-  .map(part => {
-    if (part.startsWith('<')) return part; // biarkan tag chord/bar/melodi tetap
-    return part.replace(/([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’\-]*)/g, '<span class="teks">$1</span>');
-  })
-  .join('');
-    return s;
+  let useSharps=(localStorage.getItem('cv_perf_acc')||'sharp')==='sharp';
+  let steps=parseInt(localStorage.getItem('cv_perf_steps')||'0')||0;
+  let fontPerf=parseInt(localStorage.getItem('cv_perf_font')||'28')||28;
 
-  }).join('\n');
+  // === DEFINISI CHORD YANG LEBIH KETAT ===
+  function markupPerformance(src, steps, useSharps){
+    // === teori kecil ===
+    const SHARP=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+    const FLAT =["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+    const NAME_TO_SEMI=new Map(); SHARP.forEach((n,i)=>NAME_TO_SEMI.set(n,i)); FLAT.forEach((n,i)=>NAME_TO_SEMI.set(n,i));
+    const mod=(n,m)=>((n%m)+m)%m;
 
-  return out;
-}
+    // --- REVISED: hanya ubah b→♭ saat mode flat ---
+    const semiToName=(s,sharp)=> {
+      const name = (sharp?SHARP:FLAT)[mod(s,12)];
+      return sharp ? name : name.replace(/b/g,'♭');
+    };
 
+    // --- REVISED: kapitalin A–G saja; accidental tetap ---
+    const normalize = (s) => {
+      if (!s) return s;
+      const t = String(s).replace(/♯/g,'#').replace(/♭/g,'b');
+      const m = t.match(/^([A-Ga-g])([#b]?)/);
+      return m ? (m[1].toUpperCase() + (m[2] || '')) : t.toUpperCase();
+    };
+
+    // --- CHORD TOKEN (ketat) ---
+    const CH_NAME  = String.raw`[A-G](?:#|b|♯|♭)?`;
+    const CH_EXT   = String.raw`(?:maj|min|dim|half|hd|aug|sus|add|m|M)?`;
+    const CH_ALTER = String.raw`(?:[#b+\-]?\d+|no\d+|add\d+|sus[24]|b5|#5|b9|#9|b11|#11|b13|#13)*`;
+    const CH_QUAL  = `${CH_EXT}${CH_ALTER}`;
+    const CH_CORE  = `${CH_NAME}${CH_QUAL}(?:\\/${CH_NAME})?`;
+    const CHORD_G  = new RegExp(`(^|[^A-Za-z0-9#♭♯/])(${CH_CORE})(?=$|[^A-Za-z0-9#♭♯/])`, 'gu');
+
+    function transposeToken(ch){
+      const m = ch.match(/^([A-G](?:#|b|♯|♭)?)([A-Za-z0-9+°øΔ]*)(?:\/([A-G](?:#|b|♯|♭)?))?$/);
+      if(!m) return ch;
+      const r = normalize(m[1]);
+      const rest = m[2] || '';
+      const bass = m[3] ? normalize(m[3]) : null;
+      const semiR = NAME_TO_SEMI.get(r);
+      if (semiR == null) return ch;
+      const r2 = semiToName(semiR + steps, useSharps);
+      const b2 = bass!=null ? semiToName(NAME_TO_SEMI.get(bass)+steps, useSharps) : null;
+      return r2 + rest + (b2 ? '/'+b2 : '');
+    }
+
+    const lines = src.split(/\r?\n/);
+    const out = lines.map(line=>{
+      const raw = String(line||'');
+      if (!raw.trim()) return ''; // baris kosong
+
+      // 1) Tandai CHORD sesuai aturan (pre-boundary dijaga, chord dibungkus)
+      let s = raw.replace(CHORD_G, (_all, pre, tok) => {
+        const t = transposeToken(tok);
+        return `${pre}<span class="chord">${t}</span>`;
+      });
+
+      // 2) Format bar/isi bar/melodi (tidak mengubah teks biasa)
+      s = s
+        .replace(/(\|)/g, '<span class="bar">$1</span>')
+        .replace(/(\%)/g, '<span class="bar">$1</span>')
+        .replace(/(^|\s)(\.+)(?=\s|$)/g, '$1<span class="bar">$2</span>')
+        .replace(/(^|\s)(-+)(?=\s|$)/g, '$1<span class="bar">$2</span>')
+        .replace(/(^|\s)(\d[\d.\-]*)(?=\s|$)/g, '$1<span class="melodi">$2</span>');
+
+      // 3) Jika SATU baris tidak mengandung chord/bar/melodi sama sekali → tekankan sebagai teks-line
+      const isMusicish = /class="chord"|class="bar"|class="melodi"/.test(s);
+      if (!isMusicish) return `<span class="teks-line">${cv_escapeHtml(raw)}</span>`;
+
+      // 4) Bungkus potongan teks (huruf) yang tersisa dalam baris campuran → merah
+      s = s
+        .split(/(<[^>]+>)/) // pisah tag vs teks polos
+        .map(part => {
+          if (part.startsWith('<')) return part; // biarkan tag chord/bar/melodi tetap
+          return part.replace(/([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’\-]*)/g, '<span class="teks">$1</span>');
+        })
+        .join('');
+
+      return s;
+    }).join('\n');
+
+    return out;
+  }
 
     function savePerfState(){
       localStorage.setItem('cv_perf_steps', String(steps));
