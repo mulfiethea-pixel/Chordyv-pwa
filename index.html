@@ -2946,8 +2946,10 @@ backLib.addEventListener('click', ()=>{
 
 <script>
 if ('serviceWorker' in navigator) {
+  const ver = document.querySelector('meta[name="cv-build"]').content;
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/Chordyv-pwa/sw.js').catch(console.error);
+    navigator.serviceWorker.register('/Chordyv-pwa/sw.js?v=' + ver)
+      .catch(console.error);
   });
 }
 </script>
