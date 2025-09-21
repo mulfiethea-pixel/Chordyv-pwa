@@ -1,35 +1,20 @@
 {
+  "id": "/Chordyv-pwa/",
   "name": "ChordyV",
   "short_name": "ChordyV",
-  "start_url": "/Chordyv-pwa/index.html",
+  "description": "Simple chord bank & performance tool.",
+  "start_url": "/Chordyv-pwa/?v=2025.09.20.3",
   "scope": "/Chordyv-pwa/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#FFFFFF",
   "theme_color": "#0F172A",
   "icons": [
-    {
-      "src": "/Chordyv-pwa/icon-1024-v3.png",
-      "sizes": "1024x1024",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/Chordyv-pwa/icon-512-v3.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-  {
-      "src": "/Chordyv-pwa/icon-384-v3.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-  {
-      "src": "/Chordyv-pwa/icon-256-v3.png",
-      "sizes": "256x256",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
+    { "src": "/Chordyv-pwa/icon-1024-v3.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/Chordyv-pwa/icon-512-v3.png",  "sizes": "512x512",  "type": "image/png", "purpose": "any maskable" },
+    { "src": "/Chordyv-pwa/icon-384-v3.png",  "sizes": "384x384",  "type": "image/png", "purpose": "any maskable" },
+    { "src": "/Chordyv-pwa/icon-256-v3.png",  "sizes": "256x256",  "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["music", "productivity"],
+  "prefer_related_applications": false
 }
