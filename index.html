@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.4">
+<meta name="cv-build" content="2025.09.20.5">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -4047,36 +4047,6 @@ window.restorePro = async function(){
   }
 };
 
-window.purchasePro = async function(){
-  let req;
-  try{
-    if (!('getDigitalGoodsService' in window)) {
-      alert('Billing tidak tersedia di perangkat ini'); return;
-    }
-    const svc = await getDigitalGoodsService('https://play.google.com/billing');
-    await svc.getDetails([CV_SKU]); // opsional: ambil info harga/judul
-
-    req = new PaymentRequest([{
-      supportedMethods: 'https://play.google.com/billing',
-      data: { sku: CV_SKU }
-    }]);
-
-    const resp = await req.show();
-    await resp.complete('success');
-
-    // Setelah bayar, cek ulang entitlement dari Play
-    await window.restorePro();
-    alert('Terima kasih! Premium aktif.');
-  }catch(e){
-    console.error(e);
-    try{ await req?.complete('fail'); }catch{}
-    alert('Pembelian dibatalkan / gagal.');
-  }
-};
-
-// Auto-restore saat app kembali ke foreground & saat load pertama
-document.addEventListener('visibilitychange', ()=>{ if (!document.hidden) window.restorePro(); });
-window.addEventListener('load', window.restorePro);
 </script>
 <script>
 if ('serviceWorker' in navigator) {
