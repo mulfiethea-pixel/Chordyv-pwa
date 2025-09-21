@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.3">
+<meta name="cv-build" content="2025.09.20.4">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -4085,6 +4085,104 @@ if ('serviceWorker' in navigator) {
     .then(r => console.log('SW registered, version', ver))
     .catch(err => console.error('SW failed', err));
 }
+</script>
+<script>
+/** ====== CONFIG ====== */
+const CV_SKU = "premium"; // <-- ganti dg Product ID kamu dari Play Console
+
+/** ====== Modal API (pakai modal kamu yang sudah ada) ====== */
+function openUpgrade(source){
+  const m = document.getElementById('cv_upgradeModal');
+  const t = document.getElementById('cv_upgradeTitle');
+  const titleMap = {
+    'upgrade-btn':'Upgrade to Pro',
+    'save-limit':'Save more with Pro',
+    'import':'Import is a Pro feature',
+    'export':'Export is a Pro feature'
+  };
+  if (t) t.textContent = titleMap[source] || 'Upgrade to Pro';
+  if (m) { m.classList.add('show'); m.setAttribute('aria-hidden','false'); }
+}
+function closeUpgrade(){
+  const m = document.getElementById('cv_upgradeModal');
+  if (m) { m.classList.remove('show'); m.setAttribute('aria-hidden','true'); }
+}
+// Backward-compat aliases
+window.showUpgradeModal = openUpgrade;
+window.hideUpgradeModal = closeUpgrade;
+
+/** ====== Play Billing (Digital Goods API) ====== */
+async function restorePro() {
+  try {
+    if (!('getDigitalGoodsService' in window)) return false;
+    const svc = await window.getDigitalGoodsService('https://play.google.com/billing');
+    const purchases = await svc.listPurchases();
+    const hasPremium = Array.isArray(purchases) && purchases.some(p => p.productId === CV_SKU);
+
+    // Update status label (optional)
+    const statusEl = document.getElementById('cv_proStatus');
+    if (statusEl) statusEl.textContent = hasPremium ? 'Premium User 🎉' : 'Free User';
+
+    return hasPremium;
+  } catch (err) {
+    console.error('[Restore] failed:', err);
+    return false;
+  }
+}
+
+async function purchasePro() {
+  if (!('getDigitalGoodsService' in window)) {
+    alert('Google Play Billing is not available on this device.');
+    return;
+  }
+  try {
+    const svc = await window.getDigitalGoodsService('https://play.google.com/billing');
+
+    // (Optional) debug product
+    // const [detail] = await svc.getDetails([CV_SKU]);
+    // console.log('Product detail:', detail);
+
+    // Open Google Play purchase UI
+    await svc.purchase(CV_SKU);
+
+    // Refresh entitlement & close modal if success
+    const ok = await restorePro();
+    if (ok) closeUpgrade();
+  } catch (err) {
+    console.error('[Purchase] failed:', err);
+    // keep modal open so user can retry
+  }
+}
+
+// Expose if needed elsewhere
+window.purchasePro = purchasePro;
+window.restorePro  = restorePro;
+
+/** ====== Wire modal buttons ====== */
+document.addEventListener('DOMContentLoaded', () => {
+  const btnGet   = document.getElementById('cv_btnGetPro');
+  const btnLater = document.getElementById('cv_btnMaybeLater');
+
+  if (btnGet) {
+    // Overwrite to avoid double handlers
+    btnGet.onclick = async (e) => {
+      e.preventDefault();
+      await purchasePro();
+    };
+  }
+  if (btnLater) {
+    btnLater.onclick = (e) => {
+      e.preventDefault();
+      closeUpgrade();
+    };
+  }
+});
+
+/** ====== Auto-restore on start & on foreground ====== */
+window.addEventListener('load', restorePro);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') restorePro();
+});
 </script>
 </body>
 </html>
