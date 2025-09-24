@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.5">
+<meta name="cv-build" content="2025.09.20.7">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -3260,8 +3260,8 @@ lyrics lyrics lyrics</pre>
         version 1.0.0.3 · 2025
       </div>
       <div class="links">
-        <a class="link" href="./privacy.html" target="_blank" rel="noopener">Privacy Policy</a>
-        <a class="link" href="./terms.html"   target="_blank" rel="noopener">Terms of Use</a>
+     <a href="https://chordyv.com/privacy.html" target="_blank">Privacy Policy</a> · 
+<a href="https://chordyv.com/terms.html" target="_blank">Terms of Use</a>
       </div>
     </details>
   </section>
@@ -4000,67 +4000,10 @@ firebase.auth().onAuthStateChanged((user)=>{
   window.restorePro?.();
 });
 
-/* ===== PLAY BILLING: cek & beli ===== */
-/* GANTI dengan productId kamu di Play Console */
-const CV_SKU = 'premium_monthly';
+/* ===== CONFIG ===== */
+const CV_SKU = "premium"; // set ke Product ID di Play Console
 
-window.restorePro = async function(){
-  try{
-    if (!('getDigitalGoodsService' in window)) {
-      window.cvIsPro = false;
-      if (window.cvRefreshUI) window.cvRefreshUI();
-      return;
-    }
-    const svc = await getDigitalGoodsService('https://play.google.com/billing');
-    const purchases = await svc.listPurchases();
-    const active = Array.isArray(purchases) && purchases.some(p => p.sku === CV_SKU);
-
-    window.cvIsPro = !!active;
-
-    // Jika kamu punya updater UI sendiri, panggil
-    if (window.cvRefreshUI) window.cvRefreshUI();
-
-    // Fallback langsung: update label & tombol jika id-nya ada
-    const lbl = document.querySelector('#cv_proStatus, #accountTier');
-    const btn = document.querySelector('#cv_btnUpgrade, #cv_upgradeBtn');
-    if (lbl) lbl.textContent = window.cvIsPro ? 'Pro User' : 'Free User';
-    if (btn){
-      btn.hidden = false;
-      btn.style.display = 'block';
-      if (window.cvIsPro){
-        btn.textContent = '👑 Premium User';
-        btn.disabled = true;
-        btn.style.pointerEvents = 'none';
-        btn.onclick = null;
-      } else {
-        btn.textContent = '✨ Upgrade to Pro';
-        btn.disabled = false;
-        btn.style.pointerEvents = '';
-        btn.onclick = window.purchasePro; // klik → dialog Play Store
-      }
-    }
-    console.log('[Billing] Entitlement:', window.cvIsPro ? 'Premium' : 'Free');
-  }catch(e){
-    console.warn('[Billing] restore failed:', e);
-    window.cvIsPro = false;
-    if (window.cvRefreshUI) window.cvRefreshUI();
-  }
-};
-
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-  const ver = document.querySelector('meta[name="cv-build"]').content;
-  navigator.serviceWorker.register('./sw.js?v=' + ver)
-    .then(r => console.log('SW registered, version', ver))
-    .catch(err => console.error('SW failed', err));
-}
-</script>
-<script>
-/** ====== CONFIG ====== */
-const CV_SKU = "premium"; // <-- ganti dg Product ID kamu dari Play Console
-
-/** ====== Modal API (pakai modal kamu yang sudah ada) ====== */
+/* ===== Modal API (pakai modal kamu) ===== */
 function openUpgrade(source){
   const m = document.getElementById('cv_upgradeModal');
   const t = document.getElementById('cv_upgradeTitle');
@@ -4077,25 +4020,45 @@ function closeUpgrade(){
   const m = document.getElementById('cv_upgradeModal');
   if (m) { m.classList.remove('show'); m.setAttribute('aria-hidden','true'); }
 }
-// Backward-compat aliases
 window.showUpgradeModal = openUpgrade;
 window.hideUpgradeModal = closeUpgrade;
 
-/** ====== Play Billing (Digital Goods API) ====== */
+/* ===== Play Billing (Digital Goods API) ===== */
 async function restorePro() {
   try {
-    if (!('getDigitalGoodsService' in window)) return false;
+    if (!('getDigitalGoodsService' in window)) {
+      window.cvIsPro = false;
+      return false;
+    }
     const svc = await window.getDigitalGoodsService('https://play.google.com/billing');
     const purchases = await svc.listPurchases();
     const hasPremium = Array.isArray(purchases) && purchases.some(p => p.productId === CV_SKU);
 
-    // Update status label (optional)
-    const statusEl = document.getElementById('cv_proStatus');
-    if (statusEl) statusEl.textContent = hasPremium ? 'Premium User 🎉' : 'Free User';
+    window.cvIsPro = !!hasPremium;
 
+    // Label & tombol (struktur lama dipertahankan)
+    const lbl = document.querySelector('#cv_proStatus, #accountTier');
+    const btn = document.querySelector('#cv_btnUpgrade, #cv_upgradeBtn');
+    if (lbl) lbl.textContent = hasPremium ? 'Pro User' : 'Free User';
+    if (btn){
+      btn.hidden = false;
+      btn.style.display = 'block';
+      if (hasPremium){
+        btn.textContent = '👑 Premium User';
+        btn.disabled = true;
+        btn.style.pointerEvents = 'none';
+        btn.onclick = null;
+      } else {
+        btn.textContent = '✨ Upgrade to Pro';
+        btn.disabled = false;
+        btn.style.pointerEvents = '';
+        btn.onclick = purchasePro;
+      }
+    }
     return hasPremium;
   } catch (err) {
     console.error('[Restore] failed:', err);
+    window.cvIsPro = false;
     return false;
   }
 }
@@ -4107,34 +4070,23 @@ async function purchasePro() {
   }
   try {
     const svc = await window.getDigitalGoodsService('https://play.google.com/billing');
-
-    // (Optional) debug product
-    // const [detail] = await svc.getDetails([CV_SKU]);
-    // console.log('Product detail:', detail);
-
-    // Open Google Play purchase UI
     await svc.purchase(CV_SKU);
-
-    // Refresh entitlement & close modal if success
     const ok = await restorePro();
     if (ok) closeUpgrade();
   } catch (err) {
     console.error('[Purchase] failed:', err);
-    // keep modal open so user can retry
   }
 }
 
-// Expose if needed elsewhere
 window.purchasePro = purchasePro;
 window.restorePro  = restorePro;
 
-/** ====== Wire modal buttons ====== */
+/* ===== Wire tombol modal ===== */
 document.addEventListener('DOMContentLoaded', () => {
   const btnGet   = document.getElementById('cv_btnGetPro');
   const btnLater = document.getElementById('cv_btnMaybeLater');
 
   if (btnGet) {
-    // Overwrite to avoid double handlers
     btnGet.onclick = async (e) => {
       e.preventDefault();
       await purchasePro();
@@ -4148,7 +4100,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/** ====== Auto-restore on start & on foreground ====== */
+/* ===== Auto-restore ===== */
 window.addEventListener('load', restorePro);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') restorePro();
