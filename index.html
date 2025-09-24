@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.8">
+<meta name="cv-build" content="2025.09.20.9">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -3883,11 +3883,12 @@ document.getElementById('cv_btnGetPro')?.addEventListener('click', async (e)=>{
   }
 })();
 </script>
-<!-- Firebase SDK (compat) -->
+<!--
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+-->
 
-<script>
+/* ==== nonaktif sementara ====
   // --- Config project kamu (biarin sesuai yang dari Firebase Console) ---
   const firebaseConfig = {
     apiKey: "AIzaSyAhlfX1bkxg3f58u7i_bFMpG_rZya8hqeI",
@@ -3986,7 +3987,7 @@ document.getElementById('cv_btnGetPro')?.addEventListener('click', async (e)=>{
 
   // --- Inisialisasi awal ---
   document.addEventListener("DOMContentLoaded", () => setLoggedOutUI());
-</script>
+==== end nonaktif ====*/
 <script>
 /* ===== AUTH ONLY (tanpa Firestore) ===== */
 firebase.auth().onAuthStateChanged((user)=>{
