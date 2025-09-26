@@ -4068,16 +4068,30 @@ async function restorePro() {
 
 async function purchasePro() {
   if (!('getDigitalGoodsService' in window)) {
-    alert('Google Play Billing is not available on this device.');
+    alert('❌ Billing API tidak tersedia di perangkat ini.\n\nKemungkinan:\n- App bukan dari Play Store\n- Versi Chrome/WebView belum update\n- Origin belum terverifikasi');
     return;
   }
+
   try {
+    console.log("[Billing] Memulai proses pembelian…");
     const svc = await window.getDigitalGoodsService('https://play.google.com/billing');
-    await svc.purchase(CV_SKU);
+    console.log("[Billing] Service terhubung. SKU:", CV_SKU);
+
+    const res = await svc.purchase(CV_SKU);
+    console.log("[Billing] Hasil pembelian:", res);
+    alert('✅ Pembelian berhasil! Status: ' + JSON.stringify(res));
+
     const ok = await restorePro();
-    if (ok) closeUpgrade();
+    if (ok) {
+      console.log("[Billing] Fitur premium berhasil diaktifkan.");
+      closeUpgrade();
+    } else {
+      console.warn("[Billing] Pembelian berhasil tapi fitur premium belum aktif.");
+      alert("⚠️ Pembelian berhasil, tapi fitur premium belum aktif otomatis.");
+    }
   } catch (err) {
-    console.error('[Purchase] failed:', err);
+    console.error("[Billing] Gagal:", err);
+    alert("❌ Purchase gagal: " + (err?.message || JSON.stringify(err)));
   }
 }
 
