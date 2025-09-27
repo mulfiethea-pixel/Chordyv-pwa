@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.12">
+<meta name="cv-build" content="2025.09.20.13">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -3488,43 +3488,6 @@ window.addEventListener('cv:pro', e=>{
 </div>
 
 <script>
-  // Open/Close API (drop-in replacement utk yang lama)
-  function openUpgrade(source){
-    const m = document.getElementById('cv_upgradeModal');
-    const t = document.getElementById('cv_upgradeTitle');
-    const titleMap = {
-      'upgrade-btn':'Upgrade to Pro',
-      'save-limit':'Save more with Pro',
-      'import':'Import is a Pro feature',
-      'export':'Export is a Pro feature'
-    };
-    t.textContent = titleMap[source] || 'Upgrade to Pro';
-    m.classList.add('show');
-    m.setAttribute('aria-hidden','false');
-  }
-  function closeUpgrade(){
-    const m = document.getElementById('cv_upgradeModal');
-    m.classList.remove('show');
-    m.setAttribute('aria-hidden','true');
-  }
-// Buttons (modal)
-document.getElementById('cv_btnMaybeLater')?.addEventListener('click', closeUpgrade);
-document.getElementById('cv_btnGetPro')?.addEventListener('click', async (e)=>{
-  e.preventDefault();
-  try{
-    await window.purchasePro?.();  // panggil dialog Google Play
-    closeUpgrade();                // tutup modal setelah sukses/keluar
-  }catch(err){
-    console.error(err);
-    // modal tetap terbuka kalau gagal/batal
-  }
-});
-
-  // Backward-compat alias (biar pemanggil lama tetap jalan)
-  window.showUpgradeModal = openUpgrade;
-  window.hideUpgradeModal = closeUpgrade;
-</script>
-<script>
   // Proxy klik FAB ke tombol "New" lama (kalau ada di bar aksi)
   document.addEventListener('click', function(e){
     const fab = e.target.closest('#editorView .cv-fab');
@@ -3991,7 +3954,7 @@ document.getElementById('cv_btnGetPro')?.addEventListener('click', async (e)=>{
 
   document.addEventListener("DOMContentLoaded", () => setLoggedOutUI());
 </script>
-==== end nonaktif ==== -->
+
 <script>
 /* ===== AUTH ONLY (tanpa Firestore) ===== */
 firebase.auth().onAuthStateChanged((user)=>{
@@ -4004,6 +3967,7 @@ firebase.auth().onAuthStateChanged((user)=>{
   window.restorePro?.();
 });
 </script>
+==== end nonaktif ==== -->
 <script>
 // ===== CONFIG =====
 window.CV_SKU = "premium_unlock"; // Product ID persis seperti di Play Console
