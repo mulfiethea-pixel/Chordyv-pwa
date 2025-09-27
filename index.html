@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.11">
+<meta name="cv-build" content="2025.09.20.12">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -15,6 +15,12 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/Chordyv-pwa/ios-180x180.png">  
  <link rel="manifest" href="manifest.webmanifest">  
  <title>V — Editor • Library • Performance (SPA)</title>  
+<!-- ===== CONFIG ===== -->
+<script>
+  // 🎯 Ini mendefinisikan SKU sebagai variabel global lebih awal
+  window.CV_SKU = "premium_unlock"; 
+  // Pastikan nilainya 100% sama dengan Product ID yang kamu buat di Play Console
+</script>
 <style>
     /* =================== GLOBAL THEME (default WHITE) =================== */
     :root{
@@ -4003,10 +4009,8 @@ firebase.auth().onAuthStateChanged((user)=>{
   window.restorePro?.();
 });
 
-/* ===== CONFIG ===== */
-const CV_SKU = "premium_unlock"; // set ke Product ID di Play Console
-
-/* ===== Modal API (pakai modal kamu) ===== */
+<!-- ===== Billing & Modal Logic ===== -->
+<script>
 function openUpgrade(source){
   const m = document.getElementById('cv_upgradeModal');
   const t = document.getElementById('cv_upgradeTitle');
@@ -4026,7 +4030,6 @@ function closeUpgrade(){
 window.showUpgradeModal = openUpgrade;
 window.hideUpgradeModal = closeUpgrade;
 
-/* ===== Play Billing (Digital Goods API) ===== */
 async function restorePro() {
   try {
     if (!('getDigitalGoodsService' in window)) {
@@ -4035,11 +4038,10 @@ async function restorePro() {
     }
     const svc = await window.getDigitalGoodsService('https://play.google.com/billing');
     const purchases = await svc.listPurchases();
-    const hasPremium = Array.isArray(purchases) && purchases.some(p => p.productId === CV_SKU);
+    const hasPremium = Array.isArray(purchases) && purchases.some(p => p.productId === window.CV_SKU);
 
     window.cvIsPro = !!hasPremium;
 
-    // Label & tombol (struktur lama dipertahankan)
     const lbl = document.querySelector('#cv_proStatus, #accountTier');
     const btn = document.querySelector('#cv_btnUpgrade, #cv_upgradeBtn');
     if (lbl) lbl.textContent = hasPremium ? 'Pro User' : 'Free User';
@@ -4075,9 +4077,9 @@ async function purchasePro() {
   try {
     console.log("[Billing] Memulai proses pembelian…");
     const svc = await window.getDigitalGoodsService('https://play.google.com/billing');
-    console.log("[Billing] Service terhubung. SKU:", CV_SKU);
+    console.log("[Billing] Service terhubung. SKU:", window.CV_SKU);
 
-    const res = await svc.purchase(CV_SKU);
+    const res = await svc.purchase(window.CV_SKU);
     console.log("[Billing] Hasil pembelian:", res);
     alert('✅ Pembelian berhasil! Status: ' + JSON.stringify(res));
 
@@ -4098,7 +4100,6 @@ async function purchasePro() {
 window.purchasePro = purchasePro;
 window.restorePro  = restorePro;
 
-/* ===== Wire tombol modal ===== */
 document.addEventListener('DOMContentLoaded', () => {
   const btnGet   = document.getElementById('cv_btnGetPro');
   const btnLater = document.getElementById('cv_btnMaybeLater');
@@ -4117,7 +4118,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* ===== Auto-restore ===== */
 window.addEventListener('load', restorePro);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') restorePro();
