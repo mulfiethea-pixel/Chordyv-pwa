@@ -3994,53 +3994,96 @@ window.hideUpgradeModal = closeUpgrade;
 
 // ===== Billing =====
 async function restorePro() {
+  let svc;
   try {
-    const svc = await window.getDigitalGoodsService('https://play.google.com/billing');
-    const purchases = await svc.listPurchases();
-    const hasPremium = purchases?.some(p => p.productId === window.CV_SKU);
+    // ✅ 1. Cek apakah Digital Goods API tersedia
+    if (!('getDigitalGoodsService' in window)) {
+      throw new Error('Digital Goods API unavailable');
+    }
 
-    window.cvIsPro = !!hasPremium;
-    const lbl = document.querySelector('#cv_proStatus, #accountTier');
+    // ✅ 2. Coba konek ke Play Billing
+    svc = await window.getDigitalGoodsService('https://play.google.com/billing');
+  } catch (e) {
+    // ❗ Kalau gagal, artinya app tidak jalan dari Play (bukan TWA / bukan dari Store)
+    console.warn('[Billing] Tidak tersedia:', e.message);
     const btn = document.querySelector('#cv_btnUpgrade, #cv_upgradeBtn');
-    if (lbl) lbl.textContent = hasPremium ? 'Pro User' : 'Free User';
-    if (btn){
+    if (btn) {
       btn.hidden = false;
       btn.style.display = 'block';
-      if (hasPremium){
-        btn.textContent = '👑 Premium User';
-        btn.disabled = true;
-        btn.style.pointerEvents = 'none';
-        btn.onclick = null;
-      } else {
-        btn.textContent = '✨ Upgrade to Pro';
-        btn.disabled = false;
-        btn.style.pointerEvents = '';
-        btn.onclick = purchasePro;
-      }
+      btn.textContent = 'Install dari Play untuk Pro';
+      btn.disabled = true;
     }
-    return hasPremium;
-  } catch {
+
+    const lbl = document.querySelector('#cv_proStatus, #accountTier');
+    if (lbl) lbl.textContent = 'Free User';
+
     window.cvIsPro = false;
     return false;
   }
-}
 
-async function purchasePro() {
+  // ✅ 3. Kalau service tersedia → cek apakah user sudah beli
   try {
-    const svc = await window.getDigitalGoodsService('https://play.google.com/billing');
-    const result = await svc.purchase(window.CV_SKU);
+    const purchases = await svc.listPurchases();
+    const pro = purchases?.find(p => p?.sku === window.CV_SKU);
 
-    await restorePro();
-    closeUpgrade();
+    if (pro) {
+      // Sudah beli → aktifkan fitur Pro
+      const lbl = document.querySelector('#cv_proStatus, #accountTier');
+      if (lbl) lbl.textContent = 'Premium User ✨';
+      window.cvIsPro = true;
 
-    alert("🎉 Terima kasih! Pembelian berhasil dan fitur Pro sudah aktif.");
-    return result;
+      const btn = document.querySelector('#cv_btnUpgrade, #cv_upgradeBtn');
+      if (btn) btn.style.display = 'none';
+    } else {
+      // Belum beli → tetap status Free
+      const lbl = document.querySelector('#cv_proStatus, #accountTier');
+      if (lbl) lbl.textContent = 'Free User';
+      window.cvIsPro = false;
+
+      const btn = document.querySelector('#cv_btnUpgrade, #cv_upgradeBtn');
+      if (btn) {
+        btn.hidden = false;
+        btn.style.display = 'block';
+        btn.textContent = 'Get Pro';
+        btn.disabled = false;
+      }
+    }
   } catch (err) {
-    console.error("[Billing] Gagal:", err);
-    alert("⚠️ Terjadi kesalahan saat memproses pembelian. Silakan coba lagi.");
+    console.error('[Billing] Gagal memeriksa pembelian:', err);
+    window.cvIsPro = false;
   }
 }
-window.purchasePro = purchasePro;
+async function purchasePro() {
+  try {
+    // ✅ 1. Pastikan fitur Billing tersedia (berjalan di Play TWA)
+    if (!('getDigitalGoodsService' in window)) {
+      alert('Billing hanya tersedia bila aplikasi diinstal dari Google Play (TWA).');
+      return;
+    }
+
+    const svc = await window.getDigitalGoodsService('https://play.google.com/billing');
+
+    // ✅ 2. Cek SKU valid sebelum beli
+    const details = await svc.getDetails([window.CV_SKU]);
+    if (!details || !details.length) {
+      throw new Error('Product not found on Play Console for SKU: ' + window.CV_SKU);
+    }
+
+    // ✅ 3. Lanjutkan pembelian
+    const result = await svc.purchase(window.CV_SKU);
+
+    // ✅ 4. Sukses → update status premium
+    await restorePro();
+    closeUpgrade();
+    alert('🎉 Terima kasih! Pembelian berhasil dan fitur Pro sudah aktif.');
+    return result;
+
+  } catch (err) {
+    // ✅ 5. Tambahkan log error lengkap supaya kita tahu akar masalahnya
+    console.error('[Billing] name:', err?.name, 'message:', err?.message, err);
+    alert(`⚠️ Pembelian gagal: ${err?.name || 'Error'} — ${err?.message || 'unknown'}`);
+  }
+}window.purchasePro = purchasePro;
 window.restorePro = restorePro;
 
 // ===== Wire tombol =====
