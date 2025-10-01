@@ -4115,11 +4115,10 @@ document.addEventListener('visibilitychange', () => {
 <script>
 async function runDiag() {
   const ref = document.referrer || "";
-  const isTwa = ref.startsWith("android-app://io.github.mulfiethea_pixel.twa");
   const info = {
     origin: location.origin,
     referrer: ref,
-    isTwa,
+    isTwa: ref.startsWith("android-app://io.github.mulfiethea_pixel.twa"),
     ua: navigator.userAgent,
     dgsAvail: ("getDigitalGoodsService" in window),
   };
@@ -4135,29 +4134,22 @@ async function runDiag() {
     `[Diag]\n${JSON.stringify(info, null, 2)}\nerr=${err}\ndetails=${JSON.stringify(details)}\npurchases=${JSON.stringify(purchases)}`
   );
 }
-</script>
-<script>
-function runDiagAlert(e){ 
-  // sanity check klik
-  alert('diagnosa: klik tertangkap');
-  runDiag?.().catch(err => alert('runDiag error: '+ err));
-}
 
-function wireDiag(){
-  const btn = document.getElementById('diagBtn');
-  if (btn && !btn.dataset.wired) {
-    btn.addEventListener('click', runDiagAlert);
-    btn.dataset.wired = '1';
-    console.log('[Diag] tombol diagnosa ter-wire');
+// 👉 tombol diagnosa kamu yg sudah ada
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.querySelector("button[data-action='diag']") 
+            || document.getElementById("diagBtn") 
+            || document.querySelector("button#diagnosa");
+
+  if (btn) {
+    btn.addEventListener("click", () => {
+      runDiag().catch(e => alert("runDiag error: " + e));
+    });
+    console.log("[Diag] tombol diagnosa berhasil di-wire");
+  } else {
+    console.log("[Diag] tombol diagnosa tidak ditemukan");
   }
-}
-
-// pasang beberapa hook biar nggak kelewat
-document.addEventListener('DOMContentLoaded', wireDiag);
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') setTimeout(wireDiag, 300);
 });
-setTimeout(wireDiag, 800);
 </script>
 </body>
 </html>
