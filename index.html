@@ -3483,6 +3483,7 @@ window.addEventListener('cv:pro', e=>{
     <div id="cv_upgradeActions">
       <button id="cv_btnMaybeLater">Maybe later</button>
       <button id="cv_btnGetPro">Get Pro</button>
+<button onclick="runDiag()">diagnosa</button>
     </div>
   </div>
 </div>
@@ -4112,26 +4113,28 @@ document.addEventListener('visibilitychange', () => {
 });
 </script>
 <script>
-(async () => {
+async function runDiag() {
   const ref = document.referrer || "";
-  const isTwa = ref.startsWith('android-app://io.github.mulfiethea_pixel.twa');
+  const isTwa = ref.startsWith("android-app://io.github.mulfiethea_pixel.twa");
   const info = {
     origin: location.origin,
     referrer: ref,
     isTwa,
     ua: navigator.userAgent,
-    dgsAvail: ('getDigitalGoodsService' in window)
+    dgsAvail: ("getDigitalGoodsService" in window),
   };
   let err = null, details = null, purchases = null;
   try {
-    const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
-    details = await dgs.getDetails?.(['premium_unlock']);
+    const dgs = await window.getDigitalGoodsService("https://play.google.com/billing");
+    details = await dgs.getDetails?.(["premium_unlock"]);
     purchases = await dgs.listPurchases?.();
   } catch (e) {
     err = `${e.name}:${e.message}`;
   }
-  alert(`[Diag]\n${JSON.stringify(info, null, 2)}\nerr=${err}\ndetails=${JSON.stringify(details)}\npurchases=${JSON.stringify(purchases)}`);
-})();
+  alert(
+    `[Diag]\n${JSON.stringify(info, null, 2)}\nerr=${err}\ndetails=${JSON.stringify(details)}\npurchases=${JSON.stringify(purchases)}`
+  );
+}
 </script>
 </body>
 </html>
