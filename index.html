@@ -4113,16 +4113,24 @@ document.addEventListener('visibilitychange', () => {
 </script>
 <script>
 (async () => {
-  const isTwa = document.referrer?.startsWith('android-app://io.github.mulfiethea_pixel.twa');
-  let msg = `[Diag] isTwa=${isTwa}, dgsAvail=${'getDigitalGoodsService' in window}`;
+  const ref = document.referrer || "";
+  const isTwa = ref.startsWith('android-app://io.github.mulfiethea_pixel.twa');
+  const info = {
+    origin: location.origin,
+    referrer: ref,
+    isTwa,
+    ua: navigator.userAgent,
+    dgsAvail: ('getDigitalGoodsService' in window)
+  };
+  let err = null, details = null, purchases = null;
   try {
     const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
-    const det = await dgs.getDetails?.(['premium_unlock']);
-    msg += `, details=${JSON.stringify(det)}`;
+    details = await dgs.getDetails?.(['premium_unlock']);
+    purchases = await dgs.listPurchases?.();
   } catch (e) {
-    msg += `, ERR=${e.name}:${e.message}`;
+    err = `${e.name}:${e.message}`;
   }
-  alert(msg);
+  alert(`[Diag]\n${JSON.stringify(info, null, 2)}\nerr=${err}\ndetails=${JSON.stringify(details)}\npurchases=${JSON.stringify(purchases)}`);
 })();
 </script>
 </body>
