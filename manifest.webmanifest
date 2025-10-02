@@ -3,7 +3,7 @@
   "name": "ChordyV",
   "short_name": "ChordyV",
   "description": "Simple chord bank & performance tool.",
-  "start_url": "/Chordyv-pwa/?v=2025.09.20.3",
+  "start_url": "/Chordyv-pwa/?v=2025.09.20.4",
   "scope": "/Chordyv-pwa/",
   "display": "standalone",
   "orientation": "portrait",
@@ -16,5 +16,11 @@
     { "src": "/Chordyv-pwa/icon-256-v3.png",  "sizes": "256x256",  "type": "image/png", "purpose": "any maskable" }
   ],
   "categories": ["music", "productivity"],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+
+  "features": {
+    "playBilling": {
+      "enabled": true
+    }
+  }
 }

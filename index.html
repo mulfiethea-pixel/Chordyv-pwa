@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.14">
+<meta name="cv-build" content="2025.09.20.15">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -4150,6 +4150,21 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("[Diag] tombol diagnosa tidak ditemukan");
   }
 });
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.ready.then(swReg => {
+    // kirim pesan ke sw.js saat sudah siap
+    swReg.active.postMessage({ type: "CHECK_READY" });
+  });
+
+  // dengarkan balasan dari sw.js
+  navigator.serviceWorker.addEventListener("message", e => {
+    if (e.data?.type === "READY_OK") {
+      console.log("[SW] Aktif ✅ Versi:", e.data.version);
+    }
+  });
+}
 </script>
 </body>
 </html>

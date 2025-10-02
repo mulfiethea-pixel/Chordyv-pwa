@@ -48,3 +48,9 @@ self.addEventListener("fetch", (e) => {
     })());
   }
 });
+// ✅ Tambahkan di paling bawah sw.js
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "CHECK_READY") {
+    event.source.postMessage({ type: "READY_OK", version: VERSION });
+  }
+});
