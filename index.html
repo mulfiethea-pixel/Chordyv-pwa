@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.15">
+<meta name="cv-build" content="2025.09.20.16">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -4113,58 +4113,53 @@ document.addEventListener('visibilitychange', () => {
 });
 </script>
 <script>
-async function runDiag() {
-  const ref = document.referrer || "";
-  const info = {
-    origin: location.origin,
-    referrer: ref,
-    isTwa: ref.startsWith("android-app://io.github.mulfiethea_pixel.twa"),
-    ua: navigator.userAgent,
-    dgsAvail: ("getDigitalGoodsService" in window),
-  };
-  let err = null, details = null, purchases = null;
-  try {
-    const dgs = await window.getDigitalGoodsService("https://play.google.com/billing");
-    details = await dgs.getDetails?.(["premium_unlock"]);
-    purchases = await dgs.listPurchases?.();
-  } catch (e) {
-    err = `${e.name}:${e.message}`;
+(function () {
+  const PKG_TWA = "android-app://io.github.mulfiethea_pixel.twa";
+
+  function isTwa() {
+    return (document.referrer || "").startsWith(PKG_TWA);
   }
-  alert(
-    `[Diag]\n${JSON.stringify(info, null, 2)}\nerr=${err}\ndetails=${JSON.stringify(details)}\npurchases=${JSON.stringify(purchases)}`
-  );
-}
 
-// 👉 tombol diagnosa kamu yg sudah ada
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.querySelector("button[data-action='diag']") 
-            || document.getElementById("diagBtn") 
-            || document.querySelector("button#diagnosa");
+  async function runDiagSafe() {
+    try {
+      const info = {
+        origin: location.origin,
+        referrer: document.referrer || "",
+        isTwa: isTwa(),
+        ua: navigator.userAgent,
+        dgsAvail: ("getDigitalGoodsService" in window),
+      };
 
-  if (btn) {
-    btn.addEventListener("click", () => {
-      runDiag().catch(e => alert("runDiag error: " + e));
-    });
-    console.log("[Diag] tombol diagnosa berhasil di-wire");
-  } else {
-    console.log("[Diag] tombol diagnosa tidak ditemukan");
-  }
-});
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.ready.then(swReg => {
-    // kirim pesan ke sw.js saat sudah siap
-    swReg.active.postMessage({ type: "CHECK_READY" });
-  });
+      // Kalau bukan TWA atau API gak ada, cukup tampilkan info ringan
+      if (!info.isTwa || !info.dgsAvail) {
+        alert("[Diag]\n" + JSON.stringify(info, null, 2));
+        return;
+      }
 
-  // dengarkan balasan dari sw.js
-  navigator.serviceWorker.addEventListener("message", e => {
-    if (e.data?.type === "READY_OK") {
-      console.log("[SW] Aktif ✅ Versi:", e.data.version);
+      // Ambil DGS dengan guard + paralel panggilan agar cepat
+      const dgs = await window.getDigitalGoodsService("https://play.google.com/billing");
+
+      const [details, purchases] = await Promise.all([
+        dgs.getDetails?.(["premium_unlock"]).catch(e => ({ err: e.name + ":" + e.message })),
+        dgs.listPurchases?.().catch(e => ({ err: e.name + ":" + e.message })),
+      ]);
+
+      alert("[Diag]\n" + JSON.stringify({ ...info, details, purchases }, null, 2));
+    } catch (e) {
+      alert("[DiagError] " + e.name + ": " + e.message);
     }
+  }
+
+  // Event delegation supaya tombol yang muncul belakangan tetap ketangkap
+  document.addEventListener("click", (ev) => {
+    const btn = ev.target.closest('[data-action="diag"], #diagBtn, button#diagnosa');
+    if (!btn) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    // Delay 0ms agar tidak bentrok dengan animasi/modal yang sedang menutup
+    setTimeout(runDiagSafe, 0);
   });
-}
+})();
 </script>
 </body>
 </html>
