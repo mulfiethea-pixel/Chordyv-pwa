@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.20">
+<meta name="cv-build" content="2025.09.20.21">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -3483,7 +3483,6 @@ window.addEventListener('cv:pro', e=>{
     <div id="cv_upgradeActions">
       <button id="cv_btnMaybeLater">Maybe later</button>
       <button id="cv_btnGetPro">Get Pro</button>
-<button id="diagBtn" type="button">diagnosa</button>
     </div>
   </div>
 </div>
@@ -3970,10 +3969,8 @@ firebase.auth().onAuthStateChanged((user)=>{
 </script>
 ==== end nonaktif ==== -->
 <script>
-// ===== CONFIG =====
-window.CV_SKU = "premium_unlock"; // Product ID persis seperti di Play Console
-
-// ===== Modal Upgrade =====
+// ===== CONFIG & MODAL (tetap) =====
+window.CV_SKU = window.CV_SKU || "premium_unlock";
 function openUpgrade(source){
   const m = document.getElementById('cv_upgradeModal');
   const t = document.getElementById('cv_upgradeTitle');
@@ -3996,38 +3993,45 @@ window.hideUpgradeModal = closeUpgrade;
 // =========================
 // Billing via Digital Goods
 // =========================
-// ==== helper ====
+
+// ---- selectors yang JELAS per peran
+const OUTER_CTA = '#cv_btnUpgrade';   // tombol di halaman
+const INNER_BUY = '#cv_btnGetPro';    // tombol di dalam modal
+
+// ---- util
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-const log = (...a) => console.log('[Billing]', ...a);
-
-// SKU kamu:
-window.CV_SKU = window.CV_SKU || 'premium_unlock';
-
-// Ambil label/tombol
-function setTierLabel(txt){ const el=document.querySelector('#cv_proStatus, #accountTier'); if(el) el.textContent=txt; }
-function showUpgradeBtn(label='Get Pro', disabled=false){
-  const btn=document.querySelector('#cv_btnGetPro, #cv_btnUpgrade, #cv_upgradeBtn');
-  if(!btn) return;
-  btn.hidden=false; btn.style.display='block'; btn.textContent=label; btn.disabled=!!disabled;
+const log   = (...a) => console.log('[Billing]', ...a);
+function setTierLabel(txt){
+  const el = document.querySelector('#cv_proStatus, #accountTier');
+  if (el) el.textContent = txt;
 }
-function hideUpgradeBtn(){ const btn=document.querySelector('#cv_btnGetPro, #cv_btnUpgrade, #cv_upgradeBtn'); if(btn) btn.style.display='none'; }
+// CTA luar saja (jangan menyentuh tombol modal)
+function showUpgradeCta(show = true, label = '✨ Upgrade to Pro') {
+  const cta = document.querySelector(OUTER_CTA);
+  if (!cta) return;
+  cta.hidden = !show;
+  cta.style.display = show ? 'block' : 'none';
+  if (label) cta.textContent = label;
+}
 
-// Cek punya pro dari array purchases dg berbagai kemungkinan nama field
+// ---- helper cek pro
 function hasPro(purchases, sku){
-  if(!Array.isArray(purchases)) return false;
+  if (!Array.isArray(purchases)) return false;
   return purchases.some(p => {
     const id = p?.sku ?? p?.productId ?? p?.itemId ?? p?.id;
     return id === sku;
   });
 }
 
-// === restore dengan RETRY ===
+// === restore dengan retry ===
 async function restorePro({retries=5, delayMs=800} = {}) {
   try {
     if (!('getDigitalGoodsService' in window)) {
       log('Digital Goods API unavailable');
-      setTierLabel('Free User'); showUpgradeBtn('Install dari Play untuk Pro', true);
-      window.cvIsPro=false; return false;
+      setTierLabel('Free User');
+      showUpgradeCta(true, 'Install dari Play untuk Pro');
+      window.cvIsPro = false;
+      return false;
     }
 
     const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
@@ -4037,22 +4041,27 @@ async function restorePro({retries=5, delayMs=800} = {}) {
       log('listPurchases try', i, purchases);
 
       if (hasPro(purchases, window.CV_SKU)) {
-        setTierLabel('Premium User ✨'); window.cvIsPro=true; hideUpgradeBtn();
-        log('Status: PRO'); return true;
+        setTierLabel('Premium User ✨');
+        window.cvIsPro = true;
+        showUpgradeCta(false);
+        log('Status: PRO');
+        return true;
       }
 
-      // kalau belum terdeteksi dan masih ada jatah retry → tunggu lalu coba lagi
       if (i < retries) await sleep(delayMs);
     }
 
-    // masih belum terdeteksi → tetap Free
-    setTierLabel('Free User'); window.cvIsPro=false; showUpgradeBtn('Get Pro', false);
+    setTierLabel('Free User');
+    window.cvIsPro = false;
+    showUpgradeCta(true, '✨ Upgrade to Pro');
     log('Status: FREE (belum terdeteksi)');
     return false;
 
   } catch (err) {
     console.error('[Billing][restore]', err);
-    setTierLabel('Free User'); window.cvIsPro=false; showUpgradeBtn('Get Pro', false);
+    setTierLabel('Free User');
+    window.cvIsPro = false;
+    showUpgradeCta(true, '✨ Upgrade to Pro');
     return false;
   }
 }
@@ -4061,7 +4070,7 @@ async function restorePro({retries=5, delayMs=800} = {}) {
 async function purchasePro(){
   try{
     if (!('getDigitalGoodsService' in window)) { alert('Billing hanya tersedia bila aplikasi dipasang dari Google Play.'); return; }
-    if (!('PaymentRequest' in window)) { alert('Perangkat/Chrome tidak mendukung Payment Request API.'); return; }
+    if (!('PaymentRequest' in window))       { alert('Perangkat/Chrome tidak mendukung Payment Request API.'); return; }
 
     const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
     const details = await dgs.getDetails([window.CV_SKU]);
@@ -4072,13 +4081,19 @@ async function purchasePro(){
       { total:{ label:'Total', amount:{ currency:'IDR', value:'0' } } }
     );
 
-    const resp = await request.show();
+    // (opsional) canMakePayment
+    if (request.canMakePayment) {
+      const ok = await request.canMakePayment().catch(() => null);
+      if (ok === false) { alert('Metode pembayaran tidak tersedia di perangkat ini.'); return; }
+    }
+
+    const resp = await request.show();     // munculkan UI Play
     await resp.complete('success');
 
-    // ⬇️ KUNCI: tunggu propagasi sebentar, lalu restore dengan retry yang lebih agresif
+    // tunggu propagasi lalu restore
     await sleep(500);
     await restorePro({retries:8, delayMs:900});
-    if (typeof closeUpgrade === 'function') closeUpgrade();
+    closeUpgrade();
     alert('🎉 Pembelian berhasil. Fitur Pro sudah aktif.');
   }catch(err){
     console.error('[Billing][purchase]', err?.name, err?.message, err);
@@ -4088,18 +4103,37 @@ async function purchasePro(){
 window.purchasePro = purchasePro;
 window.restorePro  = restorePro;
 
-// Wire & auto-restore
-function wireGetProButton(){
-  const btn=document.querySelector('#cv_btnGetPro, #cv_btnUpgrade, #cv_upgradeBtn');
-  if (btn && !btn.dataset.wired){
-    btn.addEventListener('click', e => { e.preventDefault(); purchasePro(); });
-    btn.dataset.wired='1';
+// ---- Wiring tombol, SESUAI PERAN
+function wireButtons(){
+  // CTA luar → buka modal
+  const cta = document.querySelector(OUTER_CTA);
+  if (cta && !cta.dataset.wired) {
+    cta.addEventListener('click', (e) => {
+      e.preventDefault();
+      openUpgrade('upgrade-btn');
+    });
+    cta.dataset.wired = '1';
+  }
+  // Tombol beli di dalam modal → purchase
+  const buy = document.querySelector(INNER_BUY);
+  if (buy && !buy.dataset.wired) {
+    buy.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await purchasePro();
+    });
+    buy.dataset.wired = '1';
+  }
+  // Optional: tombol maybe later
+  const later = document.getElementById('cv_btnMaybeLater');
+  if (later && !later.dataset.wired) {
+    later.addEventListener('click', (e) => { e.preventDefault(); closeUpgrade(); });
+    later.dataset.wired = '1';
   }
 }
-document.addEventListener('DOMContentLoaded', wireGetProButton);
-window.addEventListener('load', () => { wireGetProButton(); restorePro(); });
+document.addEventListener('DOMContentLoaded', wireButtons);
+window.addEventListener('load', () => { wireButtons(); restorePro(); });
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') restorePro();
+  if (document.visibilityState === 'visible') { wireButtons(); restorePro(); }
 });
 </script>
 </body>
