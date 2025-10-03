@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.19">
+<meta name="cv-build" content="2025.09.20.20">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -3996,159 +3996,110 @@ window.hideUpgradeModal = closeUpgrade;
 // =========================
 // Billing via Digital Goods
 // =========================
-// ====== KONFIG ======
+// ==== helper ====
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const log = (...a) => console.log('[Billing]', ...a);
+
+// SKU kamu:
 window.CV_SKU = window.CV_SKU || 'premium_unlock';
 
-// Helpers
-const $ = (sel) => document.querySelector(sel);
-function showUpgradeBtn(label = 'Get Pro', disabled = false) {
-  const btn = $('#cv_btnGetPro, #cv_btnUpgrade, #cv_upgradeBtn');
-  if (!btn) return;
-  btn.hidden = false;
-  btn.style.display = 'block';
-  btn.textContent = label;
-  btn.disabled = !!disabled;
+// Ambil label/tombol
+function setTierLabel(txt){ const el=document.querySelector('#cv_proStatus, #accountTier'); if(el) el.textContent=txt; }
+function showUpgradeBtn(label='Get Pro', disabled=false){
+  const btn=document.querySelector('#cv_btnGetPro, #cv_btnUpgrade, #cv_upgradeBtn');
+  if(!btn) return;
+  btn.hidden=false; btn.style.display='block'; btn.textContent=label; btn.disabled=!!disabled;
 }
-function setTierLabel(txt) {
-  const lbl = $('#cv_proStatus, #accountTier');
-  if (lbl) lbl.textContent = txt;
-}
+function hideUpgradeBtn(){ const btn=document.querySelector('#cv_btnGetPro, #cv_btnUpgrade, #cv_upgradeBtn'); if(btn) btn.style.display='none'; }
 
-const isTwa = (document.referrer || '').startsWith('android-app://io.github.mulfiethea_pixel.twa');
-
-// ====== RESTORE (cek pembelian) ======
-async function restorePro() {
-  console.log('[Billing] restorePro start | isTwa=', isTwa, '| SKU=', window.CV_SKU);
-
-  if (!window.CV_SKU) {
-    console.warn('[Billing] SKU belum diset');
-    setTierLabel('Free User');
-    showUpgradeBtn('Get Pro', true);
-    return false;
-  }
-
-  if (!('getDigitalGoodsService' in window)) {
-    console.warn('[Billing] Digital Goods API unavailable');
-    setTierLabel('Free User');
-    showUpgradeBtn('Install dari Play untuk Pro', true);
-    window.cvIsPro = false;
-    return false;
-  }
-
-  try {
-    const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
-    const purchases = await dgs.listPurchases?.();
-    console.log('[Billing] purchases =', purchases);
-
-    const pro = purchases?.find(p => (p?.sku || p?.productId) === window.CV_SKU);
-    if (pro) {
-      setTierLabel('Premium User ✨');
-      window.cvIsPro = true;
-      const btn = $('#cv_btnGetPro, #cv_btnUpgrade, #cv_upgradeBtn');
-      if (btn) btn.style.display = 'none';
-      console.log('[Billing] status: PRO');
-      return true;
-    } else {
-      setTierLabel('Free User');
-      window.cvIsPro = false;
-      showUpgradeBtn('Get Pro', false);
-      console.log('[Billing] status: FREE');
-      return false;
-    }
-  } catch (err) {
-    console.error('[Billing] Gagal cek pembelian:', err?.name, err?.message, err);
-    setTierLabel('Free User');
-    window.cvIsPro = false;
-    showUpgradeBtn('Get Pro', false);
-    return false;
-  }
+// Cek punya pro dari array purchases dg berbagai kemungkinan nama field
+function hasPro(purchases, sku){
+  if(!Array.isArray(purchases)) return false;
+  return purchases.some(p => {
+    const id = p?.sku ?? p?.productId ?? p?.itemId ?? p?.id;
+    return id === sku;
+  });
 }
 
-// ====== PURCHASE (beli) ======
-async function purchasePro() {
+// === restore dengan RETRY ===
+async function restorePro({retries=5, delayMs=800} = {}) {
   try {
     if (!('getDigitalGoodsService' in window)) {
-      alert('Billing hanya tersedia bila aplikasi dipasang dari Google Play.');
-      return;
-    }
-    if (!('PaymentRequest' in window)) {
-      alert('Perangkat/Chrome tidak mendukung Payment Request API.');
-      return;
+      log('Digital Goods API unavailable');
+      setTierLabel('Free User'); showUpgradeBtn('Install dari Play untuk Pro', true);
+      window.cvIsPro=false; return false;
     }
 
-    // (Opsional) validasi SKU ada di Play
+    const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
+
+    for (let i=0; i<=retries; i++){
+      const purchases = await dgs.listPurchases?.();
+      log('listPurchases try', i, purchases);
+
+      if (hasPro(purchases, window.CV_SKU)) {
+        setTierLabel('Premium User ✨'); window.cvIsPro=true; hideUpgradeBtn();
+        log('Status: PRO'); return true;
+      }
+
+      // kalau belum terdeteksi dan masih ada jatah retry → tunggu lalu coba lagi
+      if (i < retries) await sleep(delayMs);
+    }
+
+    // masih belum terdeteksi → tetap Free
+    setTierLabel('Free User'); window.cvIsPro=false; showUpgradeBtn('Get Pro', false);
+    log('Status: FREE (belum terdeteksi)');
+    return false;
+
+  } catch (err) {
+    console.error('[Billing][restore]', err);
+    setTierLabel('Free User'); window.cvIsPro=false; showUpgradeBtn('Get Pro', false);
+    return false;
+  }
+}
+
+// === purchase via Payment Request ===
+async function purchasePro(){
+  try{
+    if (!('getDigitalGoodsService' in window)) { alert('Billing hanya tersedia bila aplikasi dipasang dari Google Play.'); return; }
+    if (!('PaymentRequest' in window)) { alert('Perangkat/Chrome tidak mendukung Payment Request API.'); return; }
+
     const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
     const details = await dgs.getDetails([window.CV_SKU]);
-    if (!details || !details.length) {
-      throw new Error('SKU tidak ditemukan di Play Console: ' + window.CV_SKU);
-    }
+    if (!details || !details.length) throw new Error('SKU tidak ditemukan: '+window.CV_SKU);
 
-    const methodData = [{
-      supportedMethods: 'https://play.google.com/billing',
-      data: { sku: window.CV_SKU }
-    }];
+    const request = new PaymentRequest(
+      [{ supportedMethods:'https://play.google.com/billing', data:{ sku: window.CV_SKU } }],
+      { total:{ label:'Total', amount:{ currency:'IDR', value:'0' } } }
+    );
 
-    // Nilai total dummy: UI & harga final datang dari Play
-    const prDetails = { total: { label: 'Total', amount: { currency: 'IDR', value: '0' } } };
+    const resp = await request.show();
+    await resp.complete('success');
 
-    const request = new PaymentRequest(methodData, prDetails);
-
-    if (request.canMakePayment) {
-      const ok = await request.canMakePayment().catch(() => null);
-      if (ok === false) {
-        alert('Metode pembayaran tidak tersedia di perangkat ini.');
-        return;
-      }
-    }
-
-    const response = await request.show();  // <-- memicu sheet Google Play
-    await response.complete('success');
-
-    await restorePro();
+    // ⬇️ KUNCI: tunggu propagasi sebentar, lalu restore dengan retry yang lebih agresif
+    await sleep(500);
+    await restorePro({retries:8, delayMs:900});
     if (typeof closeUpgrade === 'function') closeUpgrade();
-    alert('🎉 Terima kasih! Pembelian berhasil. Fitur Pro sudah aktif.');
-  } catch (err) {
-    // AbortError = user tutup sheet, ini bukan error fatal
-    if (err?.name === 'AbortError') {
-      console.warn('[Billing] User cancelled.');
-      return;
-    }
+    alert('🎉 Pembelian berhasil. Fitur Pro sudah aktif.');
+  }catch(err){
     console.error('[Billing][purchase]', err?.name, err?.message, err);
     alert(`⚠️ Pembelian gagal: ${err?.name || 'Error'} — ${err?.message || 'unknown'}`);
   }
 }
-
-// Ekspor global
 window.purchasePro = purchasePro;
 window.restorePro  = restorePro;
 
-// ====== WIRING TOMBOL ======
-function wireGetProButton() {
-  const btnGet   = $('#cv_btnGetPro, #cv_btnUpgrade, #cv_upgradeBtn');
-  const btnLater = $('#cv_btnMaybeLater');
-
-  if (btnGet && !btnGet.dataset.wired) {
-    btnGet.addEventListener('click', async (e) => {
-      e.preventDefault();
-      await purchasePro();
-    });
-    btnGet.dataset.wired = '1';
-    console.log('[Billing] Get Pro button wired');
-  }
-  if (btnLater && !btnLater.dataset.wired) {
-    btnLater.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (typeof closeUpgrade === 'function') closeUpgrade();
-    });
-    btnLater.dataset.wired = '1';
+// Wire & auto-restore
+function wireGetProButton(){
+  const btn=document.querySelector('#cv_btnGetPro, #cv_btnUpgrade, #cv_upgradeBtn');
+  if (btn && !btn.dataset.wired){
+    btn.addEventListener('click', e => { e.preventDefault(); purchasePro(); });
+    btn.dataset.wired='1';
   }
 }
-
-// Auto-restore & re-wire
 document.addEventListener('DOMContentLoaded', wireGetProButton);
 window.addEventListener('load', () => { wireGetProButton(); restorePro(); });
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') { wireGetProButton(); restorePro(); }
+  if (document.visibilityState === 'visible') restorePro();
 });
 </script>
 </body>
