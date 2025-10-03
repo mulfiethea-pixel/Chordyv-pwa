@@ -4067,37 +4067,50 @@ async function restorePro({retries=5, delayMs=800} = {}) {
 }
 
 // === purchase via Payment Request ===
-async function purchasePro(){
-  try{
-    if (!('getDigitalGoodsService' in window)) { alert('Billing hanya tersedia bila aplikasi dipasang dari Google Play.'); return; }
-    if (!('PaymentRequest' in window))       { alert('Perangkat/Chrome tidak mendukung Payment Request API.'); return; }
+async function purchasePro() {
+  try {
+    if (!('getDigitalGoodsService' in window)) {
+      alert('Billing is only available when the app is installed from Google Play.');
+      return;
+    }
+    if (!('PaymentRequest' in window)) {
+      alert('This device or Chrome does not support the Payment Request API.');
+      return;
+    }
 
     const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
     const details = await dgs.getDetails([window.CV_SKU]);
-    if (!details || !details.length) throw new Error('SKU tidak ditemukan: '+window.CV_SKU);
-
-    const request = new PaymentRequest(
-      [{ supportedMethods:'https://play.google.com/billing', data:{ sku: window.CV_SKU } }],
-      { total:{ label:'Total', amount:{ currency:'IDR', value:'0' } } }
-    );
-
-    // (opsional) canMakePayment
-    if (request.canMakePayment) {
-      const ok = await request.canMakePayment().catch(() => null);
-      if (ok === false) { alert('Metode pembayaran tidak tersedia di perangkat ini.'); return; }
+    if (!details || !details.length) {
+      throw new Error('SKU not found on Play Console: ' + window.CV_SKU);
     }
 
-    const resp = await request.show();     // munculkan UI Play
+    const request = new PaymentRequest(
+      [{
+        supportedMethods: 'https://play.google.com/billing',
+        data: { sku: window.CV_SKU }
+      }],
+      { total: { label: 'Total', amount: { currency: 'IDR', value: '0' } } }
+    );
+
+    const resp = await request.show();
     await resp.complete('success');
 
-    // tunggu propagasi lalu restore
+    // Wait a bit for propagation, then restore status
     await sleep(500);
-    await restorePro({retries:8, delayMs:900});
-    closeUpgrade();
-    alert('🎉 Pembelian berhasil. Fitur Pro sudah aktif.');
-  }catch(err){
+    await restorePro({ retries: 8, delayMs: 900 });
+
+    if (typeof closeUpgrade === 'function') closeUpgrade();
+    alert('🎉 Purchase successful! Pro features are now active.');
+  } catch (err) {
     console.error('[Billing][purchase]', err?.name, err?.message, err);
-    alert(`⚠️ Pembelian gagal: ${err?.name || 'Error'} — ${err?.message || 'unknown'}`);
+
+    // 🪄 Handle cancel gracefully
+    if (err?.name === 'AbortError' || err?.message?.toLowerCase().includes('canceled')) {
+      alert('❌ Purchase canceled. You remain on the Free version.');
+      return;
+    }
+
+    alert(`⚠️ Purchase failed: ${err?.name || 'Error'} — ${err?.message || 'Unknown error'}`);
   }
 }
 window.purchasePro = purchasePro;
