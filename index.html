@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.23">
+<meta name="cv-build" content="2025.09.20.24">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -1638,6 +1638,47 @@ body.theme-navy {
 #perf_area sup.note svg {
   display: inline-block;
   vertical-align: super;
+}
+</style>
+<style>
+/* === HEADER TABLE FIX === */
+/* struktur kolom */
+#libraryView thead tr {
+  display: grid;
+  grid-template-columns: 40% 20% 20% 20%;
+  align-items: center;
+  justify-items: center;
+}
+
+/* header kolom */
+#libraryView thead th {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 14px 8px;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  word-break: keep-all;
+}
+
+/* ikon */
+#libraryView thead th .icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: block;
+}
+
+/* responsif */
+@media (min-width: 768px) {
+  #libraryView thead th { font-size: 1rem; padding: 16px 10px; }
+  #libraryView thead th .icon { width: 22px; height: 22px; }
+}
+@media (min-width: 1024px) {
+  #libraryView thead th { font-size: 1.05rem; }
 }
 </style>
 </head>
