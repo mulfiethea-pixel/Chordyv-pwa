@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.25">
+<meta name="cv-build" content="2025.09.20.26">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -2767,7 +2767,7 @@ const fReset= document.getElementById('perf_fontReset');
     const CHORD_G  = new RegExp(`(^|[^A-Za-z0-9#♭♯/])(${CH_CORE})(?=$|[^A-Za-z0-9#♭♯/])`, 'gu');
 
     function transposeToken(ch){
-      const m = ch.match(/^([A-G](?:#|b|♯|♭)?)([A-Za-z0-9+°øΔ]*)(?:\/([A-G](?:#|b|♯|♭)?))?$/);
+      const m = ch.match(/^([A-G](?:#|b|♯|♭)?)([^/\s]*)(?:\/([A-G](?:#|b|♯|♭)?))?$/);
       if(!m) return ch;
       const r = normalize(m[1]);
       const rest = m[2] || '';
