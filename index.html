@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.29">
+<meta name="cv-build" content="2025.09.20.35">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -185,54 +185,57 @@ body.theme-navy #cv_header{
   transition:transform .28s ease;
 }
 
-/* Drawer kiri (start off-canvas) */
+/* Drawer kiri/kanan (off-canvas) */
 .drawer-left{ left:0; transform:translateX(-110%); }
-/* Nanti saat open → tambahkan class .open di elemen .drawer-left */
 .drawer-left.open{ transform:translateX(0); }
-/* Drawer kanan (start off-canvas) */
-.drawer-right {
-  right:0;
-  transform:translateX(110%);
+.drawer-right{ right:0; transform:translateX(110%); }
+.drawer-right.open{ transform:translateX(0); }
+
+/* === Logo (universal) === */
+/* biarkan chip transparan agar menumpang warna header/drawer */
+.logo-chip{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:4px; border-radius:12px; /* boleh hapus kalau mau flat */
+  /* no background di sini */
 }
-.drawer-right.open {
-  transform:translateX(0);
-}
-/* === Logo universal === */
-.logo-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  padding: 4px;
+.logo-chip .logo-img{
+  height:40px; width:auto; display:block; vertical-align:middle;
 }
 
-.logo-chip .logo-img {
-  height: 22px;           /* ubah ke 20–24px kalau mau lebih kecil/besar */
-  width: auto;
-  display: block;
-  vertical-align: middle;
+/* === Header Drawer (pakai .drawer-head saja) === */
+/* samakan kiri & kanan */
+.drawer-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px;
+  background:var(--drawer-header-bg);
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom:12px; /* sesuai CSS-mu sebelumnya */
+}
+.drawer-head .brand{
+  display:flex; align-items:center; gap:8px; /* konsisten */
+}
+.drawer-head b,
+.drawer-title{
+  font-size:18px; font-weight:700; color:var(--drawer-header-text);
 }
 
-/* === Logo di HEADER === */
-.appbar .logo-chip {
-  background: rgba(255, 255, 255, 0.08); /* semi transparan biar logo tetap kelihatan di navy */
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+/* === Variabel adaptif tema === */
+body.theme-navy{
+  --drawer-header-bg:#0F172A;  /* header/drawer gelap */
+  --drawer-header-text:#FFFFFF;
+}
+body.theme-light{
+  --drawer-header-bg:#FFFFFF;  /* header/drawer terang */
+  --drawer-header-text:#0F172A;
 }
 
-/* === Logo di DRAWER kiri === */
-.drawer-left .logo-chip {
-  background: #0F172A; /* navy solid biar logo transparan tetap kelihatan */
-  box-shadow: 0 2px 6px rgba(2,6,23,0.25);
+/* Sections di dalam drawer */
+.drawer-sec{
+  border-top:1px solid var(--border);
+  padding-top:12px; margin-top:12px;
+  display:flex; flex-direction:column; gap:10px
 }
-
-/* Header & sections */
-.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.brand{display:flex;align-items:center;gap:10px}
-.logo-chip{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:12px;background:#0F172A;color:#fff;font-weight:700}
-
-.drawer-sec{border-top:1px solid var(--border); padding-top:12px; margin-top:12px; display:flex; flex-direction:column; gap:10px}
-.drawer-sec label{font-weight:700}
-.about-summary{cursor:pointer; font-weight:700}
+.about-summary{ cursor:pointer; font-weight:700 }
 
 /* Link & tombol util */
 .link{display:inline-flex;align-items:center;justify-content:center;gap:8px; padding:9px 12px; border:1px solid var(--border); border-radius:10px; text-decoration:none; color:var(--fg); background:var(--chip)}
@@ -1749,18 +1752,17 @@ body.theme-navy {
 <aside id="cv_drawerLeft" class="drawer drawer-left" aria-label="Main menu" hidden>
   <div class="drawer-head">
     <div class="brand">
-     <span class="logo-chip">
-  <img
-    src="https://mulfiethea-pixel.github.io/Chordyv-pwa/logochordyv.png"
-    alt="ChordyV Logo"
-    class="logo-img"
-  />
-</span>
+      <span class="logo-chip">
+        <img
+          src="https://mulfiethea-pixel.github.io/Chordyv-pwa/logochordyv.png"
+          alt="ChordyV Logo"
+          class="logo-img"
+        />
+      </span>
       <b>ChordyV</b>
     </div>
     <button id="cv_closeLeft" class="ghost closex" aria-label="Close">✕</button>
   </div>
-
   <!-- Menu Hamburger -->
 <div style="background: linear-gradient(135deg, var(--accent) 0%, #4c84ff 100%);
             color: white; 
