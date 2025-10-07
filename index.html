@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.26">
+<meta name="cv-build" content="2025.09.20.29">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -41,7 +41,7 @@
     }
 /* Gradasi “ChordyV” navy → biru */
 .cv-grad{
-  background: linear-gradient(135deg, #0f1f45, #2aa0ff) !important;
+  background: linear-gradient(135deg, var(--accent) 0%, #4c84ff 100%); !important;
   color:#fff !important;
   box-shadow: 0 10px 20px rgba(16, 44, 86, .25);
   border: none;
@@ -196,6 +196,33 @@ body.theme-navy #cv_header{
 }
 .drawer-right.open {
   transform:translateX(0);
+}
+/* === Logo universal === */
+.logo-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.logo-chip .logo-img {
+  height: 22px;           /* ubah ke 20–24px kalau mau lebih kecil/besar */
+  width: auto;
+  display: block;
+  vertical-align: middle;
+}
+
+/* === Logo di HEADER === */
+.appbar .logo-chip {
+  background: rgba(255, 255, 255, 0.08); /* semi transparan biar logo tetap kelihatan di navy */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+/* === Logo di DRAWER kiri === */
+.drawer-left .logo-chip {
+  background: #0F172A; /* navy solid biar logo transparan tetap kelihatan */
+  box-shadow: 0 2px 6px rgba(2,6,23,0.25);
 }
 
 /* Header & sections */
@@ -1686,7 +1713,10 @@ body.theme-navy {
   </div>
 
   <div class="center">
-    <div class="logo-chip sm">Cv.|</div>
+  <span class="logo-chip">
+  <img src="https://mulfiethea-pixel.github.io/Chordyv-pwa/logochordyv.png" 
+       alt="ChordyV Logo" class="logo-img">
+</span>
     <h1 id="titleBar">ChordyV — Library</h1>
   </div>
 
@@ -1719,14 +1749,20 @@ body.theme-navy {
 <aside id="cv_drawerLeft" class="drawer drawer-left" aria-label="Main menu" hidden>
   <div class="drawer-head">
     <div class="brand">
-      <span class="logo-chip">Cv.|</span>
+     <span class="logo-chip">
+  <img
+    src="https://mulfiethea-pixel.github.io/Chordyv-pwa/logochordyv.png"
+    alt="ChordyV Logo"
+    class="logo-img"
+  />
+</span>
       <b>ChordyV</b>
     </div>
     <button id="cv_closeLeft" class="ghost closex" aria-label="Close">✕</button>
   </div>
 
   <!-- Menu Hamburger -->
-<div style="background: linear-gradient(90deg, #003973, #007eff);
+<div style="background: linear-gradient(135deg, var(--accent) 0%, #4c84ff 100%);
             color: white; 
             padding: 16px; 
             border-radius: 14px; 
@@ -1756,7 +1792,13 @@ body.theme-navy {
       <summary class="about-summary">About</summary>
       <div class="help" style="margin-top:8px">
         <b>ChordyV</b> — simple chord bank & performance tool.<br>
-        Version <span>v1.0.0.3</span> 2025
+        Version <span>v1.0.0.1</span> 2025
+<div style="margin-top:14px; text-align:center;">
+  <a href="https://chordyv.com" target="_blank" rel="noopener noreferrer"
+     style="display:inline-block; padding:8px 14px; background: linear-gradient(135deg, var(--accent) 0%, #4c84ff 100%); color:#fff; border-radius:8px; font-weight:600; text-decoration:none; font-size:14px;">
+    chordyv.com
+  </a>
+</div>
         <div style="margin-top:12px; font-size:12px; text-align:center;">
          <a href="https://chordyv.com/privacy.html" style="color:#0EA5E9;text-decoration:none;" target="_blank">Privacy Policy</a> · 
 <a href="https://chordyv.com/terms.html" style="color:#0EA5E9;text-decoration:none;" target="_blank">Terms of Use</a>
@@ -3259,6 +3301,16 @@ lyrics lyrics lyrics</pre>
           <li>No audio/metronome.</li>
           <li>Styling (bold, red text) only visible in Performance.</li>
         </ul>
+<hr style="margin:24px 0 16px; opacity:0.3;">
+<p style="font-size:14px; margin:0;">
+  <strong>Read more details:</strong> 
+  <a href="https://chordyv.com/userguide.html" 
+     target="_blank" 
+     rel="noopener noreferrer" 
+     style="color:#0ea5e9; text-decoration:none; font-weight:600;">
+    Click here for the full guide
+  </a>
+</p>
       `;
       document.getElementById('cv_helpContent').innerHTML = html;
       document.getElementById('cv_helpModal').style.display = 'flex';
@@ -3293,7 +3345,7 @@ lyrics lyrics lyrics</pre>
       <summary class="about-summary">About</summary>
       <div class="help" style="margin-top:8px">
         <b>ChordyV</b><br/>
-        version 1.0.0.3 · 2025
+        version 1.0.0.1 · 2025
       </div>
       <div class="links">
      <a href="https://chordyv.com/privacy.html" target="_blank">Privacy Policy</a> · 
