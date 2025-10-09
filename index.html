@@ -2298,29 +2298,56 @@ cv_onViewInit('lib', ()=>{
 
     <!-- Baris 2: Folder actions + Filters -->
     <div class="row compact" style="margin-top:10px">
-      <!-- Group 1: Folder actions -->
-      <div class="seg tight">
-        <button id="lib_btnAddFolder" class="btn">+ Add Folder</button>
-        <button id="lib_btnRenameFolder" class="btn">Rename</button>
-        <button id="lib_btnDeleteFolder" class="btn">Delete</button>
-      </div>
+  <!-- Group 1: Folder actions -->
+<div class="seg tight">
+  <button id="lib_btnAddFolder" class="btn">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#2663FF" viewBox="0 0 24 24">
+      <path d="M12 5v14m7-7H5" stroke="#2663FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Add Folder
+  </button>
 
-      <!-- Group 2: Filters (Keys • Beat • Folder) -->
-      <div class="seg tight">
+  <button id="lib_btnRenameFolder" class="btn">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#2663FF" viewBox="0 0 24 24">
+      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 000-1.42l-2.34-2.34a1.003 1.003 0 00-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
+    </svg>
+    Rename
+  </button>
+
+  <button id="lib_btnDeleteFolder" class="btn">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#E53935" viewBox="0 0 24 24">
+      <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zm3.46-9.12L9 17h2v-7.12H9.46zm4 0V17h2l-.46-7.12h-1.08zM15.5 4l-1-1h-5l-1 1H5v2h14V4h-3.5z"/>
+    </svg>
+    Delete
+  </button>
+</div>
+
+ <div class="seg tight">
   <div class="icon-label">
-    <svg class="icon"><use href="#i-keys-fill"/></svg>
+    <!-- KEY -->
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M10 3a7 7 0 1 0 6.3 10L21 17v2h-2v2h-2v-2h-2v-2l-2.1-2.1A7 7 0 0 0 10 3Z"/>
+    </svg>
     <select id="lib_key"></select>
   </div>
+
   <div class="icon-label">
-    <svg class="icon"><use href="#i-beat-fill"/></svg>
+    <!-- BEAT -->
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 3h2v18H5zM17 3h2v18h-2zM11 7h2v10h-2z"/>
+    </svg>
     <select id="lib_beat"></select>
   </div>
+
   <div class="icon-label">
-    <svg class="icon"><use href="#i-folder-fill"/></svg>
+    <!-- FOLDER -->
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M10 4H4a2 2 0 0 0-2 2v3h20V8a2 2 0 0 0-2-2h-7l-3-2Z"/>
+      <path d="M22 10H2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-8Z"/>
+    </svg>
     <select id="lib_folder"></select>
   </div>
 </div>
-
       <div class="grow"></div>
       <div id="lib_counter" class="counter">0 songs • 0 folders</div>
     </div>
@@ -2330,12 +2357,33 @@ cv_onViewInit('lib', ()=>{
     <!-- LIST → TABLE -->
     <div class="table-wrap">
       <table id="lib_table" class="lib-table">
-     <thead>
+  <thead>
   <tr>
-    <th><svg class="icon"><use href="#i-song-fill"/></svg> Song</th>
-    <th><svg class="icon"><use href="#i-keys-fill"/></svg> Key</th>
-    <th><svg class="icon"><use href="#i-beat-fill"/></svg> Beat</th>
-    <th><svg class="icon"><use href="#i-folder-fill"/></svg> Folder</th>
+    <th>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M19 3v12.4A4 4 0 1 1 17 13V7h-4v8.4A4 4 0 1 1 11 13V5a1 1 0 0 1 1-1h6Z"/>
+      </svg>
+      Song
+    </th>
+    <th>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M10 3a7 7 0 1 0 6.3 10L21 17v2h-2v2h-2v-2h-2v-2l-2.1-2.1A7 7 0 0 0 10 3Z"/>
+      </svg>
+      Key
+    </th>
+    <th>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 3h2v18H5zM17 3h2v18h-2zM11 7h2v10h-2z"/>
+      </svg>
+      Beat
+    </th>
+    <th>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M10 4H4a2 2 0 0 0-2 2v3h20V8a2 2 0 0 0-2-2h-7l-3-2Z"/>
+        <path d="M22 10H2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-8Z"/>
+      </svg>
+      Folder
+    </th>
   </tr>
 </thead>
         <tbody id="lib_tbody"><!-- rows di-render via JS --></tbody>
@@ -2343,12 +2391,12 @@ cv_onViewInit('lib', ()=>{
     </div>
 
     <div class="actions" style="margin-top:10px; display:flex; gap:10px; align-items:center">
-      <div class="seg tight">
-        <button id="lib_btnOpen"   class="btn" disabled>Open</button>
-        <button id="lib_btnEdit"   class="btn" disabled>Edit</button>
-        <button id="lib_btnMove"   class="btn" disabled>Move</button>
-        <button id="lib_btnDelete" class="btn" disabled>Delete</button>
-      </div>
+<div class="seg tight" style="display:flex;justify-content:space-around;margin-top:8px;font-weight:600;">
+  <button id="lib_btnOpen"   style="border:none;background:transparent;color:#222;font-weight:600;">Open</button>
+  <button id="lib_btnEdit"   style="border:none;background:transparent;color:#222;font-weight:600;">Edit</button>
+  <button id="lib_btnMove"   style="border:none;background:transparent;color:#222;font-weight:600;">Move</button>
+  <button id="lib_btnDelete" style="border:none;background:transparent;color:#e44a4a;font-weight:700;">Delete</button>
+</div>
       <button id="lib_btnNewSong" class="cv-fab" title="New song"></button>
       <div class="grow"></div>
     </div>
