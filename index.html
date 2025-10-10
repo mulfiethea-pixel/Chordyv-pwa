@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.35">
+<meta name="cv-build" content="2025.09.20.36">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -2390,12 +2390,23 @@ cv_onViewInit('lib', ()=>{
       </table>
     </div>
 
-    <div class="actions" style="margin-top:10px; display:flex; gap:10px; align-items:center">
-<div class="seg tight" style="display:flex;justify-content:space-around;margin-top:8px;font-weight:600;">
-  <button id="lib_btnOpen"   style="border:none;background:transparent;color:#222;font-weight:600;">Open</button>
-  <button id="lib_btnEdit"   style="border:none;background:transparent;color:#222;font-weight:600;">Edit</button>
-  <button id="lib_btnMove"   style="border:none;background:transparent;color:#222;font-weight:600;">Move</button>
-  <button id="lib_btnDelete" style="border:none;background:transparent;color:#e44a4a;font-weight:700;">Delete</button>
+    <div class="actions" style="margin-<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
+  <button id="lib_btnOpen"
+    style="border:none;background:transparent;color:var(--fg);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;">
+    Open
+  </button>
+  <button id="lib_btnEdit"
+    style="border:none;background:transparent;color:var(--fg);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;">
+    Edit
+  </button>
+  <button id="lib_btnMove"
+    style="border:none;background:transparent;color:var(--fg);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;">
+    Move
+  </button>
+  <button id="lib_btnDelete"
+    style="border:none;background:transparent;color:#e44a4a;font-weight:700;padding:6px 10px;cursor:pointer;border-radius:6px;">
+    Delete
+  </button>
 </div>
       <button id="lib_btnNewSong" class="cv-fab" title="New song"></button>
       <div class="grow"></div>
