@@ -1,1 +1,4373 @@
+<!DOCTYPE html>  
+<html lang="id">  
+<head>  
+  <meta charset="utf-8"/>  
+<base href="/Chordyv-pwa/">  
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>  
+<meta name="cv-build" content="2025.09.20.38">
+<meta name="theme-color" content="#0F172A">  
+<!-- Aktifkan mode web app di iOS -->  
+<meta name="apple-mobile-web-app-capable" content="yes">  
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">  
+<meta name="apple-mobile-web-app-title" content="ChordyV">  
+  
+<!-- Icon khusus iOS (180x180 px, dengan background navy/putih) -->  
+<link rel="apple-touch-icon" sizes="180x180" href="/Chordyv-pwa/ios-180x180.png">  
+ <link rel="manifest" href="manifest.webmanifest">  
+ <title>V — Editor • Library • Performance (SPA)</title>  
+<!-- ===== CONFIG ===== -->
+<style>
+    /* =================== GLOBAL THEME (default WHITE) =================== */
+    :root{
+      --bg:#ffffff; --fg:#0f172a; --card:#ffffff; --muted:#475569; --border:#e5e7eb;
+      --accent:#3B82F6; --accent-fg:#ffffff; --chip:#eef2ff;
+      --radius:14px; --pad:10px;
 
+      --font-perf:28px;
+    }
+    /* =================== BEHAVIOR FIXES =================== */
+    /* Matikan pull-to-refresh / overscroll biar lebih app-like */
+    html, body {
+      height: 100%;                 /* biarin tetap ada */
+      overscroll-behavior: none;    /* cegah overscroll semua arah */
+      overscroll-behavior-y: contain; /* penting buat Android/Chrome */
+    }
+    body{margin:0;background:var(--bg);color:var(--fg);
+      font:16px/1.55 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Inter, "Noto Sans", sans-serif;
+}
+    body.theme-navy{
+      --bg:#0e1a38; --fg:#e5ecff; --card:#0f1f45; --muted:#94a3b8; --border:#1e2b57;
+      --chip:#0b1324;
+    }
+/* Gradasi “ChordyV” navy → biru */
+.cv-grad{
+  background: linear-gradient(135deg, var(--accent) 0%, #4c84ff 100%); !important;
+  color:#fff !important;
+  box-shadow: 0 10px 20px rgba(16, 44, 86, .25);
+  border: none;
+}
+
+/* Biar tombol upgrade ikut radius & padding rapi */
+#cv_btnUpgrade, #cv_upgradeBtn{
+  padding:10px 14px;
+  border-radius:20px;
+  width:100%;
+  font-weight:600;
+  font-size:15px;
+  letter-spacing:.3px;
+}
+  /* Header */
+  #cv_modalUpgrade h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 12px;
+  }
+
+  /* Benefit list */
+  #cv_modalUpgrade ul {
+    margin: 12px 0;
+    padding-left: 20px;
+  }
+  #cv_modalUpgrade li {
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #374151;
+  }
+
+  /* Buttons in modal */
+  #cv_modalUpgrade .btn-primary {
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 8px 14px;
+  }
+  #cv_modalUpgrade .btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    font-weight: 500;
+    border-radius: 10px;
+    padding: 8px 14px;
+  }
+
+
+    /* Buttons */
+    button,.btn,.ghost,.primary{
+      font-size:13.5px;padding:6px 10px;border-radius:10px;
+      border:1px solid var(--border);background:var(--chip);color:var(--fg);cursor:pointer
+    }
+    .btn.tiny{font-size:12.5px;padding:6px 10px;border-radius:10px;line-height:1}
+    .primary{background:var(--accent);color:var(--accent-fg);border-color:transparent}
+    .ghost{background:var(--chip)}
+    .seg{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+    .seg > .btn{border:0;border-right:1px solid var(--border)}
+    .seg > .btn:last-child{border-right:0}
+/* Inputs */
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+input,select,textarea{
+  border:1px solid var(--border);
+  background:var(--chip);
+  color:var(--fg);
+  border-radius:12px;
+  padding:10px 12px;
+  font:inherit;
+  background-clip: padding-box;
+  box-sizing: border-box;
+}
+select{padding-right:34px}
+    .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+    /* Layout & cards */
+    .wrap{max-width:980px;margin:16px auto;padding:0 16px}
+    .view{display:none}
+    .view.active{display:block}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+
+/* === OVERRIDE: Header Spotlight Final === */
+#cv_header{
+  color:#fff;
+  background:radial-gradient(120% 100% at 50% 50%,
+    #2563eb 0%, #1e3a8a 45%, #0f172a 100%
+  ) !important;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  box-shadow:0 4px 18px rgba(0,0,0,.25);
+}
+
+/* Saat theme-navy aktif, tetap pakai spotlight (jangan ditimpa navy flat) */
+body.theme-navy #cv_header{
+  background:radial-gradient(120% 100% at 50% 50%,
+    #2563eb 0%, #1e3a8a 45%, #0f172a 100%
+  ) !important;
+}
+    .head{max-width:980px;margin:auto;display:flex;align-items:center;gap:12px;padding:12px 16px}
+    .logo{width:30px;height:30px;border-radius:10px;background:#0b2558;display:grid;place-items:center;
+      color:#fff;font-weight:700;text-transform:lowercase;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+    h1#titleBar{margin:0;font-size:18px;font-weight:700;color:#0f172a}
+    body.theme-navy h1#titleBar{color:#dbeafe}
+   .gear {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:42px;
+  height:42px;
+  border-radius:12px;      /* boleh 50% kalau mau bulat penuh */
+  background:none;
+  border:none;
+  box-shadow:none;         /* hilangin bayangan */
+  cursor:pointer;
+  transition:background 0.2s ease;
+}
+.gear:hover {
+  background:rgba(0,0,0,0.05); /* efek hover tipis */
+}
+/* Tombol hamburger flat (samakan dengan .gear) */
+.hamburger{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:42px;height:42px;border:none;background:none;border-radius:12px;box-shadow:none;
+  transition:background .2s ease; cursor:pointer;
+}
+.hamburger:hover{ background:rgba(0,0,0,.05); }
+
+/* Backdrop untuk drawer */
+.backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.35);
+  z-index:50; opacity:0; transition:opacity .28s ease;
+}
+.backdrop.show{ opacity:1; }
+
+/* Drawer umum */
+.drawer{
+  position:fixed; top:0; bottom:0; width:300px; max-width:85vw; 
+  background:var(--card); border:1px solid var(--border);
+  box-shadow:0 24px 60px rgba(0,0,0,.35);
+  z-index:60; padding:16px; overflow:auto; -webkit-overflow-scrolling:touch;
+  transition:transform .28s ease;
+}
+
+/* Drawer kiri/kanan (off-canvas) */
+.drawer-left{ left:0; transform:translateX(-110%); }
+.drawer-left.open{ transform:translateX(0); }
+.drawer-right{ right:0; transform:translateX(110%); }
+.drawer-right.open{ transform:translateX(0); }
+
+/* === Logo (universal) === */
+/* biarkan chip transparan agar menumpang warna header/drawer */
+.logo-chip{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:4px; border-radius:12px; /* boleh hapus kalau mau flat */
+  /* no background di sini */
+}
+.logo-chip .logo-img{
+  height:40px; width:auto; display:block; vertical-align:middle;
+}
+
+/* === Header Drawer (pakai .drawer-head saja) === */
+/* samakan kiri & kanan */
+.drawer-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px;
+  background:var(--drawer-header-bg);
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom:12px; /* sesuai CSS-mu sebelumnya */
+}
+.drawer-head .brand{
+  display:flex; align-items:center; gap:8px; /* konsisten */
+}
+.drawer-head b,
+.drawer-title{
+  font-size:18px; font-weight:700; color:var(--drawer-header-text);
+}
+
+/* === Variabel adaptif tema === */
+body.theme-navy{
+  --drawer-header-bg:#0F172A;  /* header/drawer gelap */
+  --drawer-header-text:#FFFFFF;
+}
+body.theme-light{
+  --drawer-header-bg:#FFFFFF;  /* header/drawer terang */
+  --drawer-header-text:#0F172A;
+}
+
+/* Sections di dalam drawer */
+.drawer-sec{
+  border-top:1px solid var(--border);
+  padding-top:12px; margin-top:12px;
+  display:flex; flex-direction:column; gap:10px
+}
+.about-summary{ cursor:pointer; font-weight:700 }
+
+/* Link & tombol util */
+.link{display:inline-flex;align-items:center;justify-content:center;gap:8px; padding:9px 12px; border:1px solid var(--border); border-radius:10px; text-decoration:none; color:var(--fg); background:var(--chip)}
+.link:hover{background:#f3f4f6}
+.links{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.btn.google{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;color:#0f172a;border-radius:12px;padding:10px 14px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+    .closex{width:32px;height:32px;border-radius:10px}
+    .sec{border-top:1px solid var(--border);padding-top:10px;margin-top:10px}
+    .help{font-size:12px;color:var(--muted)}
+
+    /* Editor */
+    .form-grid{display:grid;gap:12px}
+    @media(min-width:720px){.form-grid{grid-template-columns:1fr 180px 1fr}}
+    .shortcut-bar button,[data-beat],select#ed_key{font-size:13px;padding:6px 8px;border-radius:8px;min-width:38px}
+    #ed_content{width:100%;min-height:48vh;resize:both;white-space:pre;overflow:auto}
+    /* Beat preset highlight */
+    button[data-beat].primary,
+    button[data-beat][aria-pressed="true"]{
+      background:var(--accent)!important;color:var(--accent-fg)!important;border-color:transparent!important;
+    }
+/* Library: tabel list lagu */
+#libraryView .table-wrap{
+  margin-top:6px; max-height:52vh; overflow:auto; border:1px solid var(--border); border-radius:12px;
+}
+#libraryView .lib-table{ width:100%; border-collapse:separate; border-spacing:0; font-size:13px; }
+#libraryView thead th {
+  position: sticky;
+  top: 0;
+  background: linear-gradient(135deg, var(--accent) 0%, #4c84ff 100%);
+  color: var(--accent-fg);
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 600;
+  border-bottom: none;
+}
+#libraryView thead th .icon {
+  fill: currentColor;
+}
+#libraryView .lib-table tbody tr{
+  cursor:pointer; background:var(--card);
+}
+#libraryView .lib-table tbody td{
+  padding:10px 12px; border-top:1px solid var(--border);
+}
+#libraryView .lib-table tbody tr:first-child td{ border-top:0; }
+#libraryView .lib-table tbody tr.active{
+  background:var(--accent); color:var(--accent-fg);
+}
+/* Atur proporsi kolom tabel */
+#libraryView thead tr,
+#libraryView .lib-table tbody tr {
+  display: grid;
+  grid-template-columns: 40% 20% 20% 20%; /* Songs 40%, Keys/Beat/Folder 20% */
+}
+#libraryView .lib-table tbody tr.active td{ color:var(--accent-fg); }
+/* ===== Toolbar filters with icons (wrapper) ===== */
+#libraryView .icon-label{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background: var(--chip);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  height: 36px;                 /* samakan dengan tombol lain */
+  padding: 6px 10px;
+}
+
+/* Ikon di toolbar */
+#libraryView .icon-label .icon{
+  width:14px;
+  height:14px;
+  margin:0;                     /* biar center */
+  vertical-align:middle;
+  fill: currentColor;
+}
+
+/* Select di dalam kapsul ikon */
+#libraryView .icon-label select{
+  border: none;
+  background: transparent;      /* jangan bikin kapsul di dalam kapsul */
+  height: 28px;                 /* sudah dipakai di CSS kamu juga */
+  line-height: 1.3;
+  padding: 0;                   /* hapus padding ganda */
+  color: inherit;
+  min-width: 96px;              /* tetap ada ruang teks */
+  max-width: 128px;
+  appearance: none;
+}
+
+/* === Toolbar filters transparan === */
+#libraryView .seg.tight .icon-label{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:4px !important;
+  background: transparent !important;   /* transparan */
+  border: none !important;              /* hilangkan border */
+  border-radius: 0 !important;          /* biar netral */
+  height: auto !important;              /* ikut isi */
+  padding: 0 !important;
+}
+
+/* Ikon tetap kecil dan rapi */
+#libraryView .seg.tight .icon-label .icon{
+  width:14px !important;
+  height:14px !important;
+  margin:0 !important;
+  fill: currentColor !important;
+}
+
+/* === Hapus border untuk toolbar Keys / Beats / Folders === */
+#libraryView .icon-label {
+  border: none !important;
+  background: transparent !important; /* full transparan */
+}
+
+#libraryView .seg.tight {
+  border: none !important;   /* hapus kapsul luar */
+}
+
+#libraryView .seg.tight > * {
+  border: none !important;   /* hapus garis pemisah antar item */
+  background: transparent !important; 
+}
+/* === Kecilkan font dropdown Keys / Beats / Folders === */
+#libraryView .seg.tight .icon-label select {
+  font-size: 13px !important;   /* lebih kecil dari default */
+  height: 22px !important;      /* sesuaikan supaya proporsional */
+  line-height: 1.2 !important;
+}
+/* Rapetin isi dropdown filter Keys / Beats / Folders */
+#libraryView .seg.tight .icon-label select {
+  padding: 0 4px !important;    /* kiri-kanan lebih sempit */
+  min-width: 72px !important;   /* lebih kecil dari 96px */
+  max-width: 100px !important;  /* biar nggak melar */
+  height: 22px !important;      /* lebih pendek */
+  line-height: 1.2 !important;
+  font-size: 13px !important;   /* biar teks kecil rapi */
+  border-radius: 6px !important;/* opsional: radius kecil biar nggak aneh */
+}
+/* 1) Hilangkan border/outline default select */
+#libraryView .seg.tight .icon-label select{
+  border: none !important;
+  outline: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 2) Efek hover/active/focus seperti chip button */
+#libraryView .seg.tight .icon-label{
+  border-radius: 12px;               /* kalau mau tetap transparan, biarin tanpa border */
+  transition: background .15s ease, box-shadow .15s ease;
+}
+
+#libraryView .seg.tight .icon-label:hover{
+  background: rgba(148,163,184,.12); /* halus saat hover */
+}
+
+#libraryView .seg.tight .icon-label:active{
+  background: rgba(148,163,184,.18);
+  transform: translateY(0);          /* cocokkan behavior tombolmu */
+}
+
+/* === Toolbar filter transparan tanpa border highlight === */
+#libraryView .seg.tight .icon-label select {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+/* ===== Library Clean Background Separation ===== */
+
+/* Card utama (wrapper Search, Toolbar, Tabel, Action) */
+#libraryView .card {
+  border: none !important;          /* hilangin garis luar */
+  background: #f9fafb !important;   /* abu sangat tipis */
+  box-shadow: none !important;      /* biar flat */
+  border-radius: 14px !important;   /* sudut tetap lembut */
+  padding: 16px;
+}
+
+/* Bagian toolbar (Open / Edit / Move / Delete) */
+#libraryView .card .actions {
+  background: #fdfdfd !important;   /* abu lebih tipis lagi */
+  border-radius: 12px;
+  padding: 10px;
+}
+
+/* Tabel */
+#libraryView .lib-table {
+  border-collapse: collapse;
+}
+#libraryView .lib-table th,
+#libraryView .lib-table td {
+  border: none !important;          /* hilangin garis row */
+}
+#libraryView .table-wrap {
+  border: none !important;          /* hilangin border luar */
+  background: #ffffff !important;   /* putih bersih untuk isi tabel */
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04); /* halus banget */
+}
+/* ===== Clean Background: Dark/Navy Mode ===== */
+body.theme-navy #libraryView .card {
+  background: #0f172a !important;   /* navy dasar, lebih terang sedikit dari body */
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body.theme-navy #libraryView .table-wrap {
+  background: #1e293b !important;   /* abu-navy lebih terang buat isi tabel */
+  border: none !important;
+}
+
+body.theme-navy #libraryView .lib-table th {
+  background: linear-gradient(135deg,#2563eb,#3b82f6) !important;
+  color: #fff !important;
+}
+
+body.theme-navy #libraryView .lib-table td {
+  border: none !important;
+  background: transparent !important; /* biar nyatu */
+  color: #e2e8f0 !important;          /* abu terang */
+}
+
+/* Action bar di bawah tabel */
+body.theme-navy #libraryView .card .actions {
+  background: #0b1734 !important;     /* sedikit lebih gelap dari card */
+}
+ /* =================== PERFORMANCE (2 WARNA) =================== */
+
+/* Latar view ikut tema */
+#performanceView {
+  background: var(--bg);
+}
+
+/* Panggung performance */
+#perf_area {
+  /* default: SEMUA elemen hitam */
+  color: #111 !important;
+
+  white-space: pre-wrap;     /* wrap baris panjang */
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  line-height: 2.1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--font-perf, 28px);
+  min-height: 80vh;
+}
+
+/* === TEKS (merah) === */
+/* baris teks murni (judul/section) */
+#perf_area .teks-line {
+  color: #e11d48 !important;
+  font-weight: 600;
+}
+/* fragmen teks di baris campuran (kata: Intro, Verse, Aksen, TUTI, dst.) */
+#perf_area .teks {
+  color: #e11d48 !important;
+  font-weight: 600;
+}
+
+/* === SISANYA (hitam) === */
+/* chord, bar/dot/rest, angka melodi → tetap hitam */
+#perf_area .chord,
+#perf_area .bar,
+#perf_area .melodi {
+  color: #111 !important;
+  font-weight: 700;          /* tegas untuk chord; kalau tak mau, hapus baris ini */
+  font-style: normal;        /* angka melodi non-italic; kalau mau italic, ubah ke italic */
+}
+
+/* (opsional) kalau ada rule lama yang masih nempel, paksa reset */
+#perf_area .chord *,
+#perf_area .bar *,
+#perf_area .melodi * {
+  color: #111 !important;
+}
+/* =================== Immersive (REPLACED) =================== */
+
+/* Sembunyikan UI saat immersive */
+body.onlyText #perf_toolbar { display: none; }
+body.onlyText #perf_meta    { display: none; }
+
+/* Tombol Exit – selalu terlihat & di atas semuanya */
+#perf_exitImm{
+  position: fixed;
+  inset: 10px 10px auto auto;   /* pojok kanan-atas */
+  z-index: 9999;                /* paling atas */
+  display: none;                /* default: sembunyi */
+  /* lawan gaya "flat/transparent" di #performanceView button */
+  background: rgba(15,23,42,.75) !important; 
+  color: #fff !important;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.22);
+  pointer-events: auto;         /* pastikan bisa diklik */
+}
+
+/* Tampilkan saat immersive aktif */
+body.onlyText #perf_exitImm{
+  display: inline-flex !important; 
+  align-items: center; 
+  gap: 6px;
+}
+
+/* Tambahan: kalau user masuk fullscreen via gesture/menu,
+   tetap paksa tombol Exit muncul meski class onlyText belum nempel */
+:fullscreen #perf_exitImm,
+:-webkit-full-screen #perf_exitImm{
+  display: inline-flex !important;
+  z-index: 9999 !important;
+}
+
+/* Extra guard: karena elemen tombol berada di dalam #performanceView
+   dan ada rule global: #performanceView button { background: transparent; … }
+   maka kita override lagi secara lebih spesifik di konteks ini */
+#performanceView #perf_exitImm{
+  background: rgba(15,23,42,.75) !important;
+  color: #fff !important;
+}
+
+/* Toolbar (tetap) */
+#perf_toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+}
+/* ===== EDITOR-ONLY MODERN BUTTONS ===== */
+#editorView .beat-group .preset-beat{
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  background:#f8fafc;
+  color:#0f172a;
+  padding:8px 14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .2s ease;
+}
+#editorView .beat-group .preset-beat:hover{ background:#eef7ff; }
+#editorView .beat-group .preset-beat.is-selected{
+  background:#0ea5e9;
+  color:#fff;
+  border-color:#0ea5e9;
+}
+#editorView .primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  box-shadow: 0 6px 14px rgba(0,0,0,.10);
+}
+#editorView .ghost {
+  background: rgba(148,163,184,.12);
+}
+#editorView .shortcut-bar button {
+  min-width: 40px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(148,163,184,.12);
+}
+#editorView .shortcut-bar button:hover {
+  background: rgba(148,163,184,.18);
+}
+/* === FIX OVERRIDE PRIMARY & GHOST === */
+#editorView button.primary {
+  background: var(--accent) !important;
+  color: var(--accent-fg) !important;
+  border-color: transparent !important;
+}
+
+#editorView button.ghost {
+  background: rgba(148,163,184,.12) !important;
+}
+
+/* ===== LIBRARY-ONLY MODERN BUTTONS ===== */
+#libraryView button:not(.cv-fab),
+#libraryView .btn,
+#libraryView .ghost,
+#libraryView .primary {
+  border: none !important;
+  background: transparent;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .18s ease, transform .08s ease, box-shadow .18s ease;
+}
+#libraryView .cv-fab {
+  border-radius: 50% !important;
+  background: linear-gradient(180deg,#16a3dc,#0ea5e9) !important;
+  color: #fff !important;
+  width: 56px; height: 56px;
+  padding: 0 !important;
+  display: inline-grid; place-items: center;
+}
+#libraryView .cv-fab::before {
+  content: '+'; font-size: 28px; font-weight: 700;
+}
+#libraryView .primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  box-shadow: 0 6px 14px rgba(0,0,0,.10);
+}
+#libraryView .ghost {
+  background: rgba(148,163,184,.12);
+}
+#libraryView button:hover {
+  background: rgba(148,163,184,.18);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0,0,0,.12);
+}
+#libraryView button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(0,0,0,.10);
+}
+/* === FIX OVERRIDE PRIMARY & GHOST === */
+#libraryView button.primary {
+  background: var(--accent) !important;
+  color: var(--accent-fg) !important;
+  border-color: transparent !important;
+}
+
+#libraryView button.ghost {
+  background: rgba(148,163,184,.12) !important;
+}
+/* ===== PERFORMANCE-ONLY MODERN BUTTONS ===== */
+#performanceView button,
+#performanceView .btn,
+#performanceView .ghost,
+#performanceView .primary {
+  border: none !important;
+  background: transparent;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .18s ease, transform .08s ease, box-shadow .18s ease;
+}
+
+/* Segmented toolbar buttons (transpose, acc, font size) */
+#performanceView .seg .btn {
+  background: rgba(148,163,184,.12);
+}
+#performanceView .seg .btn:hover {
+  background: rgba(148,163,184,.18);
+}
+
+/* Primary (jarang dipakai di perf, tapi tetap siap) */
+#performanceView .primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  box-shadow: 0 6px 14px rgba(0,0,0,.10);
+}
+/* ===== LIBRARY sizing & alignment ===== */
+
+/* Search lebih ramping */
+#libraryView #lib_search{
+  height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--chip);
+  border-radius: 14px !important;  /* kunci biar gak jadi kotak */
+  font-size: 14px;
+  line-height: 1.3;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ===== Toolbar Library compact & segmented ===== */
+#libraryView .row.compact { 
+  gap: 6px;                 /* lebih rapet */
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Kelompok rapet: tombol jadi satu capsule */
+#libraryView .seg.tight{
+  display: inline-flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Item di dalam seg: nempel, ada garis pemisah tipis */
+#libraryView .seg.tight > *{
+  border: 0 !important;
+  border-right: 1px solid var(--border);
+  background: rgba(148,163,184,.12);
+  height: 36px;            /* samakan tinggi */
+  padding: 6px 10px;       /* lebih ramping */
+  border-radius: 0 !important;
+}
+#libraryView .seg.tight > *:last-child{ border-right: 0; }
+
+/* Dropdown versi kompak */
+#libraryView .seg.tight select{
+  width: auto;
+  min-width: 96px;         /* jangan kependekan */
+  max-width: 128px;        /* cegah melebar */
+  appearance: none;
+}
+
+/* Sedikit rampingkan tombol default di Library */
+#libraryView button:not(.cv-fab){ height:36px; padding:6px 10px; }
+
+/* Jarak antar kontrol lebih rapat */
+#libraryView .card .row{ gap: 10px; }
+
+/* Biar deretan kontrol nggak mepet tepi kiri-kanan */
+#libraryView .card{ padding-left: 16px; padding-right: 16px; }
+
+/* Tombol chip di Library (Open/Edit/Move/…) sudah disetel sebelumnya;
+   ini samain sudut & tinggi kalau perlu */
+#libraryView button,
+#libraryView .ghost{
+  border-radius: 12px;
+  height: 38px;
+  padding: 8px 12px;
+}
+#libraryView .icon{
+  width:14px;
+  height:14px;
+  margin-right:6px;
+  vertical-align:middle;
+  fill:currentColor; /* ikut warna teks */
+}
+#libraryView .icon-label{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+#libraryView .icon-label select{
+  height:28px;
+}
+
+/* Opsional: center-kan Search & kontrol pada layar kecil */
+@media (max-width: 420px){
+/* Samain font dropdown Keys & Folders dengan tombol */
+#libraryView #lib_key,
+#libraryView #lib_folder{
+  font-size: 13.5px;
+  height: 36px;
+  line-height: 1.3;
+  padding: 6px 10px;
+  border-radius: 0 !important;   /* hanya untuk dropdown di segmen ketat */
+  background: rgba(148,163,184,.12);
+  border: none !important;
+  width: auto;
+  min-width: 96px;
+  max-width: 128px;
+  appearance: none;
+}
+
+#libraryView .new-btn:hover {
+  color: #1e2b57;                 /* navy lebih gelap pas hover */
+  transform: translateY(-1px);
+}
+
+#libraryView .new-btn:active {
+  transform: translateY(0);
+}
+/* === Editor: samakan #ed_title dengan search di Library === */
+#editorView #ed_title{
+  font-size: 14px;
+  height: 38px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--chip);
+  color: var(--fg);
+  width: 100%;
+  max-width: 360px;   /* biar “serasa” seperti Search di Library */
+}
+
+#editorView #ed_title::placeholder{ color: var(--muted); }
+
+/* === Shared Floating Action Button (FAB) === */
+.cv-fab{
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(180deg,#16a3dc,#0ea5e9);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+  z-index: 1000;
+  font-size: 0; /* sembunyikan teks */
+}
+.cv-fab::before{
+  content: '+';
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+.cv-fab:hover{
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(0,0,0,.3);
+}
+/* === FIX: Pastikan FAB tidak transparan di Editor & Library === */
+/* LIBRARY: FAB + di pojok kanan-bawah, floating */
+/* LIBRARY: FAB + di pojok kanan-bawah, floating */
+#libraryView .cv-fab {
+  position: fixed !important;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+  right: 20px !important;
+
+  width: 56px !important;
+  height: 56px !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 50% !important;
+  background: linear-gradient(180deg,#16a3dc,#0ea5e9) !important;
+  color: #fff !important;
+
+  display: inline-grid !important;
+  place-items: center !important;
+  line-height: 1 !important;
+  z-index: 1000 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25) !important;
+  transition: transform .15s, box-shadow .15s !important;
+}
+#libraryView .cv-fab::before {
+  content: '+'; font-size: 28px; font-weight: 700; color:#fff !important;
+}
+/* === FIX: Tombol Preset Beat agar biru saat dipilih === */
+#editorView .beat-group .preset-beat.is-selected,
+#editorView .beat-group .preset-beat[aria-pressed="true"] {
+  background:#0ea5e9 !important;
+  color:#fff !important;
+  border-color:#0ea5e9 !important;
+}
+/* === Global Accent Override: samain Editor, Library, Performance === */
+:root {
+  --accent:#0ea5e9 !important;
+  --accent-fg:#ffffff !important;
+}
+/* === Hilangin border tombol di Editor & Library === */
+#editorView button,
+#editorView .btn,
+#editorView .preset-beat,
+#editorView .ghost,
+#editorView .primary,
+#editorView .shortcut-bar button,
+#libraryView button,
+#libraryView .btn,
+#libraryView .ghost,
+#libraryView .primary {
+  border: none !important;
+}
+#libraryView #lib_search{
+  border-radius: 14px !important;
+}
+/* ===== Editor: segmented toolbar Save/Library/Open biar sama dgn Library ===== */
+#editorView .row .seg.tight{
+  display:inline-flex;
+  gap:0;
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+}
+
+/* Item di dalam kapsul: rata tinggi, tanpa radius per-item, ada pemisah tipis */
+#editorView .seg.tight > button{
+  height:36px;
+  padding:6px 10px;
+  border:0 !important;
+  border-right:1px solid var(--border);
+  border-radius:0 !important;
+  background: rgba(148,163,184,.12);
+  box-shadow:none !important;
+  transform:none !important;
+}
+#editorView .seg.tight > button:last-child{ border-right:0; }
+
+/* Primary di dalam kapsul: tetap biru tapi menyatu rapi */
+#editorView .seg.tight > .primary{
+  background: var(--accent) !important;
+  color: var(--accent-fg) !important;
+  border-color: transparent !important;
+}
+#editorView .seg.tight > .primary:hover{
+  background: var(--accent) !important; /* jangan berubah/berbayang */
+}
+
+/* Sedikit rapetin jarak baris tombolnya */
+#editorView .row[style*="margin-top:10px"]{ gap:10px; align-items:center; }
+/* ===== Header: 3 kolom (left / center / right) ===== */
+header .head{
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;  /* kiri-fleks • tengah-auto • kanan-fleks */
+  align-items: center;
+  gap: 12px;
+}
+
+/* tempatkan masing-masing area */
+header .head .left  { justify-self: start; }
+header .head .center{ justify-self: center; display:flex; align-items:center; gap:10px; }
+header .head .right { justify-self: end; }
+
+/* pastikan judul tidak memaksa melar */
+header .head #titleBar{
+  margin: 0;
+  white-space: nowrap;
+  font-size: 18px;
+  font-weight: 700;
+}
+/* ===== Editor Clean Background ===== */
+
+/* Hilangkan border card */
+#editorView .card {
+  border: none !important;
+  background: #f9fafb !important;    /* abu tipis */
+  box-shadow: none !important;
+  border-radius: 14px !important;
+  padding: 16px;
+  margin-bottom: 14px;              /* biar antar blok ada spasi */
+}
+
+/* Area textarea */
+#editorView #ed_content {
+  background: #fdfdfd !important;   /* lebih tipis dari card */
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 12px;
+  min-height: 40vh;
+  font-family: inherit;
+}
+
+/* Toolbar Save | Library | Open */
+#editorView .seg.tight {
+  background: transparent !important;
+  border: none !important;
+}
+
+#editorView .seg.tight > button {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 12px !important;
+}
+
+#editorView .seg.tight > button:hover {
+  background: rgba(148,163,184,.12) !important; /* hover halus */
+}
+/* ===== Editor — Clean Background (Dark/Navy) ===== */
+body.theme-navy #editorView .card {
+  border: none !important;
+  background: #0f172a !important;       /* lapis card: navy lebih terang dr body */
+  box-shadow: none !important;
+  border-radius: 14px !important;
+  padding: 16px !important;
+}
+
+/* Grup kecil di dalam card (chip bar, toolbar, dsb.) */
+body.theme-navy #editorView .section,
+body.theme-navy #editorView .inner,
+body.theme-navy #editorView .group {
+  background: #0b1734 !important;       /* lapis di dalam card: sedikit lebih gelap */
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 10px !important;
+}
+
+/* Text inputs, selects, textarea */
+body.theme-navy #editorView input[type="text"],
+body.theme-navy #editorView input[type="search"],
+body.theme-navy #editorView select,
+body.theme-navy #editorView textarea {
+  background: #1e293b !important;       /* isi field: paling terang di editor */
+  color: #e5e7eb !important;
+  border: none !important;
+  border-radius: 12px !important;
+  outline: none !important;
+}
+
+/* Placeholder */
+body.theme-navy #editorView ::placeholder {
+  color: #cbd5e1 !important;
+  opacity: .8;
+}
+
+/* Chip tombol (preset beat, simbol, dll.) */
+body.theme-navy #editorView .chip,
+body.theme-navy #editorView .seg.tight > button {
+  background: transparent !important;   /* flat/ghost */
+  color: #e2e8f0 !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  transition: background .18s ease;
+}
+body.theme-navy #editorView .chip:hover,
+body.theme-navy #editorView .seg.tight > button:hover {
+  background: rgba(226,232,240,.08) !important; /* hover halus */
+}
+
+/* Toolbar Save | Library | Open (flat, transparan) */
+body.theme-navy #editorView .seg.tight {
+  display: inline-flex;
+  gap: 6px;
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+}
+
+/* Tombol utama (Save) tetap accent */
+body.theme-navy #editorView .seg.tight > .primary,
+body.theme-navy #editorView .btn.primary {
+  background: var(--accent, #2563eb) !important;
+  color: var(--accent-fg, #fff) !important;
+  border: none !important;
+}
+
+/* Area konten (textarea besar) */
+body.theme-navy #editorView #ed_content,
+body.theme-navy #editorView textarea#ed_content {
+  background: #0b1734 !important;       /* beda tipis dari card */
+  color: #e5e7eb !important;
+  border: none !important;
+  border-radius: 12px !important;
+}
+
+/* Label & teks kecil */
+body.theme-navy #editorView label,
+body.theme-navy #editorView .muted,
+body.theme-navy #editorView .hint {
+  color: #cbd5e1 !important;
+}
+
+/* Divider garis halus (kalau ada <hr>) */
+body.theme-navy #editorView hr {
+  border: 0;
+  height: 1px;
+  background: rgba(226,232,240,.08);
+}
+
+/* Tooltip/dropdown (kalau dipakai) */
+body.theme-navy .popover,
+body.theme-navy .menu {
+  background: #0b1734 !important;
+  color: #e5e7eb !important;
+  border: 1px solid rgba(226,232,240,.08) !important;
+  border-radius: 12px !important;
+}
+
+/* biar konsisten di tema navy juga */
+body.theme-navy header .head #titleBar{ color:#dbeafe; }
+
+/* hilangkan elemen .grow lama kalau masih ada */
+header .head .grow{ display:none !important; }
+/* ===== Drawer / Sheet Fix: biar isi nggak bablas ke kanan ===== */
+.sheet, .drawer {
+  width: min(88vw, 360px);    /* lebar konsisten */
+  max-width: 360px;
+  box-sizing: border-box;
+  overflow-x: hidden;         /* cegah isi keluar */
+  word-break: break-word;     /* teks panjang tetap wrap */
+}
+
+/* semua anak wajib ikut border-box dan bisa menyusut */
+.sheet *, .drawer * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Input login */
+.sheet input[type="text"],
+.sheet input[type="email"],
+.sheet input[type="password"],
+.drawer input[type="text"],
+.drawer input[type="email"],
+.drawer input[type="password"] {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+}
+
+/* Tombol login/logout biar rapi */
+.sheet .actions, .drawer .actions {
+  display: flex;
+  gap: 12px;
+}
+.sheet .actions > *, .drawer .actions > * {
+  flex: 1 1 0;
+  max-width: 100%;
+}
+</style>
+<style>
+/* ===== Upgrade / Premium Pill Button ===== */
+/* Cocok untuk #cv_btnUpgrade (punyamu) & #cv_upgradeBtn (referensi) */
+#cv_btnUpgrade.primary,
+#cv_upgradeBtn.cv-pro-pill{
+  display:flex; align-items:center; justify-content:center; gap:.6rem;
+  width:100%; height:52px; padding:0 20px;
+  border:none; border-radius:16px;
+  color:#fff; font-weight:700; letter-spacing:.2px;
+  background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 45%,#0ea5e9 100%);
+  box-shadow:0 10px 18px rgba(29,78,216,.25), inset 0 1px 0 rgba(255,255,255,.35);
+  transition:transform .06s ease, box-shadow .2s ease, filter .2s ease;
+}
+#cv_btnUpgrade.primary::before,
+#cv_upgradeBtn.cv-pro-pill .icon::before{
+  content:"✨";
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:28px; border-radius:10px;
+  background:rgba(255,255,255,.18);
+}
+/* Saat sudah Pro → hijau */
+#cv_btnUpgrade.ghost{
+  display:flex; align-items:center; justify-content:center; gap:.6rem;
+  width:100%; height:52px; padding:0 20px;
+  border:none; border-radius:16px;
+  color:#fff; font-weight:700; letter-spacing:.2px;
+  background:linear-gradient(135deg,#16a34a 0%,#22c55e 60%,#4ade80 100%);
+  box-shadow:0 10px 18px rgba(22,163,74,.22), inset 0 1px 0 rgba(255,255,255,.35);
+  cursor:default;
+}
+#cv_btnUpgrade.ghost::before{ content:"⭐"; }
+
+/* ===== Upgrade Modal ===== */
+/* Cocok untuk #cv_modalUpgrade (punyamu) & #cv_upgradeModal (referensi) */
+#cv_modalUpgrade .modal-overlay,
+#cv_upgradeModal{ backdrop-filter:blur(8px); background:rgba(15,23,42,.35); }
+
+#cv_modalUpgrade .modal-content,
+#cv_upgradeModal #cv_upgradeBox{
+  border-radius:20px;
+  background:linear-gradient(180deg,#ffffff,#f8fafc);
+  box-shadow:0 18px 40px rgba(2,6,23,.25);
+  padding:18px 18px 14px;
+  max-width:640px;
+}
+
+#cv_modalUpgrade .modal-head,
+#cv_upgradeModal #cv_upgradeHead{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+
+#cv_modalUpgrade .modal-icon,
+#cv_upgradeModal #cv_upgradeHead .badge{
+  width:44px; height:44px; border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#1d4ed8,#60a5fa);
+  color:#fff; font-size:22px;
+  box-shadow:0 8px 18px rgba(29,78,216,.28);
+}
+
+#cv_modalUpgrade h2,
+#cv_upgradeModal #cv_upgradeTitle{ font-size:20px; font-weight:800; color:#0f172a; margin:0; }
+
+#cv_modalUpgrade p.sub,
+#cv_upgradeModal #cv_upgradeSub{ margin:.25rem 0 0; color:#475569; font-size:14px; }
+
+/* List benefit ala kartu */
+#cv_modalUpgrade .benefits,
+#cv_upgradeModal #cv_upgradeBenefits{ display:grid; gap:10px; margin:14px 0; }
+
+#cv_modalUpgrade .benefit,
+#cv_upgradeModal #cv_upgradeBenefits li{
+  display:flex; gap:10px; align-items:flex-start;
+  background:#eef2ff; border-radius:14px; padding:10px 12px; border:1px solid var(--border,#e5e7eb);
+}
+#cv_modalUpgrade .benefit .check,
+#cv_upgradeModal #cv_upgradeBenefits .tick{
+  flex:0 0 26px; height:26px; width:26px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  background:#22c55e; color:#fff; font-weight:800; box-shadow:0 4px 10px rgba(34,197,94,.35);
+}
+
+#cv_modalUpgrade .modal-actions,
+#cv_upgradeModal #cv_upgradeActions{ display:flex; gap:12px; margin-top:8px; }
+
+#cv_modalUpgrade .btn-secondary,
+#cv_upgradeModal #cv_btnMaybeLater{
+  flex:1; background:#eef2f7; color:#1f2937; border:none; border-radius:12px; padding:12px 14px; font-weight:600;
+}
+#cv_modalUpgrade .btn-primary,
+#cv_upgradeModal #cv_btnGetPro{
+  flex:1; color:#fff; border:none; border-radius:12px; padding:12px 14px; font-weight:800;
+  background:linear-gradient(135deg,#1e40af,#2563eb 50%,#3b82f6 100%);
+  box-shadow:0 10px 18px rgba(37,99,235,.28), inset 0 1px 0 rgba(255,255,255,.3);
+}
+
+/* Navy tweak */
+body.theme-navy #cv_modalUpgrade .modal-content,
+body.theme-navy #cv_upgradeModal #cv_upgradeBox{
+  background:linear-gradient(180deg,#0f1f45,#0b1734);
+  box-shadow:0 16px 36px rgba(2,6,23,.55);
+}
+body.theme-navy #cv_modalUpgrade h2{ color:#e5ecff; }
+body.theme-navy #cv_modalUpgrade p.sub{ color:#a7b2c7; }
+body.theme-navy #cv_modalUpgrade .benefit{ background:#0b1324; }
+</style>
+<script>
+  /* CORE STORAGE & UTIL */
+  (()=> {
+    const DB_KEY='cv_songs', FOLD_KEY='cv_folders';
+    window.cv_loadDB = ()=>{ try{return JSON.parse(localStorage.getItem(DB_KEY)||'{}')}catch{return{}} };
+    window.cv_saveDB = db => localStorage.setItem(DB_KEY, JSON.stringify(db));
+    window.cv_loadFolders = ()=>{ try{return JSON.parse(localStorage.getItem(FOLD_KEY)||'[]')}catch{return[]} };
+    window.cv_saveFolders = f => localStorage.setItem(FOLD_KEY, JSON.stringify(f));
+    window.cv_escapeHtml = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  })();
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ===== Upgrade Modal: visual persis screenshot ===== */
+#cv_upgradeModal{
+  position: fixed; inset: 0; z-index: 100000;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.45);
+}
+#cv_upgradeModal.show{ display:flex; }
+
+#cv_upgradeBox{
+  width: min(92vw, 520px);
+  background: var(--card, #fff);
+  color: var(--fg, #0f172a);
+  border-radius: 22px;
+  padding: 20px 18px 16px;
+  box-shadow: 0 22px 60px rgba(0,0,0,.35);
+}
+
+/* Header: badge biru-navy + judul/subtitle */
+#cv_upgradeHead{
+  display:flex; align-items:center; gap:12px; margin-bottom:6px;
+}
+#cv_upgradeHead .badge{
+  display:grid; place-items:center;
+  width:44px; height:44px; border-radius:16px;
+  background: linear-gradient(135deg,#0f1f45 0%, #183b7a 55%, #2aa0ff 100%);
+  color:#fff; font-weight:800; font-size:20px;
+  box-shadow: 0 8px 22px rgba(16,77,160,.32);
+}
+#cv_upgradeTitle{
+  margin:0; font-size:22px; font-weight:800; letter-spacing:.2px;
+}
+#cv_upgradeSub{
+  margin: 6px 0 12px; color: var(--muted,#64748b); font-size:14px;
+}
+
+/* Benefit tiles: biru muda seperti chip di SS */
+#cv_upgradeBenefits{
+  list-style:none; margin:10px 0 16px; padding:0; display:grid; gap:12px;
+}
+#cv_upgradeBenefits li{
+  display:flex; gap:12px; align-items:flex-start;
+  background: #e8f0ff;                      /* tone biru muda */
+  border: 1px solid #dbe7ff;
+  color: var(--fg,#0f172a);
+  padding: 14px 16px; border-radius: 16px;
+  font-size: 15px; line-height: 1.4;
+}
+#cv_upgradeBenefits .tick{
+  font-weight:800; font-size:18px;
+  color:#12b76a;                             /* ceklis hijau */
+}
+
+/* Actions: kiri abu lembut, kanan gradient navy→blue */
+#cv_upgradeActions{ display:flex; gap:12px; margin-top: 2px; }
+#cv_btnMaybeLater, #cv_btnGetPro{
+  flex:1 1 0; height: 48px; border:0; border-radius: 14px; font-weight:800; cursor:pointer;
+}
+#cv_btnMaybeLater{
+  background: rgba(148,163,184,.16); color: var(--fg,#0f172a);
+}
+#cv_btnGetPro{
+  background: linear-gradient(135deg,#0f1f45 0%, #183b7a 55%, #2aa0ff 100%);
+  color:#fff;
+  box-shadow: 0 10px 26px rgba(16,77,160,.36);
+}
+
+/* Responsif kecil */
+@media (max-width:420px){
+  #cv_upgradeBox{ border-radius: 20px; padding: 18px 14px 14px; }
+  #cv_upgradeBenefits li{ padding: 12px 14px; font-size:14px; }
+  #cv_btnMaybeLater, #cv_btnGetPro{ height:46px; }
+}
+</style>
+<style>
+/* ====== ChordyV Final Patch (Library + Editor) ====== */
+/* ——— Core ——— */
+html, body{ height:100%; }
+:root{ --safe-b: env(safe-area-inset-bottom, 0px); }
+
+.wrap{
+  padding-bottom: calc(84px + var(--safe-b)) !important; /* ruang aman bawah */
+  overflow: visible;
+}
+
+/* Komponen yang dulu pakai vh → dvh agar stabil di landscape */
+#perf_area, #perf_area .editor, #editorView textarea{
+  min-height: 40dvh !important;
+}
+
+/* ——— LIBRARY ——— */
+/* Header: kiri | tengah | kanan, judul+logo benar2 center */
+header .head{
+  display:grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
+  align-items:center !important;
+}
+header .head #titleBar{
+  grid-column:2 !important;
+  justify-self:center !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:8px;
+  max-width:70vw;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+header .head > :first-child{ grid-column:1 !important; justify-self:start; }
+header .head > :last-child{  grid-column:3 !important; justify-self:end;  }
+header .head #titleBar .logo,
+header .head #titleBar img{ height:24px;width:auto;display:block;vertical-align:middle; }
+
+/* Segmented toolbar jadi satu kapsul rapat (tanpa jarak antar item) */
+#libraryView .row,
+#libraryView .row.compact{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+
+#libraryView .seg.tight{
+  display:flex !important;
+  flex-wrap:nowrap !important;   /* kapsul satu baris; biar rapi */
+  gap:0 !important;
+  border-radius:14px !important;
+  overflow:hidden;               /* sudut anak ikut rapi */
+  max-width:100%;
+}
+#libraryView .seg.tight > *{
+  margin:0 !important;
+  border-radius:0 !important;
+  flex:0 0 auto !important;
+}
+#libraryView .seg.tight > * + *{ margin-left:-1px !important; } /* satu garis */
+#libraryView .seg.tight select{
+  width:auto !important; min-width:112px !important; max-width:160px !important; appearance:none;
+}
+
+/* ——— EDITOR ——— */
+/* Bar aksi (Save | Library | Open | +): jangan menyusut & jangan memangkas anak */
+#editorView .actions, #editorView .actions.row{
+  display:flex !important;
+  flex-wrap:wrap !important;     /* kalau sempit boleh turun baris */
+  gap:8px !important;
+  overflow:visible !important;
+}
+#editorView .actions > *{
+  flex:0 0 auto !important;      /* jangan auto-shrink jadi “garis” */
+  min-width:44px !important;
+}
+
+/* Pastikan tombol terakhir (si “+”/New) tetap tampil & bisa diklik di semua orientasi */
+#editorView .actions > :last-child{
+  display:inline-flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  width:auto !important; max-width:none !important;
+  pointer-events:auto !important;
+}
+
+/* FAB “+” editor: selalu pojok kanan-bawah; tidak menyentuh DEBUG */
+#editorView .cv-fab,
+#editorView .fab,
+#editorView .btn.fab,
+#editorView .floating.fab{
+  position:fixed !important;
+  right:20px !important;
+  bottom:calc(20px + var(--safe-b)) !important;
+  z-index:2147483000 !important;   /* sangat tinggi: klik pasti tembus */
+  pointer-events:auto !important;  /* jangan dinonaktifkan */
+}
+/* Jangan pakai pseudo '+' agar event click selalu jatuh ke elemen yang punya handler */
+#editorView .cv-fab::before{ content:none !important; }
+
+/* Tambah ruang bawah khusus editor supaya bar aksi tak ketutup apa pun */
+#editorView .wrap{ padding-bottom: 96px !important; }
+
+/* Highlight toolbar editor jangan berubah */
+#editorView .seg > .on,
+#editorView .seg > .active,
+#editorView .toolbar > .on,
+#editorView .toolbar > .active{
+  filter:none !important; opacity:1 !important; mix-blend-mode:normal !important;
+}
+/* === Editor FAB '+': selalu terlihat & bisa diklik (portrait/landscape) === */
+#editorView #ed_btnNew.cv-fab{
+  position: fixed !important;
+  right: 20px !important;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+  z-index: 2147483000 !important;   /* di atas debug/pill lain */
+  pointer-events: auto !important;
+}
+
+/* Tampilkan simbol '+' langsung dari CSS agar tidak kosong di beberapa mode */
+#editorView #ed_btnNew.cv-fab::before{
+  content: '+' !important;
+  font-size: 28px !important;
+  line-height: 1 !important;
+  display: inline-block !important;
+}
+
+/* Penting: jangan biarkan pseudo-element menyerap click */
+#editorView #ed_btnNew.cv-fab::before,
+#editorView #ed_btnNew.cv-fab::after{
+  pointer-events: none !important;
+}
+
+/* Amankan dari aturan global yang mungkin menyembunyikan tombol terakhir saat landscape */
+@media (orientation: landscape){
+  #editorView .actions > :last-child{
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    max-width: none !important;
+    pointer-events: auto !important;
+  }
+}
+
+/* Tambah ruang bawah agar tidak ketutup elemen mengambang */
+#editorView .wrap{ padding-bottom: 96px !important; }
+/* ===== Match style: FAB '+' == tombol 'Save' ===== */
+
+/* Ambil warna utama dari tema kamu; fallback ke biru yang sama dg tombol Save */
+:root{
+  --cv-primary: var(--btn-primary, var(--accent, #2563eb));
+  --cv-on-primary: #fff;
+}
+
+/* Bentuk, warna, dan bayangan FAB */
+#editorView #ed_btnNew.cv-fab,
+#editorView .cv-fab.btn-primary{
+  background: var(--cv-primary) !important;
+  color: var(--cv-on-primary) !important;
+  width: 56px; height: 56px; border-radius: 9999px !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,.25), 0 2px 6px rgba(0,0,0,.12) !important;
+  border: none !important;
+}
+
+/* Ikon plus: rapi & konsisten */
+#editorView #ed_btnNew.cv-fab::before{
+  content: '+'; font-size: 28px; font-weight: 700; line-height: 1;
+  pointer-events: none;
+}
+
+/* Hover/active mengikuti feel tombol Save */
+#editorView #ed_btnNew.cv-fab:hover{ filter: brightness(1.05); }
+#editorView #ed_btnNew.cv-fab:active{
+  transform: translateY(1px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.22), 0 1px 4px rgba(0,0,0,.10) !important;
+}
+
+/* (Opsional) sinkronkan warna fokus/outline seperti tombol Save */
+#editorView #ed_btnNew.cv-fab:focus-visible{
+  outline: 3px solid color-mix(in srgb, var(--cv-primary) 35%, white);
+  outline-offset: 2px;
+}
+/* ===== Lock highlight color di semua orientasi ===== */
+:root{
+  --accent: #0ea5e9 !important;    /* ganti di sini kalau mau ubah warna */
+  --accent-fg: #ffffff !important;
+}
+@media (orientation: landscape){
+  :root{
+    --accent: #0ea5e9 !important;  /* lock ulang di landscape */
+    --accent-fg: #ffffff !important;
+  }
+}
+
+/* ===== Pastikan tombol aktif pakai warna accent yang sama ===== */
+#editorView .preset-beat.is-selected,
+#editorView .preset-beat[aria-pressed="true"],
+#editorView .toolbar .on,
+#editorView .toolbar .active,
+#libraryView .seg .on,
+#libraryView .seg .active{
+  background: var(--accent) !important;
+  color: var(--accent-fg) !important;
+  border-color: transparent !important;
+  filter: none !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+
+/* Kalau ada state hover/active yang suka meredupkan warna, netralkan */
+#editorView .preset-beat.is-selected:hover,
+#editorView .preset-beat[aria-pressed="true"]:hover,
+#editorView .toolbar .on:hover,
+#editorView .toolbar .active:hover{
+  background: var(--accent) !important;
+}
+/* === Samakan Editor toolbar (Save | Library | Open) dengan Library === */
+#editorView .seg.tight {
+  display: inline-flex !important;
+  gap: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+}
+
+#editorView .seg.tight > button {
+  height: 36px !important;
+  padding: 6px 10px !important;
+  border: none !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: background .18s ease;
+}
+
+#editorView .seg.tight > button:hover {
+  background: rgba(148,163,184,.12) !important;
+}
+
+#editorView .seg.tight > .primary {
+  background: var(--accent) !important;
+  color: var(--accent-fg) !important;
+}
+/* ===== Header icon contrast (light ↔ navy) ===== */
+
+/* Variabel default (tema terang) */
+:root{
+  --header-bg: #ffffff;
+  --header-fg: #111827; /* hampir-hitam */
+}
+
+/* Tema navy: cukup tambahkan class ini di <body> atau root container */
+.theme-navy{
+  --header-bg: #0b1220;   /* navy/dark */
+  --header-fg: #ffffff;   /* putih agar kontras */
+}
+
+#cv_header {
+  background: radial-gradient(120% 100% at 50% 50%,
+    #2563eb 0%, #1e3a8a 45%, #0f172a 100%
+  ) !important;
+  color:#fff !important;
+}
+/* Spotlight header + soft fade ke konten */
+#cv_header{
+  position: sticky; /* sudah ada, gapapa */
+  top: 0;
+  z-index: 20;      /* di atas konten */
+  overflow: visible;/* penting: agar ::after boleh keluar ke bawah */
+}
+/* 1) Jika hamburger/gear berbasis SVG: ikuti currentColor */
+header .head .hamburger,
+header .head .gear,
+header .head .icon{
+  color: var(--header-fg);        /* pastikan pewarnaan dari sini */
+}
+header .head .hamburger svg,
+header .head .gear svg{
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+/* 2) Jika hamburger berupa <span> garis-garis */
+header .head .hamburger .bar,
+header .head .hamburger .line{
+  background: currentColor;       /* garis ikut warna header-fg */
+}
+
+/* 3) Jika hamburger berupa <img> (PNG/SVG external) → gunakan filter */
+header .head .hamburger img,
+header .head .gear img{
+  filter: var(--icon-filter, none);
+}
+/* di tema navy, balik jadi putih */
+.theme-navy header .head .hamburger img,
+.theme-navy header .head .gear img{
+  filter: brightness(0) invert(1);   /* hitam → putih */
+}
+
+/* Opsional: hover/focus biar tetap jelas */
+header .head .hamburger:hover,
+header .head .gear:hover{ opacity: .9; }
+header .head .hamburger:focus-visible,
+header .head .gear:focus-visible{
+  outline: 2px solid color-mix(in srgb, var(--header-fg) 40%, transparent);
+  outline-offset: 2px;
+}
+/* Default (tema putih) */
+:root {
+  --perf-text: #e11d48;   /* merah */
+  --perf-chord: #111111;  /* chord & angka hitam */
+}
+
+/* Tema navy */
+body.theme-navy {
+  --perf-text: #e11d48;   /* tetap merah */
+  --perf-chord: #ffffff;  /* chord & angka putih */
+}
+
+/* Terapkan di Performance */
+#perf_area .teks-line,
+#perf_area .teks {
+  color: var(--perf-text) !important;
+  font-weight: 600;
+}
+
+#perf_area .chord,
+#perf_area .bar,
+#perf_area .melodi {
+  color: var(--perf-chord) !important;
+  font-weight: 700;
+}
+
+#perf_area .chord *,
+#perf_area .bar *,
+#perf_area .melodi * {
+  color: var(--perf-chord) !important;
+}
+#perf_area sup.note {
+  font-size: 0.7em;
+  vertical-align: super;
+  line-height: 0;
+}
+#perf_area sup.note svg {
+  display: inline-block;
+  vertical-align: super;
+}
+</style>
+<style>
+/* === HEADER TABLE FIX: FORCE OVERRIDE === */
+#libraryView thead tr{
+  display: grid !important;
+  grid-template-columns: 40% 20% 20% 20% !important;
+  align-items: center !important;
+  justify-items: center !important;
+}
+
+#libraryView thead th{
+  display: flex !important;
+  flex-direction: column !important;   /* ikon di atas judul */
+  align-items: center !important;      /* center horizontal */
+  justify-content: center !important;  /* center vertikal   */
+  text-align: center !important;
+  padding: 14px 8px !important;
+  gap: 6px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#libraryView thead th .icon{
+  width: 22px !important;
+  height: 22px !important;
+  flex-shrink: 0 !important;
+  display: block !important;
+}
+</style>
+</head>
+
+<body>
+<!-- =================== HEADER (Editor only) + SETTINGS =================== -->
+<header id="cv_header">
+<div class="head">
+  <div class="left">
+    <button id="cv_btnHamburger" class="ghost hamburger" aria-label="Menu" title="Menu">
+      <!-- svg hamburger kamu -->
+      <svg viewBox="0 0 24 24" width="42" height="42" aria-hidden="true">
+        <rect x="3" y="6"  width="18" height="2" rx="1" fill="#0F172A"/>
+        <rect x="3" y="11" width="18" height="2" rx="1" fill="#0F172A"/>
+        <rect x="3" y="16" width="18" height="2" rx="1" fill="#0F172A"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="center">
+  <span class="logo-chip">
+  <img src="https://mulfiethea-pixel.github.io/Chordyv-pwa/logochordyv.png" 
+       alt="ChordyV Logo" class="logo-img">
+</span>
+    <h1 id="titleBar">ChordyV — Library</h1>
+  </div>
+
+  <div class="right">
+    <button id="cv_btnSettings" class="ghost gear" title="Settings" aria-label="Settings">
+    <!-- SVG Gear Double -->
+    <svg xmlns="http://www.w3.org/2000/svg" 
+         width="42" height="42" viewBox="0 0 24 24">
+      <defs>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#0F172A;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#C0C0C0;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <!-- Gear luar gradient -->
+      <path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.21l-2.49 1a7.028 7.028 0 0 0-1.7-.98l-.38-2.65A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.5.42l-.38 2.65c-.63.25-1.2.58-1.7.98l-2.49-1a.5.5 0 0 0-.61.21l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.14.24.43.34.7.23l2.49-1c.5.4 1.07.73 1.7.98l.38 2.65c.04.26.25.42.5.42h4c.25 0 .46-.16.5-.42l.38-2.65c.63-.25 1.2-.58 1.7-.98l2.49 1c.27.11.56.01.7-.23l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65z" fill="url(#grad1)"/>
+      <!-- Gear dalam silver -->
+      <g transform="translate(12 12) scale(0.5) translate(-12 -12)">
+        <path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.21l-2.49 1a7.028 7.028 0 0 0-1.7-.98l-.38-2.65A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.5.42l-.38 2.65c-.63.25-1.2.58-1.7.98l-2.49-1a.5.5 0 0 0-.61.21l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.14.24.43.34.7.23l2.49-1c.5.4 1.07.73 1.7.98l.38 2.65c.04.26.25.42.5.42h4c.25 0 .46-.16.5-.42l.38-2.65c.63-.25 1.2-.58 1.7-.98l2.49 1c.27.11.56.01.7-.23l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65z" fill="#C0C0C0"/>
+      </g>
+    </svg>
+  </button>
+</div>
+</div>         
+  </header>
+<!-- Backdrop untuk kedua drawer -->
+<div id="cv_backdrop" class="backdrop" hidden></div>
+
+<!-- DRAWER KIRI (Hamburger) -->
+<aside id="cv_drawerLeft" class="drawer drawer-left" aria-label="Main menu" hidden>
+  <div class="drawer-head">
+    <div class="brand">
+      <span class="logo-chip">
+        <img
+          src="https://mulfiethea-pixel.github.io/Chordyv-pwa/logochordyv.png"
+          alt="ChordyV Logo"
+          class="logo-img"
+        />
+      </span>
+      <b>ChordyV</b>
+    </div>
+    <button id="cv_closeLeft" class="ghost closex" aria-label="Close">✕</button>
+  </div>
+  <!-- Menu Hamburger -->
+<div style="background: linear-gradient(135deg, var(--accent) 0%, #4c84ff 100%);
+            color: white; 
+            padding: 16px; 
+            border-radius: 14px; 
+            text-align: center; 
+            font-family: sans-serif; 
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+  <div class="account-box">
+    Welcome to ChordyV <br>
+    Your personal music library
+  </div>
+</div>
+
+  <!-- Tombol Google Sign-In akan dirender ke sini -->
+  <div id="googleBtn"></div>
+
+  <!-- Tombol Logout (disembunyikan dulu) -->
+  <button id="googleLogoutBtn" class="ghost" style="display:none">Sign out</button>
+</div>
+<div class="drawer-sec">
+    <button id="cv_btnUpgrade" class="cv-grad" style="width:100%">Upgrade to Pro</button>
+    <div class="help" id="cv_proStatus">Free User</div>
+  </div>
+
+  <div class="drawer-sec">
+    <details>
+      <summary class="about-summary">About</summary>
+      <div class="help" style="margin-top:8px">
+        <b>ChordyV</b> — simple chord bank & performance tool.<br>
+        Version <span>v1.0.0.1</span> 2025
+<div style="margin-top:14px; text-align:center;">
+  <a href="https://chordyv.com" target="_blank" rel="noopener noreferrer"
+     style="display:inline-block; padding:8px 14px; background: linear-gradient(135deg, var(--accent) 0%, #4c84ff 100%); color:#fff; border-radius:8px; font-weight:600; text-decoration:none; font-size:14px;">
+    chordyv.com
+  </a>
+</div>
+        <div style="margin-top:12px; font-size:12px; text-align:center;">
+         <a href="https://chordyv.com/privacy.html" style="color:#0EA5E9;text-decoration:none;" target="_blank">Privacy Policy</a> · 
+<a href="https://chordyv.com/terms.html" style="color:#0EA5E9;text-decoration:none;" target="_blank">Terms of Use</a>
+        </div>
+      </div>
+    </details>
+  </div>
+</aside>
+
+<!-- DRAWER KANAN (Gear / Settings) -->
+<aside id="cv_drawerRight" class="drawer drawer-right" aria-label="Settings" hidden>
+  <div class="drawer-head">
+    <b>Settings</b>
+    <button id="cv_closeRight" class="ghost closex" aria-label="Close">✕</button>
+  </div>
+
+  <!-- ====== Pindahan isi Settings lama ke sini ====== -->
+  <div class="drawer-sec">
+    <label>Theme (Global)</label>
+    <div class="row">
+      <label><input type="radio" name="cv_theme" value="white"> White</label>
+      <label><input type="radio" name="cv_theme" value="navy"> Navy</label>
+    </div>
+    <div class="help">Global theme applies to Editor, Library, and Performance.</div>
+  </div>
+
+  <div class="drawer-sec">
+    <button class="ghost" onclick="showChordyVHelp()">User Guide</button>
+    <details style="margin-top:6px">
+      <summary class="about-summary">Quick Guide</summary>
+      <div class="help" style="margin-top:8px">
+        <ul style="margin:6px 0 0 18px;padding:0">
+          <li><b>|</b> — barline</li>
+          <li><b>Bar</b> — fill 1 bar with . then close with <b>|</b></li>
+          <li><b>-</b> — rest</li>
+          <li><b>%</b> — repeat previous bar</li>
+          <li><b>#</b> / <b>♭</b> — quick insert</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="drawer-sec">
+    <label>Data</label>
+    <div class="row" style="gap:8px">
+      <button id="cv_btnExport" class="ghost">Export Songs</button>
+      <button id="cv_btnImport" class="ghost">Import Songs</button>
+      <input id="cv_importFile" type="file" accept="application/json" style="display:none">
+    </div>
+    <div class="help">Backup/restore songs & folders.</div>
+  </div>
+</aside>
+<!-- =================== VIEWS =================== -->
+  <div id="editorView" class="wrap view active"></div>
+  <div id="libraryView" class="wrap view"></div>
+  <div id="performanceView" class="wrap view"></div>
+<!-- =================== GLOBAL THEME / SETTINGS JS =================== -->
+ <script>
+(()=> {
+  const THEME_KEY='cv_theme';
+
+  function applyTheme(t){ document.body.classList.toggle('theme-navy', t==='navy'); }
+  function initTheme(){
+    const current = localStorage.getItem(THEME_KEY) || 'white';
+    applyTheme(current);
+    document.querySelectorAll('input[name="cv_theme"]').forEach(r=>{
+      r.checked = (r.value===current);
+      r.addEventListener('change', ()=>{
+        const val = r.value==='navy' ? 'navy' : 'white';
+        localStorage.setItem(THEME_KEY, val);
+        applyTheme(val);
+      });
+    });
+  }
+
+function initDataIO(){
+  const btnEx = document.getElementById('cv_btnExport');
+  const btnIm = document.getElementById('cv_btnImport');
+
+  // dukung 2 kemungkinan id input file
+  const fileA = document.getElementById('cv_importFile');
+  const fileB = document.getElementById('cv_fileImport');
+  const file  = fileA || fileB;
+
+  // === EXPORT ===
+  btnEx?.addEventListener('click', (e)=>{
+    // guard Free
+    if (!window.cvIsPro){
+      e.preventDefault();
+      showUpgradeModal('export');
+      return;
+    }
+    // logic export asli (dipertahankan)
+    const payload={songs:cv_loadDB(),folders:cv_loadFolders?.()};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='chordyv_backup.json';
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  });
+
+  // === IMPORT (klik tombol) ===
+  btnIm?.addEventListener('click', (e)=>{
+    if (!window.cvIsPro){
+      e.preventDefault();
+      showUpgradeModal('import');
+      return;
+    }
+    file?.click();
+  });
+
+  // === IMPORT (on change) ===
+  file?.addEventListener('change', async (ev)=>{
+    if (!window.cvIsPro){
+      ev.target.value = '';
+      showUpgradeModal('import');
+      return;
+    }
+
+    const f=file.files?.[0]; if(!f) return;
+    try{
+      const txt=await f.text(); const obj=JSON.parse(txt);
+      const db=cv_loadDB(), folders=cv_loadFolders?.() || [];
+      const inSongs=obj.songs||{}, inFolders=obj.folders||[];
+
+      // merge folders
+      inFolders.forEach(name=>{ if(name && !folders.includes(name)) folders.push(name); });
+      cv_saveFolders?.(folders);
+
+      // merge songs (logicmu dipertahankan)
+      for (const [id,song] of Object.entries(inSongs)){
+        if(!db[id]) db[id]=song;
+        else{
+          const action=await cvPrompt(`Conflict: "${song.title||'(Untitled)'}"\nType: o=overwrite, k=keep both, s=skip`,'k');
+          if(action==='o') db[id]=song;
+          else if(action==='k') db['s_'+Math.random().toString(36).slice(2,9)]=song;
+        }
+      }
+
+      cv_saveDB(db);
+window.dispatchEvent(new CustomEvent('cv:view', { detail: { name: 'lib' } }));
+      cvToast?.('Import completed.');
+    }catch(e){
+      console.error('IMPORT ERROR:', e);
+      cvToast?.('Import failed.');
+    } finally {
+      if (file) file.value='';
+    }
+  });
+}
+  // === INIT (panggil fungsinya) ===
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', ()=>{ initTheme(); initDataIO(); });
+  } else {
+    initTheme(); initDataIO();
+  }
+})();
+</script>
+<!-- ===== MODULE: ROUTER ===== -->
+<!-- =================== ROUTER (landing = Editor) =================== -->
+  <script>
+  (()=> {
+    const header = document.getElementById('cv_header');
+    const titleBar = document.getElementById('titleBar');
+    const views={ed:document.getElementById('editorView'), lib:document.getElementById('libraryView'), perf:document.getElementById('performanceView')};
+    const initializers={ed:null,lib:null,perf:null}, initialized={ed:false,lib:false,perf:false};
+
+    function setTitle(name){
+      if(name==='ed')   titleBar.textContent='ChordyV — Editor';
+      if(name==='lib')  titleBar.textContent='ChordyV — Library';
+      if(name==='perf') titleBar.textContent='ChordyV — Performance';
+    }
+  function toggleHeader(name){ header.style.display = (name==='lib') ? 'block' : 'none'; }
+    function switchView(name){
+      Object.values(views).forEach(v=>v.classList.remove('active'));
+      views[name]?.classList.add('active');
+      setTitle(name); toggleHeader(name);
+
+      if(!initialized[name] && typeof initializers[name]==='function'){ try{ initializers[name](); }catch(e){ console.error(e);} initialized[name]=true; }
+      window.dispatchEvent(new CustomEvent('cv:view', {detail:{name}}));
+      window.scrollTo({top:0,behavior:'instant'});
+    }
+    window.cv_onViewInit=(name,fn)=>{ initializers[name]=fn; };
+    window.cv_switchView=switchView;
+
+   if(document.readyState==='loading')
+  document.addEventListener('DOMContentLoaded', ()=>switchView('lib'));
+else
+  switchView('lib');
+  })();
+  </script>
+<!-- ===== FEATURE: EDITOR ===== -->
+<!-- =================== EDITOR VIEW + MODULE =================== -->
+  <script>
+  cv_onViewInit('ed', ()=>{
+    const wrap=document.getElementById('editorView');
+    wrap.innerHTML = `
+      <div class="card">
+        <div class="form-grid">
+          <div>
+            <label>song title</label>
+            <input id="ed_title" type="text" placeholder="Song title"/>
+          </div>
+          <div>
+            <label>Key</label>
+            <select id="ed_key"></select>
+          </div>
+          <div>
+            <label>Preset Beat</label>
+           <div class="beat-group">
+  <button type="button" class="preset-beat is-selected" data-beat="2/4">2/4</button>
+  <button type="button" class="preset-beat" data-beat="3/4">3/4</button>
+  <button type="button" class="preset-beat" data-beat="4/4">4/4</button>
+  <button type="button" class="preset-beat" data-beat="6/8">6/8</button>
+</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+
+  <!-- Bar khusus notasi -->
+  <div class="note-bar" style="margin-bottom:8px;">
+    <button id="ed_note_halfbeat"   title="Not 1/2 ketuk (eighth)">♪</button>
+    <button id="ed_note_quarterbeat" title="Not 1/4 ketuk (sixteenth)">♬</button>
+  </div>
+
+  <!-- Bar tombol editor -->
+  <div class="shortcut-bar">
+    <button id="ed_btnPipe">|</button>
+    <button id="ed_btnBar">Bar</button>
+    <button id="ed_btnRest">-</button>
+    <button id="ed_btnRepeat">%</button>
+    <button id="ed_btnSharp">#</button>
+    <button id="ed_btnFlat">♭</button>
+    <button id="ed_btnSlash">/</button>
+  </div>
+
+</div>
+
+        <label>content (Chords / Melody / Text)</label>
+        <textarea id="ed_content" spellcheck="false" placeholder="Write chords / melody / text..."></textarea>
+
+       <div class="row" style="margin-top:10px; display:flex; align-items:center; gap:10px">
+  <!-- FAB tetap terpisah -->
+  <button id="ed_btnNew" class="cv-fab" title="New song"></button>
+
+  <!-- Group: Save / Library / Open jadi kapsul -->
+  <div class="seg tight">
+    <button id="ed_btnSave"    class="btn primary">Save</button>
+    <button id="ed_btnLibrary" class="btn ghost">Library</button>
+    <button id="ed_btnPerf"    class="btn ghost">Open</button>
+  </div>
+
+  <div class="grow"></div>
+</div>
+      </div>
+    `;
+
+    let db=cv_loadDB();
+    let currentId=localStorage.getItem('cv_edit_id')||null;
+    let beatPreset=4;
+
+    const titleEl=document.getElementById('ed_title');
+    const keyEl=document.getElementById('ed_key');
+    const contentEl=document.getElementById('ed_content');
+
+    const NAT_KEYS=["C","G","D","A","E","B","F#","C#","F","Bb","Eb","Ab","Db","Gb","Cb"];
+    keyEl.innerHTML=NAT_KEYS.map(k=>`<option>${k}</option>`).join(''); keyEl.value='C';
+
+    function loadByIdIfAny(){
+  db = cv_loadDB();
+  const temp = localStorage.getItem('cv_edit_temp'); // ← buffer dari Performance
+
+  if (currentId && db[currentId]) {
+    // kasus: buka lagu tersimpan
+    const s = db[currentId];
+    titleEl.value   = s.title || '';
+    keyEl.value     = s.key   || 'C';
+    contentEl.value = s.raw   || '';
+  } else if (temp) {
+    // kasus: balik dari Performance yang berasal dari RAW (tanpa id)
+    currentId       = null;
+    titleEl.value   = '';
+    keyEl.value     = 'C';
+    contentEl.value = temp;
+    localStorage.removeItem('cv_edit_temp'); // habiskan buffer
+  } else {
+    // default (editor kosong)
+    titleEl.value   = titleEl.value || '';
+    keyEl.value     = keyEl.value   || 'C';
+    contentEl.value = contentEl.value|| '';
+  }
+}
+    loadByIdIfAny();
+// Beat preset highlight (FINAL)
+const beatButtons = [...document.querySelectorAll('#editorView .beat-group .preset-beat')];
+
+// Normalisasi nilai data-beat: "2/4" → 2, "4" → 4
+const normalizeBeat = (s) => {
+  if (!s) return 4;
+  if (s.includes('/')) return parseInt(s, 10) || 4;
+  return parseInt(s, 10) || 4;
+};
+
+// Pilih default dari markup (tombol yang punya .is-selected).
+// Kalau tidak ada, fallback ke 4/4.
+let selected =
+  beatButtons.find(b => b.classList.contains('is-selected')) ||
+  beatButtons.find(b => (b.dataset.beat === '4/4' || b.dataset.beat === '4'));
+
+beatButtons.forEach(b => {
+  const on = (b === selected);
+  b.classList.toggle('is-selected', on);
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+});
+
+// Set nilai awal beatPreset dari tombol yang terpilih
+beatPreset = normalizeBeat(selected?.dataset.beat);
+
+// Klik handler: aktifkan tombol yang dipilih + set beatPreset
+beatButtons.forEach(b => {
+  b.addEventListener('click', () => {
+    selected = b;
+    beatPreset = normalizeBeat(b.dataset.beat);
+
+    beatButtons.forEach(x => {
+      x.classList.remove('is-selected');
+      x.setAttribute('aria-pressed', 'false');
+    });
+
+    b.classList.add('is-selected');
+    b.setAttribute('aria-pressed', 'true');
+  });
+});
+
+function insertAt(txt){
+  // Kalau ada cvInsert, pakai itu (lebih pintar)
+  if (typeof window.cvInsert === 'function') {
+    window.cvInsert(txt);
+    return;
+  }
+  // Cadangan kalau cvInsert belum ada
+  const el = contentEl;
+  const isFocused = document.activeElement === el;
+  if(isFocused){
+    const s = el.selectionStart ?? el.value.length;
+    const e = el.selectionEnd ?? el.value.length;
+    el.value = el.value.slice(0,s)+txt+el.value.slice(e);
+    el.setSelectionRange(s+txt.length,s+txt.length);
+  }else{
+    el.value = (el.value||'')+txt;
+  }
+}
+
+    /* === REVISI: Logika tombol Bar untuk SEMUA preset === */
+    function makeBar(){
+      const active = document.querySelector('[data-beat][aria-pressed="true"]');
+      const n = parseInt(active?.dataset.beat || beatPreset || 4, 10) || 4;
+
+      // Ambil konteks sebelum kursor di baris aktif
+      const el = contentEl;
+      const s  = el.selectionStart ?? el.value.length;
+      const left = el.value.slice(0, s);
+      const lineStart = left.lastIndexOf('\n') + 1;
+      const before = left.slice(lineStart);
+
+      // Deteksi chord tepat di ujung sebelum kursor (toleran)
+      const CHORD_AT_END = /(^|\s)([A-G](?:#|b|♯|♭)?(?:[^/\s.,…]*)(?:\/[A-G](?:#|b|♯|♭)?)?)\s*$/u;
+
+      if (CHORD_AT_END.test(before)) {
+        // Setelah chord: chord = beat-1 → isi sisa (n−1) titik + barline
+        return ' ' + ('. '.repeat(Math.max(0, n-1)).trimEnd()) + ' | ';
+      }
+      // Tanpa chord: bar kosong penuh (n titik) + barline
+      return ' ' + ('. '.repeat(Math.max(1, n)).trimEnd()) + ' | ';
+    }
+
+document.getElementById('ed_btnPipe').addEventListener('click',()=>insertAt(' | '));
+    document.getElementById('ed_btnBar').addEventListener('click',()=>insertAt(makeBar()));
+    document.getElementById('ed_btnRest').addEventListener('click',()=>insertAt(' - '));
+    document.getElementById('ed_btnRepeat').addEventListener('click',()=>insertAt(' % '));
+    document.getElementById('ed_btnSharp').addEventListener('click',()=>insertAt('#'));
+    document.getElementById('ed_btnFlat').addEventListener('click',()=>insertAt('♭'));
+    document.getElementById('ed_btnSlash').addEventListener('click',()=>insertAt(' / '));
+document.getElementById('ed_note_halfbeat')
+  .addEventListener('click', () => insertAt('(♪)'));
+document.getElementById('ed_note_quarterbeat')
+  .addEventListener('click', () => insertAt('(♬)'));
+
+    document.getElementById('ed_btnNew').addEventListener('click', async ()=>{
+      if((titleEl.value.trim()||contentEl.value.trim()) && !await cvConfirm('Clear the editor?')) return;
+      currentId=null; localStorage.removeItem('cv_edit_id');
+      titleEl.value=''; keyEl.value='C'; contentEl.value='';
+    });
+/* ===== FREEMIUM / LIMIT SAVE ===== */
+// Revisi tombol Save (Editor)  
+// ===== FREEMIUM / LIMIT SAVE (FINAL) =====
+const CV_LIMIT_FREE = true;      // set true untuk test gating
+const FREE_MAX_SONGS = 5;
+
+function canSaveMoreSongs(db){
+  if (!CV_LIMIT_FREE) return true;
+  if (window.cvIsPro) return true;     // flag Pro dari Step 0
+  return Object.keys(db || {}).length < FREE_MAX_SONGS;
+}
+document.getElementById('ed_btnSave').addEventListener('click', async ()=>{
+  const title = (titleEl.value||'').trim();
+  if (!title){ cvToast?.('Title is empty'); return; }
+
+  const db = cv_loadDB();
+
+  // Free limit guard
+  if (!canSaveMoreSongs(db)){
+    showUpgradeModal('save-limit');
+    return;
+  }
+
+  // === Logic save ===
+  const id = currentId || ('s_'+Math.random().toString(36).slice(2,9));
+  db[id] = {
+    title,
+    key:   keyEl.value || 'C',
+    beat:  beatPreset || 4,
+    folder:(db[id]?.folder||''),
+    raw:   contentEl.value || ''
+  };
+  cv_saveDB(db);
+  currentId = id;
+  localStorage.setItem('cv_edit_id', id);
+  cvToast?.(`Saved: ${title}`);
+});
+document.getElementById('ed_btnPerf').addEventListener('click', async ()=>{
+  const raw=(contentEl.value||'').trim();
+  localStorage.setItem('cv_perf_raw', raw);
+  if(currentId) localStorage.setItem('cv_perf_id', currentId);
+
+  const meta = {
+    id:    currentId || null,
+    title: (titleEl.value||'').trim() || '(Untitled)',
+    key:   keyEl.value || 'C',
+    beat:  beatPreset || 4
+  };
+  localStorage.setItem('cv_perf_meta', JSON.stringify(meta));
+  cv_switchView('perf');
+});
+/* === Editor: tombol "Library" (DITAMBAHKAN) === */
+document.getElementById('ed_btnLibrary')?.addEventListener('click', () => {
+  const raw = (document.getElementById('ed_content')?.value || '').trim();
+  if (raw) localStorage.setItem('cv_edit_temp', raw);
+  cv_switchView('lib');
+});
+
+  window.addEventListener('cv:view', e=>{
+  if(e.detail?.name==='ed'){
+    // PRIORITAS: jika ada flag "baru", kosongkan Editor
+    if (localStorage.getItem('cv_edit_new')) {
+      localStorage.removeItem('cv_edit_new');
+      currentId = null;
+      localStorage.removeItem('cv_edit_id');
+      titleEl.value = '';
+      keyEl.value = 'C';
+      contentEl.value = '';
+      return;
+    }
+    const id = localStorage.getItem('cv_edit_id');
+    if (id && id !== currentId) {
+      currentId = id;
+      loadByIdIfAny();                 // buka lagu terpilih
+    } else if (!id && currentId) {
+      // tidak ada id, tapi sebelumnya ada lagu → kosongkan
+      currentId = null;
+      titleEl.value = '';
+      keyEl.value = 'C';
+      contentEl.value = '';
+    }
+  }
+});
+});
+  </script>
+<!-- ===== FEATURE: LIBRARY ===== -->
+<!-- =================== LIBRARY VIEW + MODULE =================== -->
+ <script>
+cv_onViewInit('lib', ()=>{
+  const wrap = document.getElementById('libraryView');
+
+  // ---------- VIEW HTML ----------
+  wrap.innerHTML = `
+  <div class="card">
+    <!-- Baris 1: Search -->
+    <div class="row">
+      <div class="grow">
+        <input id="lib_search" type="text" placeholder="Search song"/>
+      </div>
+    </div>
+
+    <!-- Baris 2: Folder actions + Filters -->
+    <div class="row compact" style="margin-top:10px">
+  <!-- Group 1: Folder actions -->
+<div class="seg tight">
+  <button id="lib_btnAddFolder" class="btn">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#2663FF" viewBox="0 0 24 24">
+      <path d="M12 5v14m7-7H5" stroke="#2663FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Add Folder
+  </button>
+
+  <button id="lib_btnRenameFolder" class="btn">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#2663FF" viewBox="0 0 24 24">
+      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 000-1.42l-2.34-2.34a1.003 1.003 0 00-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
+    </svg>
+    Rename
+  </button>
+
+  <button id="lib_btnDeleteFolder" class="btn">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#E53935" viewBox="0 0 24 24">
+      <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zm3.46-9.12L9 17h2v-7.12H9.46zm4 0V17h2l-.46-7.12h-1.08zM15.5 4l-1-1h-5l-1 1H5v2h14V4h-3.5z"/>
+    </svg>
+    Delete
+  </button>
+</div>
+
+ <div class="seg tight">
+  <div class="icon-label">
+    <!-- KEY -->
+  <svg class="icon" viewBox="0 0 100 100" aria-hidden="true" width="16" height="16">
+  <path d="M54.608,45.02C53.928,42.709,53.28,40.425,52.695,38.209C56.729,34.433,59.929,29.413,60,21.283
+           C60.036,17.06,59.532,12.006,55.525,6.535C54.343,4.922,52.104,4.519,50.434,5.621C46.485,8.227,42.5,14.457,42.5,22.5
+           C42.5,26.253,43.199,30.663,44.282,35.411C43.449,36.021,42.577,36.63,41.677,37.259C35.36,41.667,27.5,47.153,27.5,60
+           C27.5,74.084,38.94,82.5,50,82.5C52.158,82.5,54.229,82.271,56.177,81.841C56.184,82.066,56.188,82.285,56.188,82.5
+           C56.188,85.257,53.945,87.5,51.188,87.5C49.852,87.5,48.596,86.98,47.653,86.036L42.348,91.339C44.709,93.7,47.848,95,51.188,95
+           C58.081,95,63.688,89.393,63.688,82.5C63.688,81.387,63.618,80.206,63.486,78.964C69.029,75.615,72.501,70.154,72.501,63.75
+           C72.5,53.699,64.55,45.47,54.608,45.02ZM51.744,15.311C52.36,17.224,52.517,19.139,52.5,21.218
+           C52.473,24.421,51.787,26.889,50.625,28.943C50.229,26.582,50,24.41,50,22.5C50,19.607,50.764,17.158,51.744,15.311ZM50,75
+           C42.729,75,35,69.743,35,60C35,51.065,39.841,47.686,45.969,43.409C46.073,43.337,46.177,43.264,46.281,43.192
+           C46.603,44.346,46.938,45.509,47.28,46.677C42.373,49.271,38.688,54.53,38.688,60C38.688,63.338,39.988,66.477,42.348,68.838
+           L47.653,63.535C46.709,62.59,46.188,61.335,46.188,59.999C46.188,57.909,47.621,55.645,49.527,54.157
+           C49.596,54.384,49.666,54.611,49.734,54.838C51.803,61.627,53.919,68.566,55.14,74.372C53.55,74.78,51.822,75,50,75ZM62.003,70.664
+           C60.739,65.243,58.906,59.209,57.008,52.981C61.628,54.381,65,58.679,65,63.75C65,66.4,63.898,68.782,62.003,70.664Z"
+        fill="currentColor"></path>
+</svg>
+    <select id="lib_key"></select>
+  </div>
+
+  <div class="icon-label">
+    <!-- BEAT -->
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 3h2v18H5zM17 3h2v18h-2zM11 7h2v10h-2z"/>
+    </svg>
+    <select id="lib_beat"></select>
+  </div>
+
+  <div class="icon-label">
+    <!-- FOLDER -->
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M10 4H4a2 2 0 0 0-2 2v3h20V8a2 2 0 0 0-2-2h-7l-3-2Z"/>
+      <path d="M22 10H2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-8Z"/>
+    </svg>
+    <select id="lib_folder"></select>
+  </div>
+</div>
+      <div class="grow"></div>
+      <div id="lib_counter" class="counter">0 songs • 0 folders</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <!-- LIST → TABLE -->
+    <div class="table-wrap">
+      <table id="lib_table" class="lib-table">
+  <thead>
+  <tr>
+    <th>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M19 3v12.4A4 4 0 1 1 17 13V7h-4v8.4A4 4 0 1 1 11 13V5a1 1 0 0 1 1-1h6Z"/>
+      </svg>
+      Song
+    </th>
+    <th>
+     <!-- Treble Clef icon by Arthur Shlain (Usefulicons) – CC BY 3.0 -->
+<svg class="icon" viewBox="0 0 100 100" aria-hidden="true" width="16" height="16">
+  <path d="M54.608,45.02C53.928,42.709,53.28,40.425,52.695,38.209C56.729,34.433,59.929,29.413,60,21.283
+           C60.036,17.06,59.532,12.006,55.525,6.535C54.343,4.922,52.104,4.519,50.434,5.621C46.485,8.227,42.5,14.457,42.5,22.5
+           C42.5,26.253,43.199,30.663,44.282,35.411C43.449,36.021,42.577,36.63,41.677,37.259C35.36,41.667,27.5,47.153,27.5,60
+           C27.5,74.084,38.94,82.5,50,82.5C52.158,82.5,54.229,82.271,56.177,81.841C56.184,82.066,56.188,82.285,56.188,82.5
+           C56.188,85.257,53.945,87.5,51.188,87.5C49.852,87.5,48.596,86.98,47.653,86.036L42.348,91.339C44.709,93.7,47.848,95,51.188,95
+           C58.081,95,63.688,89.393,63.688,82.5C63.688,81.387,63.618,80.206,63.486,78.964C69.029,75.615,72.501,70.154,72.501,63.75
+           C72.5,53.699,64.55,45.47,54.608,45.02ZM51.744,15.311C52.36,17.224,52.517,19.139,52.5,21.218
+           C52.473,24.421,51.787,26.889,50.625,28.943C50.229,26.582,50,24.41,50,22.5C50,19.607,50.764,17.158,51.744,15.311ZM50,75
+           C42.729,75,35,69.743,35,60C35,51.065,39.841,47.686,45.969,43.409C46.073,43.337,46.177,43.264,46.281,43.192
+           C46.603,44.346,46.938,45.509,47.28,46.677C42.373,49.271,38.688,54.53,38.688,60C38.688,63.338,39.988,66.477,42.348,68.838
+           L47.653,63.535C46.709,62.59,46.188,61.335,46.188,59.999C46.188,57.909,47.621,55.645,49.527,54.157
+           C49.596,54.384,49.666,54.611,49.734,54.838C51.803,61.627,53.919,68.566,55.14,74.372C53.55,74.78,51.822,75,50,75ZM62.003,70.664
+           C60.739,65.243,58.906,59.209,57.008,52.981C61.628,54.381,65,58.679,65,63.75C65,66.4,63.898,68.782,62.003,70.664Z"
+        fill="currentColor"></path>
+</svg>
+      Key
+    </th>
+    <th>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 3h2v18H5zM17 3h2v18h-2zM11 7h2v10h-2z"/>
+      </svg>
+      Beat
+    </th>
+    <th>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M10 4H4a2 2 0 0 0-2 2v3h20V8a2 2 0 0 0-2-2h-7l-3-2Z"/>
+        <path d="M22 10H2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-8Z"/>
+      </svg>
+      Folder
+    </th>
+  </tr>
+</thead>
+        <tbody id="lib_tbody"><!-- rows di-render via JS --></tbody>
+      </table>
+    </div>
+
+    <div class="actions" style="margin-<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
+  <button id="lib_btnOpen"
+    style="border:none;background:transparent;color:var(--fg);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;">
+    Open
+  </button>
+  <button id="lib_btnEdit"
+    style="border:none;background:transparent;color:var(--fg);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;">
+    Edit
+  </button>
+  <button id="lib_btnMove"
+    style="border:none;background:transparent;color:var(--fg);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;">
+    Move
+  </button>
+  <button id="lib_btnDelete"
+    style="border:none;background:transparent;color:#e44a4a;font-weight:700;padding:6px 10px;cursor:pointer;border-radius:6px;">
+    Delete
+  </button>
+</div>
+      <button id="lib_btnNewSong" class="cv-fab" title="New song"></button>
+      <div class="grow"></div>
+    </div>
+
+    <div class="tip" style="margin-top:8px;font-size:12px;color:var(--muted)">
+      Tip: double-tap a song to Open (Performance).
+    </div>
+  </div>
+  `;
+
+  // ---------- STATE ----------
+  let db = cv_loadDB();
+  let folders = cv_loadFolders();
+
+  let selectedId = null;
+  let filterText = '';
+  let filterFolder = 'Folders';
+  let filterKey = 'Keys';
+  let filterBeat = 'Beats';
+  let lastTap = 0, tappedId = null;
+
+  // ---------- REFS ----------
+  const searchEl   = document.getElementById('lib_search');
+  const folderEl   = document.getElementById('lib_folder');
+  const counterEl  = document.getElementById('lib_counter');
+
+  const btnAddFolder    = document.getElementById('lib_btnAddFolder');
+  const btnRenameFolder = document.getElementById('lib_btnRenameFolder');
+  const btnDeleteFolder = document.getElementById('lib_btnDeleteFolder');
+
+  const btnOpen   = document.getElementById('lib_btnOpen');
+  const btnEdit   = document.getElementById('lib_btnEdit');
+  const btnMove   = document.getElementById('lib_btnMove');
+  const btnDelete = document.getElementById('lib_btnDelete');
+  const btnNewSong = document.getElementById('lib_btnNewSong');
+
+  const keyEl   = document.getElementById('lib_key');
+  const beatEl  = document.getElementById('lib_beat');
+  const tbodyEl = document.getElementById('lib_tbody');
+
+  // ---------- ACTION: New Song FAB ----------
+  btnNewSong.addEventListener('click', ()=>{
+    localStorage.removeItem('cv_edit_id');
+    localStorage.removeItem('cv_edit_temp');
+    localStorage.setItem('cv_edit_new','1');
+    cv_switchView('ed');
+  });
+
+  // ---------- HELPERS ----------
+  // tampilkan 2/4, 3/4, 4/4, 6/8
+  function displayBeat(v){
+    if (v == null) return '';
+    if (typeof v === 'string' && v.includes('/')) return v;
+    const n = parseInt(v,10);
+    if (Number.isNaN(n)) return String(v);
+    if (n === 6) return '6/8';
+    if (n === 2 || n === 3 || n === 4) return `${n}/4`;
+    return `${n}/4`;
+  }
+
+  // normalisasi nilai beat untuk pembanding/filter
+  function normalizeBeat(v){
+    if (v == null) return null;
+    if (typeof v === 'string'){
+      if (v.includes('/')){
+        const left = parseInt(v.split('/')[0],10);
+        return Number.isNaN(left) ? null : left;
+      }
+      const n = parseInt(v,10);
+      return Number.isNaN(n) ? null : n;
+    }
+    const n = parseInt(v,10);
+    return Number.isNaN(n) ? null : n;
+  }
+
+  // ---------- RENDER: dropdown ----------
+  function renderFolders(){
+    const opts = ['Folders', ...folders];
+    folderEl.innerHTML = opts.map(n => `<option>${cv_escapeHtml(n)}</option>`).join('');
+    folderEl.value = filterFolder;
+  }
+
+  function renderKeys(){
+    const NAT_KEYS = ["C","G","D","A","E","B","F#","C#","F","Bb","Eb","Ab","Db","Gb","Cb"];
+    keyEl.innerHTML = ['Keys', ...NAT_KEYS].map(k => `<option>${k}</option>`).join('');
+    keyEl.value = filterKey;
+  }
+
+  function renderBeats(){
+    const BEATS = ['Beats','2/4','3/4','4/4','6/8'];
+    beatEl.innerHTML = BEATS.map(b => `<option>${b}</option>`).join('');
+    beatEl.value = filterBeat;
+  }
+
+  // ---------- RENDER: table ----------
+  function renderList(){
+    if (!tbodyEl) return;
+    tbodyEl.innerHTML = '';
+
+    const items = Object.entries(db)
+      .map(([id, s]) => ({ ...s, id }))
+      .filter(s => {
+        if (filterText && !(s.title||'').toLowerCase().includes(filterText)) return false;
+        if (filterFolder !== 'Folders' && (s.folder||'') !== filterFolder) return false;
+        if (filterKey !== 'Keys' && (s.key||'') !== filterKey) return false;
+        if (filterBeat !== 'Beats'){
+          const wanted = normalizeBeat(filterBeat);
+          const actual = normalizeBeat(s.beat);
+          if (wanted !== actual) return false;
+        }
+        return true;
+      })
+      .sort((a,b)=> (a.title||'').localeCompare(b.title||''));
+
+    let stillValid = false;
+
+    items.forEach(song=>{
+      const tr = document.createElement('tr');
+      tr.dataset.id = song.id;
+      tr.innerHTML = `
+        <td>${cv_escapeHtml(song.title || '(Untitled)')}</td>
+        <td>${cv_escapeHtml(song.key || '')}</td>
+        <td>${cv_escapeHtml(displayBeat(song.beat))}</td>
+        <td>${cv_escapeHtml(song.folder || '')}</td>
+      `;
+
+      tr.addEventListener('click', ()=>{
+        const now = Date.now();
+        if (now - lastTap < 320 && tappedId === song.id){
+          openSong(song.id); lastTap = 0; tappedId = null; return;
+        }
+        lastTap = now; tappedId = song.id;
+        select(song.id, tr);
+      });
+
+      if (song.id === selectedId){ tr.classList.add('active'); stillValid = true; }
+      tbodyEl.appendChild(tr);
+    });
+
+    if (!stillValid){ selectedId = null; }
+    updateActions(items.length);
+    counterEl.textContent = `${Object.keys(db).length} songs • ${folders.length} folders`;
+  }
+
+  // ---------- SELECT & ACTIONS ----------
+  function select(id, rowEl){
+    [...tbodyEl.querySelectorAll('tr')].forEach(x=>x.classList.remove('active'));
+    rowEl.classList.add('active');
+    selectedId = id;
+    updateActions(1);
+  }
+  function updateActions(){
+    const on = !!selectedId;
+    btnOpen.disabled = !on;
+    [btnEdit, btnMove, btnDelete].forEach(b=> b.disabled = !on);
+  }
+
+  // ---------- LIST ACTIONS ----------
+  function openSong(id){
+    if(!db[id]) return;
+    const s = db[id];
+    localStorage.setItem('cv_perf_raw', (s.raw||'').trim());
+    localStorage.setItem('cv_perf_id', id);
+    const meta = {
+      id, title: s.title || '(Untitled)',
+      key: s.key || 'C',
+      beat: s.beat || 4
+    };
+    localStorage.setItem('cv_perf_meta', JSON.stringify(meta));
+    cv_switchView('perf');
+  }
+  btnOpen.addEventListener('click', ()=>{
+    if(!selectedId){ cvToast('Select a song first.'); return; }
+    openSong(selectedId);
+  });
+  btnEdit.addEventListener('click', ()=>{
+    if(!selectedId){ cvToast('Select a song first.'); return; }
+    localStorage.setItem('cv_edit_id', selectedId);
+    cv_switchView('ed');
+  });
+  btnMove.addEventListener('click', (ev)=>{
+    if (!selectedId){ cvToast('Select a song first.'); return; }
+    if (!folders || folders.length === 0){ cvToast('No folders yet. Add one first.'); return; }
+
+    const old = document.getElementById('cv_movePopup');
+    if (old) old.remove();
+
+    const r = ev.currentTarget.getBoundingClientRect();
+    const popup = document.createElement('div');
+    popup.id = 'cv_movePopup';
+    popup.style.position = 'fixed';
+    popup.style.zIndex = '9999';
+    popup.style.top = (r.bottom + 8) + 'px';
+    popup.style.left = Math.max(12, Math.min(window.innerWidth - 260, r.left)) + 'px';
+    popup.style.width = '240px';
+    popup.style.padding = '12px';
+    popup.style.borderRadius = '12px';
+    popup.style.border = '1px solid var(--border)';
+    popup.style.background = 'var(--card)';
+    popup.style.boxShadow = '0 12px 28px rgba(0,0,0,.18)';
+    popup.innerHTML = `
+      <div style="font-weight:700; margin-bottom:8px">Move to folder</div>
+      <select id="cv_moveSelect" style="width:100%; margin-bottom:10px">
+        <option>(no folder)</option>
+        ${folders.map(f => `<option>${cv_escapeHtml(f)}</option>`).join('')}
+      </select>
+      <div style="display:flex; gap:8px; justify-content:flex-end">
+        <button id="cv_moveCancel" class="btn">Cancel</button>
+        <button id="cv_moveOk" class="primary btn">Move</button>
+      </div>
+    `;
+    document.body.appendChild(popup);
+    const sel = popup.querySelector('#cv_moveSelect');
+    sel.focus();
+
+    const close = () => { popup.remove(); document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); };
+    const onDoc = (e) => { if (!popup.contains(e.target)) close(); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'Enter') doMove(); };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+
+    popup.querySelector('#cv_moveCancel').addEventListener('click', close);
+    popup.querySelector('#cv_moveOk').addEventListener('click', doMove);
+
+    function doMove(){
+      const v = sel.value;
+      const target = (v && v !== '(no folder)') ? v : '';
+      db[selectedId].folder = target;
+      cv_saveDB(db);
+      renderFolders();
+      renderList();
+      close();
+      cvToast('Moved.');
+    }
+  });
+  btnDelete.addEventListener('click', async ()=>{
+    if (!selectedId){ cvToast('Select a song first.'); return; }
+    const t = db[selectedId]?.title || '(Untitled)';
+    if (!await cvConfirm(`Delete "${t}"? This cannot be undone.`)) return;
+    delete db[selectedId];
+    cv_saveDB(db);
+    selectedId = null;
+    renderList();
+  });
+
+  // ---------- FOLDER OPS ----------
+  btnAddFolder.addEventListener('click', async ()=>{
+    const name = await cvPrompt('Folder name?',''); if(!name) return;
+    if (folders.includes(name)){ cvToast('Folder already exists.'); return; }
+    folders.push(name); cv_saveFolders(folders); renderFolders();
+  });
+  btnRenameFolder.addEventListener('click', async ()=>{
+    if (filterFolder==='Folders'){ cvToast('Select a folder to rename.'); return; }
+    const newName = await cvPrompt('New folder name?', filterFolder);
+    if (!newName || newName === filterFolder) return;
+    if (folders.includes(newName)){ cvToast('A folder with that name already exists.'); return; }
+    folders = folders.map(f=> f===filterFolder ? newName : f); cv_saveFolders(folders);
+    const db0 = cv_loadDB(); Object.values(db0).forEach(s=>{ if((s.folder||'')===filterFolder) s.folder=newName; });
+    cv_saveDB(db0); db = db0; filterFolder = newName; renderFolders(); renderList();
+  });
+  btnDeleteFolder.addEventListener('click', async ()=>{
+    if (filterFolder==='Folders'){ cvToast('Select a folder to delete.'); return; }
+    const hasSongs = Object.values(db).some(s => (s.folder||'') === filterFolder);
+    const msg = `Delete folder "${filterFolder}"?` + (hasSongs ? `\nSongs inside will be moved to (no folder).` : ``);
+    if (!await cvConfirm(msg)) return;
+    Object.values(db).forEach(s=>{ if((s.folder||'')===filterFolder) s.folder=''; });
+    cv_saveDB(db); folders = folders.filter(f=> f !== filterFolder); cv_saveFolders(folders);
+    filterFolder = 'Folders'; renderFolders(); renderList();
+  });
+
+  // ---------- FILTER EVENTS ----------
+  const applySearch = () => { filterText = searchEl.value.trim().toLowerCase(); renderList(); };
+  searchEl.addEventListener('input', applySearch);
+  folderEl.addEventListener('change', ()=>{ filterFolder = folderEl.value; renderList(); });
+  keyEl.addEventListener('change',   ()=>{ filterKey    = keyEl.value;    renderList(); });
+  beatEl.addEventListener('change',  ()=>{ filterBeat   = beatEl.value;   renderList(); });
+
+  // ---------- INIT ----------
+  renderFolders();
+  renderKeys();
+  renderBeats();
+  renderList();
+
+  // ---------- RESYNC SAAT VIEW LIBRARY DIBUKA ----------
+  window.addEventListener('cv:view', (e)=>{
+    if (e.detail?.name === 'lib'){
+      db = cv_loadDB();
+      folders = cv_loadFolders();
+      renderFolders();
+      renderKeys();
+      renderBeats();
+      renderList();
+    }
+  });
+});
+</script>
+<!-- ===== FEATURE: PERFORMANCE ===== -->
+<!-- =================== PERFORMANCE VIEW + MODULE =================== -->
+  <script>
+  cv_onViewInit('perf', ()=>{
+   const wrap = document.getElementById('performanceView');
+wrap.innerHTML = `
+  <div id="perf_toolbar" class="card" style="margin-bottom:12px">
+    <div class="row" style="gap:8px">
+      <button id="perf_backLib" class="btn tiny">← Library</button>
+      <button id="perf_backEd"  class="btn tiny">← Editor</button>
+
+      <div class="seg">
+        <button class="btn tiny" id="perf_tDown">−</button>
+        <button class="btn tiny" id="perf_tSteps" disabled>0</button>
+        <button class="btn tiny" id="perf_tUp">＋</button>
+      </div>
+
+      <div class="seg">
+        <button class="btn tiny" id="perf_accSharp">#</button>
+        <button class="btn tiny" id="perf_accFlat">♭</button>
+      </div>
+
+      <div class="seg">
+        <button class="btn tiny" id="perf_fontSmall">A−</button>
+        <button class="btn tiny" id="perf_fontBig">A＋</button>
+        <button class="btn tiny" id="perf_fontReset">Reset</button>
+      </div>
+
+      <button id="perf_full" class="btn tiny">⛶ Full Screen</button>
+    </div>
+  </div>
+
+  <div id="perf_stage" class="card">
+    <h2 id="perf_meta" style="margin:0 0 8px; font-size:16px; font-weight:600; color:var(--fg)"></h2>
+    <pre id="perf_area"></pre>
+  </div>
+
+  <button id="perf_exitImm">↩ Exit</button>
+`;
+
+    const perf=document.getElementById('perf_area');
+const metaEl = document.getElementById('perf_meta');
+
+// Helper: format beat 2/4, 3/4, 4/4, 6/8
+function displayBeat(v){
+  if (v == null) return '';
+  if (typeof v === 'string' && v.includes('/')) return v; // sudah "x/y"
+  const n = parseInt(v, 10);
+  if (Number.isNaN(n)) return String(v);
+  if (n === 6) return '6/8';
+  if (n === 2 || n === 3 || n === 4) return `${n}/4`;
+  return `${n}/4`; // fallback aman
+}
+
+function loadPerfMeta(){
+  try { return JSON.parse(localStorage.getItem('cv_perf_meta')||'null'); }
+  catch { return null; }
+}
+
+function showPerfMeta(){
+  if(!metaEl) return;
+  const m = loadPerfMeta();
+  if(!m){ metaEl.textContent = ''; return; }
+  metaEl.textContent =
+    `${m.title || '(Untitled)'} • Key: ${m.key || 'C'} • Beat: ${displayBeat(m.beat)}`;
+}
+    const tDown=document.getElementById('perf_tDown');
+    const tUp=document.getElementById('perf_tUp');
+    const tSteps=document.getElementById('perf_tSteps');
+const fDown = document.getElementById('perf_fontSmall');
+const fUp   = document.getElementById('perf_fontBig');
+const fReset= document.getElementById('perf_fontReset');
+    const accSharp=document.getElementById('perf_accSharp');
+    const accFlat=document.getElementById('perf_accFlat');
+    const backLib=document.getElementById('perf_backLib');
+    const backEd=document.getElementById('perf_backEd');
+
+<!-- === Performance / Theory helpers (REVISED) === -->
+  /* Theory helpers */
+  const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  const FLAT  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+  const NAME_TO_SEMI = new Map();
+  SHARP.forEach((n,i)=>NAME_TO_SEMI.set(n,i));
+  FLAT.forEach((n,i)=>NAME_TO_SEMI.set(n,i));
+  const mod = (n,m)=>((n%m)+m)%m;
+
+  const semiToName = (s, useSharps = true) => {
+    const name = (useSharps ? SHARP : FLAT)[mod(s,12)];
+    return useSharps ? name : name.replace(/b/g, '♭');
+  };
+
+  // --- SANITIZER ---
+  function sanitizeRaw(raw) {
+    return String(raw)
+      .replace(/[\u2044\u2215]/g, '/')      // weird slashes → /
+      .replace(/[¦|︱︲｜]/g, '|')           // bars → |
+      .replace(/[–—−]/g, '-')               // dashes → -
+      .replace(/…/g, '...')                 // ellipsis
+      .replace(/♯/g, '#').replace(/♭/g, 'b')// music symbols to ASCII
+      .replace(/\u00A0/g, ' ')              // nbsp
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')// zero width
+      .replace(/[\uFF21-\uFF3A]/g, c => String.fromCharCode(c.charCodeAt(0)-0xFEE0)) // width A-Z
+      .replace(/[\uFF41-\uFF5A]/g, c => String.fromCharCode(c.charCodeAt(0)-0xFEE0)) // width a-z
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\r\n?/g, '\n');
+  }
+
+  // --- REVISED: kapitalin A–G saja; accidental (#/b) jangan diubah ---
+  const normalizeNote = (s) => {
+    if (!s) return s;
+    const t = String(s).replace(/♯/g,'#').replace(/♭/g,'b');
+    const m = t.match(/^([A-Ga-g])([#b]?)/);
+    return m ? (m[1].toUpperCase() + (m[2] || '')) : t.toUpperCase();
+  };
+
+  function parseChordToken(tok){
+    if(!tok) return null;
+    const mTrail = tok.match(/^(.+?)([.,…]+)?$/);
+    const core  = mTrail ? mTrail[1] : tok;
+    const trail = (mTrail && mTrail[2]) ? mTrail[2] : '';
+    const m = core.match(/^([A-G](?:#|b|♯|♭)?)([^/\s]*)(?:\/([A-G](?:#|b|♯|♭)?))?$/);
+    if(!m) return null;
+    const root = normalizeNote(m[1]);
+    const rest = m[2] || '';
+    const bass = m[3] ? normalizeNote(m[3]) : null;
+    return { root, rest, bass, trail };
+  }
+
+  const isBarSym  = s => (s==='|' || s==='.' || s==='-' || s==='%');
+  const isMelody  = s => /^\d[\d.\-]*$/.test(s);
+
+  let useSharps=(localStorage.getItem('cv_perf_acc')||'sharp')==='sharp';
+  let steps=parseInt(localStorage.getItem('cv_perf_steps')||'0')||0;
+  let fontPerf=parseInt(localStorage.getItem('cv_perf_font')||'28')||28;
+
+  // === DEFINISI CHORD YANG LEBIH KETAT ===
+  function markupPerformance(src, steps, useSharps){
+    // === teori kecil ===
+    const SHARP=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+    const FLAT =["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+    const NAME_TO_SEMI=new Map(); SHARP.forEach((n,i)=>NAME_TO_SEMI.set(n,i)); FLAT.forEach((n,i)=>NAME_TO_SEMI.set(n,i));
+    const mod=(n,m)=>((n%m)+m)%m;
+
+    // --- REVISED: hanya ubah b→♭ saat mode flat ---
+    const semiToName=(s,sharp)=> {
+      const name = (sharp?SHARP:FLAT)[mod(s,12)];
+      return sharp ? name : name.replace(/b/g,'♭');
+    };
+
+    // --- REVISED: kapitalin A–G saja; accidental tetap ---
+    const normalize = (s) => {
+      if (!s) return s;
+      const t = String(s).replace(/♯/g,'#').replace(/♭/g,'b');
+      const m = t.match(/^([A-Ga-g])([#b]?)/);
+      return m ? (m[1].toUpperCase() + (m[2] || '')) : t.toUpperCase();
+    };
+
+    // --- CHORD TOKEN (ketat) ---
+    const CH_NAME  = String.raw`[A-G](?:#|b|♯|♭)?`;
+    const CH_EXT   = String.raw`(?:maj|min|dim|half|hd|aug|sus|add|m|M)?`;
+    const CH_ALTER = String.raw`(?:[#b+\-]?\d+|no\d+|add\d+|sus[24]|b5|#5|b9|#9|b11|#11|b13|#13)*`;
+    const CH_QUAL  = `${CH_EXT}${CH_ALTER}`;
+    const CH_CORE  = `${CH_NAME}${CH_QUAL}(?:\\/${CH_NAME})?`;
+    const CHORD_G  = new RegExp(`(^|[^A-Za-z0-9#♭♯/])(${CH_CORE})(?=$|[^A-Za-z0-9#♭♯/])`, 'gu');
+
+    function transposeToken(ch){
+      const m = ch.match(/^([A-G](?:#|b|♯|♭)?)([^/\s]*)(?:\/([A-G](?:#|b|♯|♭)?))?$/);
+      if(!m) return ch;
+      const r = normalize(m[1]);
+      const rest = m[2] || '';
+      const bass = m[3] ? normalize(m[3]) : null;
+      const semiR = NAME_TO_SEMI.get(r);
+      if (semiR == null) return ch;
+      const r2 = semiToName(semiR + steps, useSharps);
+      const b2 = bass!=null ? semiToName(NAME_TO_SEMI.get(bass)+steps, useSharps) : null;
+      return r2 + rest + (b2 ? '/'+b2 : '');
+    }
+
+    const lines = src.split(/\r?\n/);
+    const out = lines.map(line=>{
+      const raw = String(line||'');
+      if (!raw.trim()) return ''; // baris kosong
+
+      // 1) Tandai CHORD sesuai aturan (pre-boundary dijaga, chord dibungkus)
+      let s = raw.replace(CHORD_G, (_all, pre, tok) => {
+        const t = transposeToken(tok);
+        return `${pre}<span class="chord">${t}</span>`;
+      });
+
+      // 2) Format bar/isi bar/melodi (tidak mengubah teks biasa)
+      s = s
+        .replace(/(\|)/g, '<span class="bar">$1</span>')
+        .replace(/(\%)/g, '<span class="bar">$1</span>')
+        .replace(/(^|\s)(\.+)(?=\s|$)/g, '$1<span class="bar">$2</span>')
+        .replace(/(^|\s)(-+)(?=\s|$)/g, '$1<span class="bar">$2</span>')
+        .replace(/(^|\s)(\d[\d.\-]*)(?=\s|$)/g, '$1<span class="melodi">$2</span>');
+
+      // 3) Jika SATU baris tidak mengandung chord/bar/melodi sama sekali → tekankan sebagai teks-line
+      const isMusicish = /class="chord"|class="bar"|class="melodi"/.test(s);
+      if (!isMusicish) return `<span class="teks-line">${cv_escapeHtml(raw)}</span>`;
+
+      // 4) Bungkus potongan teks (huruf) yang tersisa dalam baris campuran → merah
+      s = s
+        .split(/(<[^>]+>)/) // pisah tag vs teks polos
+        .map(part => {
+          if (part.startsWith('<')) return part; // biarkan tag chord/bar/melodi tetap
+          return part.replace(/([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’\-]*)/g, '<span class="teks">$1</span>');
+        })
+        .join('');
+
+      return s;
+    }).join('\n');
+
+    return out;
+  }
+
+    function savePerfState(){
+      localStorage.setItem('cv_perf_steps', String(steps));
+      localStorage.setItem('cv_perf_acc', useSharps ? 'sharp' : 'flat');
+      localStorage.setItem('cv_perf_font', String(fontPerf));
+    }
+    function syncAccUI(){
+      accSharp.classList.toggle('active', useSharps);
+      accFlat.classList.toggle('active', !useSharps);
+    }
+// --- Sumber konten (satu pintu) ---
+function getPerfSource(){
+  const raw = (localStorage.getItem('cv_perf_raw')||'').trim();
+  if (raw) return raw;
+  const id = localStorage.getItem('cv_perf_id')||'';
+  if (id) {
+    const db = cv_loadDB();
+    const s  = db && db[id] && db[id].raw ? String(db[id].raw).trim() : '';
+    if (s) return s;
+  }
+  return '';
+}
+function isEmptyLike(s){ return !s || !String(s).trim(); }
+function showPlaceholder(){
+  perf.innerHTML = `<span class="teks-line">No content loaded.
+Buka dari Editor (Open → Performance) atau pilih lagu di Library.</span>`;
+  document.documentElement.style.setProperty('--font-perf', fontPerf+'px');
+  tSteps.textContent = String(steps);
+  syncAccUI();
+}
+
+function perfRender(rawFromArg){
+  let srcRaw = (rawFromArg ?? getPerfSource() ?? '');
+  if (isEmptyLike(srcRaw)) return showPlaceholder();
+  const src = sanitizeRaw(srcRaw);
+  if (isEmptyLike(src)) return showPlaceholder();
+
+  const html = markupPerformance(src, steps, useSharps);
+if (isEmptyLike(html.replace(/<[^>]+>/g,''))) return showPlaceholder();
+// ♫ 1/2 ketuk (eighth) — 1 flag
+const NOTE_SVG_HALF =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 128" width="14" height="14" aria-hidden="true">' +
+    '<ellipse cx="20" cy="104" rx="18" ry="12" fill="currentColor"/>' +
+    '<rect x="34" y="8" width="6" height="96" fill="currentColor"/>' +
+    // 1 flag
+    '<path d="M40 8 C64 20, 64 36, 40 44" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+  '</svg>';
+
+// ♬ 1/4 ketuk (sixteenth) — 2 flag
+const NOTE_SVG_QUARTERBEAT =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 128" width="14" height="14" aria-hidden="true">' +
+    '<ellipse cx="20" cy="104" rx="18" ry="12" fill="currentColor"/>' +
+    '<rect x="34" y="8" width="6" height="96" fill="currentColor"/>' +
+    // 2 flag
+    '<path d="M40 8  C64 20, 64 36, 40 44" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+    '<path d="M40 28 C64 40, 64 56, 40 64" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+  '</svg>';
+
+// mapping token -> superscript SVG (tetap sama)
+function applyNoteSuperscript(s) {
+  return s
+    .replace(/\(♪\)/g, '<sup class="note">' + NOTE_SVG_HALF + '</sup>')
+    .replace(/\(♬\)/g, '<sup class="note">' + NOTE_SVG_QUARTERBEAT + '</sup>');
+}
+
+function applyNoteSuperscript(s) {
+  return s
+    .replace(/\(♪\)/g, '<sup class="note">' + NOTE_SVG_HALF + '</sup>')
+    .replace(/\(♬\)/g, '<sup class="note">' + NOTE_SVG_QUARTERBEAT + '</sup>');
+}
+perf.innerHTML = applyNoteSuperscript(html);
+document.documentElement.style.setProperty('--font-perf', fontPerf+'px');
+tSteps.textContent = String(steps);
+syncAccUI();
+}
+    // Controls
+    tDown.addEventListener('click', async ()=>{ steps--; perfRender(); savePerfState(); });
+    tUp.addEventListener('click',   async ()=>{ steps++; perfRender(); savePerfState(); });
+
+    accSharp.addEventListener('click', async ()=>{ useSharps=true; syncAccUI(); perfRender(); savePerfState(); });
+    accFlat .addEventListener('click', async ()=>{ useSharps=false; syncAccUI(); perfRender(); savePerfState(); });
+
+    fDown.addEventListener('click', async ()=>{ fontPerf=Math.max(10,fontPerf-2); perfRender(); savePerfState(); });
+    fUp  .addEventListener('click', async ()=>{ fontPerf=Math.min(72,fontPerf+2); perfRender(); savePerfState(); });
+    fReset.addEventListener('click', async ()=>{ fontPerf=28; steps=0; useSharps=true; syncAccUI(); perfRender(); savePerfState(); });
+
+    
+backLib.addEventListener('click', ()=>{
+  cv_switchView('lib');
+});
+   backEd.addEventListener('click', ()=>{
+  const id  = localStorage.getItem('cv_perf_id') || '';
+  const raw = (localStorage.getItem('cv_perf_raw') || '').trim();
+  const db  = cv_loadDB();
+
+  if (id && db[id]) {
+    // Lagu sedang tampil berasal dari Library (punya id)
+    localStorage.setItem('cv_edit_id', id);
+    localStorage.removeItem('cv_edit_temp');
+  } else {
+    // Lagu sedang tampil berasal dari teks “raw” (belum disave)
+    localStorage.removeItem('cv_edit_id');
+    if (raw) localStorage.setItem('cv_edit_temp', raw);
+  }
+  cv_switchView('ed');
+});
+
+  // === render awal ===
+    perfRender();
+    showPerfMeta();
+
+    // refresh tiap kali masuk view Performance
+    window.addEventListener('cv:view', (e) => {
+      if (e.detail?.name === 'perf') {
+        perfRender();
+        showPerfMeta();
+      }
+    });
+
+    // ==== FULLSCREEN & EXIT BUTTON ====
+    const btnFull    = document.getElementById('perf_full');
+    const btnExitImm = document.getElementById('perf_exitImm');
+    const rootEl     = document.documentElement;
+
+    function enterOnlyTextUI(){ document.body.classList.add('onlyText'); }
+    function exitOnlyTextUI(){  document.body.classList.remove('onlyText'); }
+
+    // masuk fullscreen
+    btnFull?.addEventListener('click', () => {
+      enterOnlyTextUI();  // sembunyikan toolbar + meta
+
+      const req = rootEl.requestFullscreen
+               || rootEl.webkitRequestFullscreen
+               || rootEl.msRequestFullscreen;
+
+      if (!req) return; // device tak dukung fullscreen → tetap onlyText
+
+      try {
+        const p = req.call(rootEl);
+        if (p?.catch) p.catch(()=> exitOnlyTextUI());
+      } catch { exitOnlyTextUI(); }
+    });
+
+    // tombol ↩ Exit (pojok kanan atas)
+    btnExitImm?.addEventListener('click', ()=>{
+      document.exitFullscreen?.();
+      exitOnlyTextUI();
+    });
+
+    // keluar fullscreen via ESC/back → reset UI
+    function onFsChange(){
+      const inFs = document.fullscreenElement
+                || document.webkitFullscreenElement
+                || document.msFullscreenElement;
+      if (!inFs) exitOnlyTextUI();
+    }
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
+    document.addEventListener('MSFullscreenChange', onFsChange);
+
+  }); // <== penutup cv_onViewInit('perf', …)
+  </script>
+
+
+<script>
+if ('serviceWorker' in navigator) {
+  const ver = document.querySelector('meta[name="cv-build"]').content;
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/Chordyv-pwa/sw.js?v=' + ver)
+      .catch(console.error);
+  });
+}
+</script>
+<script>
+(function(){
+  const ALLOW = new Set(['PRE','DIV','SPAN','BR','#text']);
+function sanitizeNode(node){
+  // Lindungi root perf_area biar gak kesapu
+  if (node.nodeType === 1 && node.id === 'perf_area') return false;
+
+  if (node.nodeType === 1 && (node.tagName === 'SCRIPT' || node.tagName === 'STYLE')) {
+    node.remove(); return true;
+  }
+  if (node.nodeType === 1 && !ALLOW.has(node.tagName)) {
+    const txt = document.createTextNode(node.textContent);
+    node.replaceWith(txt);
+    return true;
+  }
+  return false;
+}
+  function sweep(root){
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null);
+    const toSanitize = [];
+    let n = walker.nextNode();
+    while(n){ toSanitize.push(n); n = walker.nextNode(); }
+    for(const el of toSanitize){ sanitizeNode(el); }
+  }
+  function guard(el){
+    if (!el) return;
+    sweep(el);
+    const mo = new MutationObserver(muts => {
+      for (const m of muts){
+        m.addedNodes && m.addedNodes.forEach(n => {
+          if (n.nodeType === 1) {
+            if (!sanitizeNode(n)) sweep(n);
+          }
+        });
+      }
+    });
+    mo.observe(el, {childList:true, subtree:true});
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => guard(document.getElementById('perf_area')));
+  } else {
+    guard(document.getElementById('perf_area'));
+  }
+})();
+function applyNoteSuperscript(s) {
+  return s
+    .replace(/\(♪\)/g, '<sup class="note"><img src="icons/note-half.svg" alt="♪"></sup>')
+    .replace(/\(♬\)/g, '<sup class="note"><img src="icons/note-quarter.svg" alt="♬"></sup>');
+}
+</script>
+
+<!-- ===== UI COMPONENT: TOAST ===== -->
+<!-- Toast (non-blocking) -->
+<style>
+  .cv-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(6px);
+    background:#121826;color:#fff;padding:10px 14px;border-radius:12px;font-size:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;z-index:9999;
+    transition:opacity .18s ease, transform .18s ease}
+  .cv-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+<div id="cv_toast" class="cv-toast" aria-live="polite" aria-atomic="true"></div>
+<script>
+  function cvToast(msg, dur=1600){
+    const el=document.getElementById('cv_toast'); if(!el) return;
+    el.textContent=msg; el.classList.add('show');
+    clearTimeout(window.__cvtt); window.__cvtt=setTimeout(()=>el.classList.remove('show'), dur);
+  }
+</script>
+
+
+
+
+
+<script>
+/* Caret memory + cvInsert (no toolbar interception) */
+(function(){
+  function getEditor(){
+    return (typeof contentEl!=='undefined' && contentEl)
+        || document.getElementById('ed_content')
+        || document.querySelector('#cv_editor, #cv_content, [data-section="editor"] textarea, textarea');
+  }
+  var caret={s:0,e:0,scroll:0};
+  function remember(ed){
+    ed=ed||getEditor(); if(!ed) return;
+    if(typeof ed.selectionStart==='number'){ caret.s=ed.selectionStart; caret.e=ed.selectionEnd; }
+    caret.scroll=ed.scrollTop||0;
+  }
+  document.addEventListener('selectionchange', function(){
+    if(document.activeElement && document.activeElement.tagName==='TEXTAREA') remember(document.activeElement);
+  });
+  ['input','keyup','click','touchend','focus'].forEach(function(ev){
+    document.addEventListener(ev, function(e){
+      if(e.target && e.target.tagName==='TEXTAREA') remember(e.target);
+    }, true);
+  });
+  window.cvInsert=function(text){
+    var ed=getEditor(); if(!ed) return;
+    ed.focus({preventScroll:true});
+    var s=(typeof ed.selectionStart==='number')?ed.selectionStart:caret.s;
+    var e=(typeof ed.selectionEnd  ==='number')?ed.selectionEnd  :caret.e;
+    var before=ed.value.slice(0,s), after=ed.value.slice(e);
+    ed.value=before+String(text)+after;
+    var pos=s+String(text).length;
+    try{ ed.setSelectionRange(pos,pos); }catch(_){}
+    ed.scrollTop=caret.scroll||ed.scrollTop;
+    ed.dispatchEvent(new Event('input',{bubbles:true}));
+    caret.s=caret.e=pos;
+  };
+})();
+</script>
+
+
+<script>
+/* Shim: insertAt -> cvInsert */
+(function(){
+  var _orig = window.insertAt;
+  window.insertAt = function(text){
+    if (typeof window.cvInsert === 'function') return window.cvInsert(text);
+    if (typeof _orig === 'function') return _orig(text);
+  };
+})();
+</script>
+
+
+<!-- ===== UI COMPONENT: MODAL ===== -->
+<!-- ===== cv modal (global) ===== -->
+<style>
+  /* simple modal style — tweak sesukamu */
+  #cv_modal {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    align-items:center;
+    justify-content:center;
+    z-index:99999;
+  }
+  #cv_modalBox{
+    width:100%;
+    max-width:380px;
+    background:var(--card, #fff);
+    color:var(--fg, #0f172a);
+    border-radius:12px;
+    padding:16px;
+    box-shadow:0 12px 40px rgba(0,0,0,.35);
+  }
+  #cv_modalMsg{ margin-bottom:10px; font-size:14px; line-height:1.3; }
+  #cv_modalInput{ width:100%; padding:8px 10px; border-radius:8px; border:1px solid #ddd; margin-bottom:12px; font:inherit; }
+  .cv_modalRow{ display:flex; gap:8px; justify-content:flex-end; }
+  .cv_modalBtn{ padding:8px 12px; border-radius:8px; background:var(--chip,#eef2ff); border:1px solid var(--border,#e5e7eb); cursor:pointer; }
+  .cv_modalPrimary{ background:var(--accent,#3B82F6); color:var(--accent-fg,#fff); border-color:transparent; }
+</style>
+
+<div id="cv_modal" role="dialog" aria-hidden="true">
+  <div id="cv_modalBox" class="card">
+    <div id="cv_modalMsg"></div>
+    <input id="cv_modalInput" type="text" />
+    <div class="cv_modalRow">
+      <button id="cv_modalCancel" class="cv_modalBtn">Cancel</button>
+      <button id="cv_modalOk" class="cv_modalBtn cv_modalPrimary">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const modal = document.getElementById('cv_modal');
+  const msgEl = document.getElementById('cv_modalMsg');
+  const inputEl = document.getElementById('cv_modalInput');
+  const okBtn = document.getElementById('cv_modalOk');
+  const cancelBtn = document.getElementById('cv_modalCancel');
+
+  let resolver = null;
+
+  function openModal({msg = '', showInput = true, def = ''}){
+    msgEl.textContent = msg;
+    inputEl.style.display = showInput ? 'block' : 'none';
+    inputEl.value = def ?? '';
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden','false');
+    // focus
+    setTimeout(()=>{ if(showInput) inputEl.focus(); else okBtn.focus(); },50);
+  }
+  function closeModal(){
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden','true');
+  }
+
+  okBtn.addEventListener('click', async ()=> {
+    if(!resolver) return;
+    const val = (inputEl.style.display!=='none') ? inputEl.value.trim() : true;
+    const r = resolver;
+    resolver = null;
+    closeModal();
+    r(val);
+  });
+  cancelBtn.addEventListener('click', async ()=> {
+    if(!resolver) return;
+    const r = resolver;
+    resolver = null;
+    closeModal();
+    r(inputEl.style.display!=='none' ? null : false);
+  });
+
+  // keyboard handling: Enter -> ok, Esc -> cancel
+  modal.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape'){ e.preventDefault(); cancelBtn.click(); }
+    else if(e.key === 'Enter'){ e.preventDefault(); okBtn.click(); }
+  });
+
+  window.cvPrompt = function(msg, def=''){
+    return new Promise(resolve=>{
+      resolver = resolve;
+      openModal({msg, showInput:true, def});
+    });
+  };
+
+  window.cvConfirm = function(msg){
+    return new Promise(resolve=>{
+      resolver = resolve;
+      openModal({msg, showInput:false});
+    });
+  };
+})();
+</script>
+<!-- Help Modal -->
+  <div id="cv_helpModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:1000;">
+    <div style="background:#fff;color:#000;max-width:600px;width:90%;padding:20px;border-radius:12px;
+      max-height:80%;overflow-y:auto;">
+      <div id="cv_helpContent"></div>
+      <div style="text-align:right;margin-top:16px;">
+        <button onclick="document.getElementById('cv_helpModal').style.display='none'"
+          style="background:#0EA5E9;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showChordyVHelp(){
+      const html = `
+        <h2 style="margin:0 0 12px;color:#0EA5E9;">ChordyV Basic Guide</h2>
+
+        <h3>1. Writing Format</h3>
+        <p>Chords must be uppercase (C, Am7, F#dim, G/B).<br>
+        Symbols: | (barline), . (beat filler), - (rest), % (repeat bar), # / ♭ (accidental), / (slash chord).</p>
+
+        <h3>2. Example</h3>
+        <pre>
+[Intro] ( without lyrics )
+Chord Progression :
+G . . . |Cmaj7 . . . | Bm . . . |
+Am7 . . .  | Em . . . | D . . . |
+
+[Verse 1] ( with lyrics )
+G   Cmaj7   Gmaj7
+lyrics lyrics lyrics</pre>
+
+        <h3>3. Supported Chords</h3>
+        <p>A–G (#/b), maj, min/m, dim, aug, sus, add, 7/9/11/13, m7♭5/hd, slash chords.</p>
+
+        <h3>4. Editor Limitations</h3>
+        <ul>
+          <li>No transpose in Editor (only in Performance).</li>
+          <li>No chord auto-correct (typos not recognized).</li>
+          <li>No audio/metronome.</li>
+          <li>Styling (bold, red text) only visible in Performance.</li>
+        </ul>
+<hr style="margin:24px 0 16px; opacity:0.3;">
+<p style="font-size:14px; margin:0;">
+  <strong>Read more details:</strong> 
+  <a href="https://chordyv.com/userguide.html" 
+     target="_blank" 
+     rel="noopener noreferrer" 
+     style="color:#0ea5e9; text-decoration:none; font-weight:600;">
+    Click here for the full guide
+  </a>
+</p>
+      `;
+      document.getElementById('cv_helpContent').innerHTML = html;
+      document.getElementById('cv_helpModal').style.display = 'flex';
+    }
+  </script>
+<!-- Backdrop global (untuk drawer) -->
+<div id="cv_backdrop" class="backdrop" hidden></div>
+
+<!-- Drawer kiri (Hamburger) -->
+<aside id="cv_drawerLeft" class="drawer drawer-left" role="dialog" aria-label="Main menu" aria-hidden="true">
+  <div class="drawer-head">
+    <div class="brand">
+      <span class="logo-chip">cv</span>
+      <b>ChordyV</b>
+    </div>
+    <button class="ghost closex" aria-label="Close">✕</button>
+  </div>
+
+  <section class="drawer-sec">
+    <label>Account</label>
+    <div class="help">Sign in with Google</div>
+    <button class="btn google" disabled>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="margin-right:8px">
+        <path fill="#4285F4" d="M21.35 11.1h-9.18v2.98h5.26c-.22 1.49-1.59 4.37-5.26 4.37-3.17 0-5.76-2.62-5.76-5.85s2.59-5.85 5.76-5.85c1.8 0 3 .76 3.69 1.41l2.51-2.42C17.13 4.39 15.07 3.5 12.17 3.5 7.42 3.5 3.61 7.31 3.61 12s3.81 8.5 8.56 8.5c4.94 0 8.21-3.46 8.21-8.33 0-.56-.06-1.01-.13-1.57z"/>
+      </svg>
+      Sign in with Google
+    </button>
+  </section>
+
+  <section class="drawer-sec">
+    <details open>
+      <summary class="about-summary">About</summary>
+      <div class="help" style="margin-top:8px">
+        <b>ChordyV</b><br/>
+        version 1.0.0.1 · 2025
+      </div>
+      <div class="links">
+     <a href="https://chordyv.com/privacy.html" target="_blank">Privacy Policy</a> · 
+<a href="https://chordyv.com/terms.html" target="_blank">Terms of Use</a>
+      </div>
+    </details>
+  </section>
+</aside>
+<!-- Drawer kanan (Gear) -->
+<aside id="cv_drawerRight" class="drawer drawer-right" role="dialog" aria-label="Settings" aria-hidden="true">
+  <div class="drawer-head">
+    <b>Settings</b>
+    <button id="cv_btnCloseDrawerRight" class="ghost closex" aria-label="Close">✕</button>
+  </div>
+
+  <!-- Theme -->
+  <section class="drawer-sec">
+    <label>Theme</label>
+    <div class="row" style="gap:10px">
+      <label class="chip"><input type="radio" name="cv_theme" value="white"> White</label>
+      <label class="chip"><input type="radio" name="cv_theme" value="navy"> Navy</label>
+    </div>
+    <div class="help">Apply instantly & saved locally.</div>
+  </section>
+
+  <!-- Guides -->
+  <section class="drawer-sec">
+    <label>Guides</label>
+    <div class="row" style="gap:10px; flex-wrap:wrap">
+      <button class="btn secondary" id="cv_btnQuickGuide">Quick Guide</button>
+      <a class="btn" href="./user-guide.html" target="_blank" rel="noopener">User Guide</a>
+    </div>
+  </section>
+
+  <!-- Data -->
+  <section class="drawer-sec">
+    <label>Data</label>
+    <div class="row" style="gap:10px; flex-wrap:wrap">
+      <button class="btn secondary" id="cv_btnExport">Export JSON</button>
+      <label class="btn">
+        Import JSON <input type="file" id="cv_fileImport" accept="application/json" style="display:none">
+      </label>
+    </div>
+    <div class="help">Backup/restore your library.</div>
+  </section>
+</aside>
+<script>
+(()=> {
+  const qs = sel => document.querySelector(sel);
+
+  const btnHamb = qs('#cv_btnHamburger');
+  const btnGear  = qs('#cv_btnSettings');
+
+  const left     = qs('#cv_drawerLeft');
+  const right    = qs('#cv_drawerRight');
+  const back     = qs('#cv_backdrop');
+
+  const closeL   = qs('#cv_closeLeft');
+  const closeR   = qs('#cv_closeRight');
+
+  function show(el){
+    el.hidden = false;
+    requestAnimationFrame(()=> el.classList.add('open'));
+  }
+  function hide(el){
+    el.classList.remove('open');
+    el.addEventListener('transitionend', ()=> el.hidden = true, {once:true});
+  }
+  function openLeft(){
+    show(left); back.hidden=false; requestAnimationFrame(()=> back.classList.add('show'));
+  }
+  function openRight(){
+    show(right); back.hidden=false; requestAnimationFrame(()=> back.classList.add('show'));
+  }
+  function closeAll(){
+    if(!left.hidden)  hide(left);
+    if(!right.hidden) hide(right);
+    back.classList.remove('show');
+    back.addEventListener('transitionend', ()=> back.hidden=true, {once:true});
+  }
+
+  btnHamb?.addEventListener('click', openLeft);
+  btnGear?.addEventListener('click', openRight);
+  closeL?.addEventListener('click', closeAll);
+  closeR?.addEventListener('click', closeAll);
+  back?.addEventListener('click', closeAll);
+// === STEP 2: Wiring tombol Upgrade ===
+document.getElementById('cv_btnUpgrade')?.addEventListener('click', ()=>{
+  showUpgradeModal('upgrade-btn');
+});
+
+// === Trial Premium UI (auto switch tombol & label) ===
+function updateUpgradeUI(){
+  const btn = document.getElementById('cv_btnUpgrade');   // atau 'cv_upgradeBtn' kalau id-mu itu
+  const lbl = document.getElementById('cv_proStatus');     // atau 'proStatus'
+  if (!btn || !lbl) return;
+
+  if (window.cvIsPro){
+    // Sudah Pro → tampilkan badge premium, tetap pakai gradasi navy→biru
+    btn.textContent = '👑 Premium User';
+    btn.classList.add('cv-grad');       // pakai kelas gradasi (lihat patch CSS #2)
+    btn.classList.remove('ghost');
+    btn.disabled = true;                // biar nggak diklik lagi
+    lbl.textContent = 'Pro User';
+  } else {
+    // Free
+    btn.textContent = '✨ Upgrade to Pro';  // satu ikon ✨ saja
+    btn.classList.add('cv-grad');          // sama-sama pakai gradasi
+    btn.classList.remove('ghost');
+    btn.disabled = false;
+    lbl.textContent = 'Free User';
+  }
+}
+
+// Panggil saat load (elemen sudah ada di DOM)
+updateUpgradeUI();
+
+// Sinkron saat status berubah (setPro(true/false) mem-broadcast event ini)
+window.addEventListener('cv:pro', updateUpgradeUI);
+
+
+// Update status teks Free/Pro saat setPro berubah
+window.addEventListener('cv:pro', e=>{
+  const el=document.getElementById('cv_proStatus');
+  if (el) el.textContent = e.detail.isPro ? 'Pro User' : 'Free User';
+});
+
+  // Escape untuk tutup
+  window.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape') closeAll();
+  });
+})();
+</script>
+<!-- === UPGRADE MODAL (FINAL – sama seperti screenshot) === -->
+<style>
+  /* Overlay */
+  #cv_upgradeModal{
+    position: fixed; inset: 0; z-index: 100000;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px);
+    background: rgba(15,23,42,.35);
+  }
+  #cv_upgradeModal.show{ display:flex; }
+
+  /* Card */
+  #cv_upgradeBox{
+    width: min(92vw, 520px);
+    border-radius: 22px;
+    background: linear-gradient(180deg,#ffffff,#f8fafc);
+    color:#0f172a;
+    padding: 20px 18px 16px;
+    box-shadow: 0 22px 60px rgba(2,6,23,.25);
+  }
+
+  /* Head */
+  #cv_upgradeHead{ display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  #cv_upgradeHead .badge{
+    width:44px; height:44px; border-radius:16px; display:grid; place-items:center;
+    background: linear-gradient(135deg,#0f1f45 0%, #183b7a 55%, #2aa0ff 100%);
+    color:#fff; font-size:20px; font-weight:800;
+    box-shadow: 0 8px 22px rgba(16,77,160,.32);
+  }
+  #cv_upgradeTitle{ margin:0; font-size:22px; font-weight:800; letter-spacing:.2px; }
+  #cv_upgradeSub{ margin: 6px 0 12px; color:#64748b; font-size:14px; }
+
+  /* Benefits */
+  #cv_upgradeBenefits{ list-style:none; margin:10px 0 16px; padding:0; display:grid; gap:12px; }
+  #cv_upgradeBenefits li{
+    display:flex; gap:12px; align-items:flex-start;
+    background:#e8f0ff; border:1px solid #dbe7ff;
+    padding:14px 16px; border-radius:16px; font-size:15px; line-height:1.4;
+  }
+  #cv_upgradeBenefits .tick{
+    flex:0 0 26px; width:26px; height:26px; border-radius:8px;
+    display:grid; place-items:center; font-weight:800; font-size:18px;
+    background:#22c55e; color:#fff; box-shadow:0 4px 10px rgba(34,197,94,.35);
+  }
+
+  /* Actions */
+  #cv_upgradeActions{ display:flex; gap:12px; margin-top:2px; }
+  #cv_btnMaybeLater, #cv_btnGetPro{
+    flex:1 1 0; height:48px; border:0; border-radius:14px; font-weight:800; cursor:pointer;
+  }
+  #cv_btnMaybeLater{ background: rgba(148,163,184,.16); color:#0f172a; }
+  #cv_btnGetPro{
+    background: linear-gradient(135deg,#0f1f45 0%, #183b7a 55%, #2aa0ff 100%);
+    color:#fff; box-shadow: 0 10px 26px rgba(16,77,160,.36);
+  }
+
+  /* Tema navy */
+  body.theme-navy #cv_upgradeBox{
+    background: linear-gradient(180deg,#0f1f45,#0b1734);
+    color:#e5ecff; box-shadow:0 16px 36px rgba(2,6,23,.55);
+  }
+  body.theme-navy #cv_upgradeSub{ color:#a7b2c7; }
+  body.theme-navy #cv_upgradeBenefits li{ background:#0b1324; border-color:#1e2b57; }
+</style>
+
+<div id="cv_upgradeModal" aria-hidden="true">
+  <div id="cv_upgradeBox" role="dialog" aria-modal="true" aria-labelledby="cv_upgradeTitle">
+    <div id="cv_upgradeHead">
+      <div class="badge">✨</div>
+      <div>
+        <h2 id="cv_upgradeTitle">Upgrade to Pro</h2>
+        <p id="cv_upgradeSub">Unlock full features and play without limits.</p>
+      </div>
+    </div>
+
+    <ul id="cv_upgradeBenefits">
+      <li><span class="tick">✓</span> <div><b>Unlimited song saving</b> — add and keep as many songs as you wish.</div></li>
+      <li><span class="tick">✓</span> <div><b>Export &amp; Import files</b> — full backup and restore across devices.</div></li>
+      <li><span class="tick">✓</span> <div><b>All future updates</b> — get upcoming Pro features first.</div></li>
+    </ul>
+
+    <div id="cv_upgradeActions">
+      <button id="cv_btnMaybeLater">Maybe later</button>
+      <button id="cv_btnGetPro">Get Pro</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Proxy klik FAB ke tombol "New" lama (kalau ada di bar aksi)
+  document.addEventListener('click', function(e){
+    const fab = e.target.closest('#editorView .cv-fab');
+    if (!fab) return;
+    const newBtn = document.querySelector('#editorView .actions .btn.new, #editorView .actions [data-role="new"], #editorView .actions [aria-label="+"]');
+    if (newBtn) newBtn.click();
+  });
+</script>
+<script>
+/* ==== ChordyV — Performance Auto-Scroll (smooth + iOS carry, vertical pill) ==== */
+(function(){
+  // ----- state (jangan ubah di luar patch ini) -----
+  let btnAuto=null, speedUI=null, spdLabel=null, btnDec=null, btnInc=null, btnPause=null;
+  let rafId=0, lastTs=0, running=false;
+  let scroller=null, perfArea=null, perfToolbar=null;
+
+  // SPEED ENGINE (Chordtela-like)
+  let targetSpeed = 30;      // px/s yang DIMINTA user (disimpan & tampil di label)
+  let curSpeed    = 30;      // px/s AKTUAL (bergerak mulus menuju target)
+  let _fracCarry  = 0;       // akumulasi pecahan px (buat iOS)
+  const SMOOTH_K  = 8;       // 3–10 enak; makin besar makin responsif
+
+  // ----- helpers -----
+  function pickScroller(){
+    return document.getElementById('perf_area')
+        || document.scrollingElement
+        || document.documentElement
+        || document.body;
+  }
+  function makePerfScrollable(){
+    if (perfArea){
+      perfArea.style.overflow = 'auto';
+      perfArea.style.maxHeight = '100dvh';
+      perfArea.style.webkitOverflowScrolling = 'touch';
+    }
+  }
+
+  function ensureUI(){
+    // ambil ulang setiap kali view perf aktif
+    perfArea    = document.getElementById('perf_area');
+    perfToolbar = document.getElementById('perf_toolbar');
+    makePerfScrollable();
+
+    // tombol "Auto" di toolbar (buat kalau belum ada)
+    btnAuto = document.getElementById('perf_auto');
+    if (!btnAuto && perfToolbar){
+      btnAuto = document.createElement('button');
+      btnAuto.id = 'perf_auto';
+      btnAuto.className = 'ghost';
+      btnAuto.textContent = 'Auto';
+      // sedikit style biar gak invisible oleh CSS global
+      btnAuto.style.background = 'rgba(148,163,184,.12)';
+      btnAuto.style.border = '1px solid rgba(148,163,184,.35)';
+      btnAuto.style.borderRadius = '12px';
+      perfToolbar.appendChild(btnAuto);
+    }
+
+    // SPEED PILL: wrapper transparan, vertikal, kanan-tengah
+    speedUI = document.getElementById('perf_speedUI');
+    if (!speedUI){
+      speedUI = document.createElement('div');
+      speedUI.id = 'perf_speedUI';
+      document.body.appendChild(speedUI);
+    }
+    speedUI.style.cssText = [
+      'position:fixed',
+      'right:12px',
+      'top:50%',
+      'transform:translateY(-50%)',
+      'z-index:2147483000',
+      'background:transparent',   // wrapper transparan
+      'color:#fff',
+      'padding:0',
+      'display:none',             // muncul saat Auto ditekan
+      'flex-direction:column',
+      'align-items:center',
+      'gap:6px',
+      'font:600 11px system-ui,-apple-system,Segoe UI,Roboto,sans-serif'
+    ].join(';');
+
+    // isi: 3 tombol bulat + label kecil (hanya elemen yg punya bg sendiri)
+    speedUI.innerHTML = `
+      <button id="perf_spd_inc" class="btn"
+        style="display:block;border:1px solid rgba(15,23,42,.35);
+               width:32px;height:32px;border-radius:50%;padding:0;font-size:14px;cursor:pointer;
+               background:rgba(15,23,42,.22);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)">+</button>
+
+      <span id="perf_spd_label"
+        style="display:block;min-width:60px;text-align:center;
+               padding:2px 6px;font-size:11px;color:#fff;
+               background:rgba(15,23,42,.45);border-radius:6px">30 px/s</span>
+
+      <button id="perf_spd_dec" class="btn"
+        style="display:block;border:1px solid rgba(15,23,42,.35);
+               width:32px;height:32px;border-radius:50%;padding:0;font-size:14px;cursor:pointer;
+               background:rgba(15,23,42,.22);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)">–</button>
+
+      <button id="perf_pause" class="btn"
+        style="display:block;border:1px solid rgba(15,23,42,.35);
+               width:40px;height:40px;border-radius:50%;padding:0;font-size:12px;cursor:pointer;
+               background:rgba(15,23,42,.22);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)">❚❚</button>
+    `;
+
+    spdLabel = document.getElementById('perf_spd_label');
+    btnInc   = document.getElementById('perf_spd_inc');
+    btnDec   = document.getElementById('perf_spd_dec');
+    btnPause = document.getElementById('perf_pause');
+
+    // rebind aman (hindari double binding): clone lalu pasang listener baru
+    function rebind(el, fn){
+      if (!el) return null;
+      const clone = el.cloneNode(true);
+      el.replaceWith(clone);
+      clone.addEventListener('click', fn);
+      return clone;
+    }
+    if (btnAuto)  btnAuto  = rebind(btnAuto,  toggleAuto);
+    if (btnPause) btnPause = rebind(btnPause, toggleAuto);
+
+    // ---- speed setter (TARGET) + simpan ----
+    function setSpeed(v){
+  targetSpeed = Math.max(1, Math.min(300, v));  // biarin desimal
+  if (spdLabel) spdLabel.textContent = `${Math.round(targetSpeed)} px/s`; 
+  try { localStorage.setItem('cv_scroll_speed', String(targetSpeed)); } catch {}
+}
+    // load saved
+    try {
+      const saved = parseInt(localStorage.getItem('cv_scroll_speed')||'', 10);
+      if (!Number.isNaN(saved)) setSpeed(saved); else setSpeed(targetSpeed);
+    } catch { setSpeed(targetSpeed); }
+
+    // ---- press & hold: ±5% tiap tick ----
+    const incRef = { current:null }, decRef = { current:null };
+    function holdStart(mode, ref){
+      if (ref.current) return;
+      const tick = ()=>{
+        if (mode === '+') setSpeed(targetSpeed * 1.05);
+        else              setSpeed(targetSpeed / 1.05);
+      };
+      tick();
+      ref.current = setInterval(tick, 100);
+    }
+    function holdStop(ref){
+      if (ref.current){ clearInterval(ref.current); ref.current=null; }
+    }
+
+    // bind +/− (tap & hold)
+    if (btnInc){
+      btnInc.addEventListener('mousedown', ()=>holdStart('+', incRef));
+      btnInc.addEventListener('mouseup',   ()=>holdStop(incRef));
+      btnInc.addEventListener('mouseleave',()=>holdStop(incRef));
+      btnInc.addEventListener('touchstart', e=>{ e.preventDefault(); holdStart('+', incRef); }, {passive:false});
+      btnInc.addEventListener('touchend',   ()=>holdStop(incRef));
+      btnInc.addEventListener('touchcancel',()=>holdStop(incRef));
+      btnInc.addEventListener('click', ()=> setSpeed(targetSpeed + 1));    // tap +1 px/s// tap +5%
+    }
+    if (btnDec){
+      btnDec.addEventListener('mousedown', ()=>holdStart('-', decRef));
+      btnDec.addEventListener('mouseup',   ()=>holdStop(decRef));
+      btnDec.addEventListener('mouseleave',()=>holdStop(decRef));
+      btnDec.addEventListener('touchstart', e=>{ e.preventDefault(); holdStart('-', decRef); }, {passive:false});
+      btnDec.addEventListener('touchend',   ()=>holdStop(decRef));
+      btnDec.addEventListener('touchcancel',()=>holdStop(decRef));
+      btnDec.addEventListener('click', ()=> setSpeed(targetSpeed - 1)); // tap -5%
+    }
+  }
+
+  // ----- UI pill show/hide -----
+  function showPill(){ if (speedUI) speedUI.style.display='inline-flex'; }
+  function hidePill(){ if (speedUI) speedUI.style.display='none'; }
+
+  // ----- loop (smoothing + iOS fractional carry) -----
+  function step(ts){
+    if (!running) return;
+    if (!scroller) { stopAuto(); return; }
+    if (!lastTs) lastTs = ts;
+    const dt = (ts - lastTs)/1000; lastTs = ts;
+
+    // smoothing: curSpeed → targetSpeed
+    const alpha = 1 - Math.exp(-SMOOTH_K * dt);
+    curSpeed += (targetSpeed - curSpeed) * alpha;
+
+    // iOS-friendly scroll
+    const maxScroll = scroller.scrollHeight - scroller.clientHeight - 1;
+    _fracCarry += curSpeed * dt;
+    const stepInt = _fracCarry > 0 ? Math.floor(_fracCarry) : Math.ceil(_fracCarry);
+    if (stepInt !== 0){
+      scroller.scrollTop = Math.min(maxScroll, Math.max(0, scroller.scrollTop + stepInt));
+      _fracCarry -= stepInt;
+    }
+
+    if (scroller.scrollTop >= maxScroll){ stopAuto(); return; }
+    rafId = requestAnimationFrame(step);
+  }
+
+  // ----- engine control -----
+  function startAuto(){
+    if (running) return;
+    scroller = pickScroller();
+    if (!scroller) return;
+    running = true; lastTs = 0;
+    _fracCarry = 0;
+    curSpeed = targetSpeed;       // mulai dari nilai saat ini
+    showPill();
+    rafId = requestAnimationFrame(step);
+  }
+  function stopAuto(){
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = 0; lastTs = 0;
+    _fracCarry = 0;
+    hidePill();
+  }
+  function toggleAuto(){ running ? stopAuto() : startAuto(); }
+  window.cv_toggleAuto = toggleAuto; // export biar tombol Auto manapun bisa panggil
+
+  // ----- router/view hooks -----
+  window.addEventListener('cv:view', (e)=>{
+    const onPerf = e?.detail?.name === 'perf';
+    if (onPerf){
+      ensureUI();
+      hidePill(); // muncul saat user tekan "Auto"
+    } else {
+      stopAuto();
+    }
+  });
+
+  // init saat halaman siap
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', ensureUI);
+  } else {
+    ensureUI();
+  }
+})();
+</script>
+<!-- SVG SPRITE: Custom Vienaya Icons -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <!-- SONG -->
+  <symbol id="i-song-fill" viewBox="0 0 24 24">
+    <path d="M10 4v10.55a4 4 0 1 0 2 3.45V8h6V4h-8Z" fill="currentColor"/>
+  </symbol>
+  <!-- KEYS -->
+  <symbol id="i-keys-fill" viewBox="0 0 24 24">
+    <path d="M9 3h2v18H9V3Zm6 0h2v18h-2V3ZM3 9h18v2H3V9Zm0 6h18v2H3v-2Z" fill="currentColor"/>
+  </symbol>
+  <!-- BEAT -->
+  <symbol id="i-beat-fill" viewBox="0 0 24 24">
+    <path d="M6 21h12l-4-16h-4l-4 16Zm6-11 7-4-1-2-7 4v2Z" fill="currentColor"/>
+  </symbol>
+  <!-- FOLDER -->
+  <symbol id="i-folder-fill" viewBox="0 0 24 24">
+    <path d="M10 4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6Z" fill="currentColor"/>
+  </symbol>
+</svg>
+<script>
+(() => {
+  // --- Konfigurasi ---
+  const ROOT_VIEW = 'lib';           // anggap 'lib' sebagai halaman awal/root
+  const EXIT_WINDOW_MS = 1500;       // waktu double-back
+  const VALID = new Set(['ed','lib','perf']); // daftar view yang ada
+
+  // --- Ambil switchView asli ---
+  const _origSwitch = (window.cv_switchView || window.switchView);
+  if (!_origSwitch) return; // kalau tidak ada, stop
+
+  let fromPop = false;      // flag untuk mencegah push saat proses back
+  let exitArmed = false;    // status double-back
+  let exitTimer = null;
+
+  // Ganti switchView agar otomatis push ke history
+  function switchViewWithHistory(name, opts = {}) {
+    const push = (opts.push !== false) && !fromPop;
+    _origSwitch(name); // render UI seperti biasa
+
+    if (push) {
+      // dorong state layar ke history tanpa mengubah URL
+      history.pushState({ screen: name }, "");
+    }
+  }
+
+  // Ekspor kembali agar semua pemanggil pakai yang baru
+  window.switchView = switchViewWithHistory;
+  window.cv_switchView = switchViewWithHistory;
+
+  // Helper: tampilkan toast (fallback ke console kalau belum ada)
+  function toast(msg) {
+    if (typeof window.cvToast === 'function') window.cvToast(msg);
+    else console.log('[toast]', msg);
+  }
+
+  // Inisialisasi history:
+  // 1) set entry awal sebagai screen current (agar Back pertama tidak keluar app)
+  // 2) tambahkan "guard" di atasnya untuk mekanisme double-back
+  function initHistory() {
+    // Deteksi view aktif saat ini dari DOM (class "active") atau fallback ROOT_VIEW
+    let current = ROOT_VIEW;
+    try {
+      const active = document.querySelector('.view.active')?.id || '';
+      if (active.includes('editor')) current = 'ed';
+      if (active.includes('library')) current = 'lib';
+      if (active.includes('performance')) current = 'perf';
+    } catch {}
+
+    if (!VALID.has(current)) current = ROOT_VIEW;
+
+    // Ganti state sekarang menjadi {screen: current}
+    history.replaceState({ screen: current }, "");
+    // Tambahkan guard di atasnya
+    history.pushState({ guard: true }, "");
+  }
+
+  // Handler Back
+  window.addEventListener('popstate', (e) => {
+    const st = e.state || {};
+
+    // 1) Jika pop ke guard: ini adalah "percobaan keluar app"
+    if (st.guard) {
+      if (!exitArmed) {
+        exitArmed = true;
+        clearTimeout(exitTimer);
+        exitTimer = setTimeout(() => (exitArmed = false), EXIT_WINDOW_MS);
+        toast("Tekan sekali lagi untuk keluar");
+        // Dorong lagi guard supaya stack tetap terlindungi
+        history.pushState({ guard: true }, "");
+        return;
+      }
+      // Kedua kalinya dalam window → biarkan sistem keluar (jangan push guard lagi)
+      return;
+    }
+
+    // 2) Jika pop ke screen tertentu → render layar itu tanpa push lagi
+    if (st.screen && VALID.has(st.screen)) {
+      fromPop = true;
+      _origSwitch(st.screen);
+      fromPop = false;
+
+      // Kalau sampai di ROOT_VIEW dan belum armed → aktifkan guard + toast agar tidak langsung keluar
+      if (st.screen === ROOT_VIEW && !exitArmed) {
+        exitArmed = true;
+        clearTimeout(exitTimer);
+        exitTimer = setTimeout(() => (exitArmed = false), EXIT_WINDOW_MS);
+        toast("Tekan sekali lagi untuk keluar");
+        history.pushState({ guard: true }, "");
+      }
+      return;
+    }
+
+    // 3) Fallback: kalau state tidak jelas, kembalikan ke ROOT_VIEW
+    fromPop = true;
+    _origSwitch(ROOT_VIEW);
+    fromPop = false;
+    history.pushState({ guard: true }, "");
+  });
+
+  // Opsional: jika kamu punya tombol back in-app, panggil ini
+  window.cv_goBack = function () {
+    history.back();
+  };
+
+  // Jalankan setelah DOM siap (pastikan router kamu sudah jalan duluan)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHistory, { once: true });
+  } else {
+    initHistory();
+  }
+})();
+</script>
+<!--
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+-->
+
+<!-- ==== nonaktif sementara ====
+<script>
+  // --- Config project kamu (biarin sesuai yang dari Firebase Console) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyAhlfX1bkxg3f58u7i_bFMpG_rZya8hqeI",
+    authDomain: "auth.chordyv.com",
+    projectId: "chordyv-4c72d",
+    storageBucket: "chordyv-4c72d.firebasestorage.app",
+    messagingSenderId: "575225159933",
+    appId: "1:575225159933:web:fbe8931ddebe991f4b9e94",
+    measurementId: "G-00EKC1XLJ9"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+
+  // --- Helper DOM ---
+  const $ = (sel) => document.querySelector(sel);
+  const accountBox = $("#accountBox");
+  const googleBtnMount = $("#googleBtn");
+  const logoutBtn = $("#googleLogoutBtn");
+
+  function renderLoginButton() {
+    if (!googleBtnMount) return;
+    googleBtnMount.innerHTML = `
+      <button id="googleLoginBtn" class="ghost">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+             alt="" style="width:16px;height:16px;vertical-align:-3px;margin-right:8px;">
+        Sign in with Google
+      </button>`;
+    const loginBtn = document.getElementById("googleLoginBtn");
+    if (loginBtn) loginBtn.onclick = signInWithGoogle;
+  }
+
+  function setLoggedOutUI() {
+    if (accountBox) {
+      accountBox.innerHTML = `
+        <div class="user-info free">
+          <div class="name">Guest</div>
+          <div class="email">not logged in</div>
+        </div>`;
+    }
+    renderLoginButton();
+    if (logoutBtn) logoutBtn.style.display = "none";
+  }
+
+  function setLoggedInUI(user) {
+    const name = user.displayName || user.email || "User";
+    const pic  = user.photoURL
+      ? `<img src="${user.photoURL}" alt="" style="width:28px;height:28px;border-radius:50%;margin-right:8px;vertical-align:-6px">`
+      : "";
+    if (accountBox) {
+      accountBox.innerHTML = `
+        <div class="user-info">
+          <div class="name">${pic}${name}</div>
+          <div class="email">${user.email || ""}</div>
+        </div>`;
+    }
+    if (googleBtnMount) googleBtnMount.innerHTML = "";
+    if (logoutBtn)       logoutBtn.style.display = "inline-block";
+  }
+
+  async function signInWithGoogle() {
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider).catch(async (err) => {
+        if (err && (err.code === "auth/popup-blocked" || err.code === "auth/cancelled-popup-request")) {
+          await auth.signInWithRedirect(provider);
+        } else {
+          throw err;
+        }
+      });
+    } catch (e) {
+      console.error(e);
+      alert("Login gagal: " + e.message);
+    }
+  }
+
+  function signOutNow() {
+    auth.signOut().catch((e) => {
+      console.error(e);
+      alert("Gagal logout: " + e.message);
+    });
+  }
+
+  if (logoutBtn) logoutBtn.onclick = signOutNow;
+
+  auth.onAuthStateChanged((user) => {
+    if (user) setLoggedInUI(user);
+    else      setLoggedOutUI();
+  });
+
+  document.addEventListener("DOMContentLoaded", () => setLoggedOutUI());
+</script>
+
+<script>
+/* ===== AUTH ONLY (tanpa Firestore) ===== */
+firebase.auth().onAuthStateChanged((user)=>{
+  if (!user){
+    window.cvIsPro = false;
+    if (window.cvRefreshUI) window.cvRefreshUI();
+    return;
+  }
+  // saat user login, cek entitlement dari Play
+  window.restorePro?.();
+});
+</script>
+==== end nonaktif ==== -->
+<script>
+// =====================
+// 1. Toast System (new)
+// =====================
+(function(){
+  const el = document.createElement('div');
+  el.id = 'cvToast';
+  document.addEventListener('DOMContentLoaded', () => document.body.appendChild(el));
+
+  let hideTimer;
+  window.cvToast = function(msg, type='info', ms=2600){
+    const t = document.getElementById('cvToast') || el;
+    t.className = type;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => t.classList.remove('show'), ms);
+  };
+})();
+
+// =====================
+// 2. Modal Upgrade
+// =====================
+window.CV_SKU = window.CV_SKU || "premium_unlock";
+
+function openUpgrade(source){
+  const m = document.getElementById('cv_upgradeModal');
+  const t = document.getElementById('cv_upgradeTitle');
+  const titleMap = {
+    'upgrade-btn':'Upgrade to Pro',
+    'save-limit':'Save more with Pro',
+    'import':'Import is a Pro feature',
+    'export':'Export is a Pro feature'
+  };
+  if (t) t.textContent = titleMap[source] || 'Upgrade to Pro';
+  if (m) { m.classList.add('show'); m.setAttribute('aria-hidden','false'); }
+}
+
+function closeUpgrade(){
+  const m = document.getElementById('cv_upgradeModal');
+  if (m) { m.classList.remove('show'); m.setAttribute('aria-hidden','true'); }
+}
+
+window.showUpgradeModal = openUpgrade;
+window.hideUpgradeModal = closeUpgrade;
+
+// =====================
+// 3. Billing Handling
+// =====================
+const OUTER_CTA = '#cv_btnUpgrade';
+const INNER_BUY = '#cv_btnGetPro';
+
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const log   = (...a) => console.log('[Billing]', ...a);
+
+function setTierLabel(txt){
+  const el = document.querySelector('#cv_proStatus, #accountTier');
+  if (el) el.textContent = txt;
+}
+
+function showUpgradeCta(show = true, label = '✨ Upgrade to Pro') {
+  const cta = document.querySelector(OUTER_CTA);
+  if (!cta) return;
+  cta.hidden = !show;
+  cta.style.display = show ? 'block' : 'none';
+  if (label) cta.textContent = label;
+}
+
+function hasPro(purchases, sku){
+  if (!Array.isArray(purchases)) return false;
+  return purchases.some(p => {
+    const id = p?.sku ?? p?.productId ?? p?.itemId ?? p?.id;
+    return id === sku;
+  });
+}
+
+// =====================
+// 4. Restore Status
+// =====================
+async function restorePro({retries=5, delayMs=800} = {}) {
+  try {
+    if (!('getDigitalGoodsService' in window)) {
+      log('Digital Goods API unavailable');
+      setTierLabel('Free User');
+      showUpgradeCta(true, 'Install from Play for Pro');
+      window.cvIsPro = false;
+      return false;
+    }
+
+    const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
+
+    for (let i=0; i<=retries; i++){
+      const purchases = await dgs.listPurchases?.();
+      log('listPurchases try', i, purchases);
+
+      if (hasPro(purchases, window.CV_SKU)) {
+        setTierLabel('Premium User ✨');
+        window.cvIsPro = true;
+        showUpgradeCta(false);
+        log('Status: PRO');
+        return true;
+      }
+
+      if (i < retries) await sleep(delayMs);
+    }
+
+    setTierLabel('Free User');
+    window.cvIsPro = false;
+    showUpgradeCta(true, '✨ Upgrade to Pro');
+    log('Status: FREE');
+    return false;
+
+  } catch (err) {
+    console.error('[Billing][restore]', err);
+    setTierLabel('Free User');
+    window.cvIsPro = false;
+    showUpgradeCta(true, '✨ Upgrade to Pro');
+    return false;
+  }
+}
+
+// =====================
+// 5. Purchase Flow
+// =====================
+async function purchasePro() {
+  try {
+    if (!('getDigitalGoodsService' in window)) {
+      cvToast('Billing is only available when installed from Google Play.', 'info');
+      return;
+    }
+    if (!('PaymentRequest' in window)) {
+      cvToast('This device or Chrome does not support the Payment Request API.', 'error');
+      return;
+    }
+
+    const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
+    const details = await dgs.getDetails([window.CV_SKU]);
+    if (!details || !details.length) {
+      throw new Error('SKU not found on Play Console: ' + window.CV_SKU);
+    }
+
+    const request = new PaymentRequest(
+      [{
+        supportedMethods: 'https://play.google.com/billing',
+        data: { sku: window.CV_SKU }
+      }],
+      { total: { label: 'Total', amount: { currency: 'IDR', value: '0' } } }
+    );
+
+    const resp = await request.show();
+    await resp.complete('success');
+
+    await sleep(500);
+    await restorePro({ retries: 8, delayMs: 900 });
+
+    if (typeof closeUpgrade === 'function') closeUpgrade();
+    cvToast('🎉 Purchase successful! Pro features are now active.', 'success');
+
+  } catch (err) {
+    console.error('[Billing][purchase]', err?.name, err?.message, err);
+
+    if (err?.name === 'AbortError' || err?.message?.toLowerCase().includes('canceled')) {
+      cvToast('❌ Purchase canceled. You remain on the Free version.', 'info');
+      return;
+    }
+
+    cvToast(`⚠️ Purchase failed: ${err?.name || 'Error'} — ${err?.message || 'Unknown error'}`, 'error');
+  }
+}
+
+window.purchasePro = purchasePro;
+window.restorePro  = restorePro;
+
+// =====================
+// 6. Wire Buttons
+// =====================
+function wireButtons(){
+  const cta = document.querySelector(OUTER_CTA);
+  if (cta && !cta.dataset.wired) {
+    cta.addEventListener('click', (e) => {
+      e.preventDefault();
+      openUpgrade('upgrade-btn');
+    });
+    cta.dataset.wired = '1';
+  }
+
+  const buy = document.querySelector(INNER_BUY);
+  if (buy && !buy.dataset.wired) {
+    buy.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await purchasePro();
+    });
+    buy.dataset.wired = '1';
+  }
+
+  const later = document.getElementById('cv_btnMaybeLater');
+  if (later && !later.dataset.wired) {
+    later.addEventListener('click', (e) => { e.preventDefault(); closeUpgrade(); });
+    later.dataset.wired = '1';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', wireButtons);
+window.addEventListener('load', () => { wireButtons(); restorePro(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') { wireButtons(); restorePro(); }
+});
+</script>
+
+<style>
+  #cvToast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    min-width: 240px;
+    max-width: 90vw;
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.3;
+    box-shadow: 0 10px 25px rgba(0,0,0,.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease, bottom .18s ease;
+    z-index: 99999;
+  }
+  #cvToast.show { opacity: 1; bottom: 32px; }
+  #cvToast.success { background: #16a34a; }
+  #cvToast.info    { background: #2563eb; }
+  #cvToast.error   { background: #dc2626; }
+</style>
+</body>
+</html>
