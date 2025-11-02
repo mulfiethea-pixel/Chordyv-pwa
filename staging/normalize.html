@@ -1225,11 +1225,18 @@ if(homeBtn){
   });
 </script>
 <script>
+/* === Keys yang sudah dipakai === */
 const KEY_NORM_IN   = 'chordyv:norm:lastIn';
 const KEY_NORM_OUT  = 'chordyv:norm:lastOut';
 const KEY_QGLOBAL   = 'chordyv:qGlobal';
 const KEY_PER_ROW   = 'chordyv:norm:perRow';
+const KEY_GRIDSTATE = 'chordyv:norm:grid:v1';
 
+/* === Flag resume: tandai bahwa user datang dari "Send to Editor" === */
+const KEY_RESUME    = 'chordyv:norm:resume';
+
+/* === Util save yang ada === */
+// (pastikan fungsi ini sudah ada; kalau belum, tempel saja)
 function saveNormState(){
   const raw  = document.getElementById('raw')?.value ?? '';
   const qSel = document.getElementById('qGlobal')?.value;
@@ -1238,48 +1245,66 @@ function saveNormState(){
   if (qSel != null) localStorage.setItem(KEY_QGLOBAL, String(qSel));
   if (pr   != null) localStorage.setItem(KEY_PER_ROW, String(pr));
 }
-
-/* === Restore full UI + paksa analyze === */
-document.addEventListener('DOMContentLoaded', () => {
-  const rawEl = document.getElementById('raw');
-  const outEl = document.getElementById('out');
-  const qSel  = document.getElementById('qGlobal');
-  const prSel = document.getElementById('normBarsPerRow');
-
-  const qSaved  = localStorage.getItem(KEY_QGLOBAL);
-  const prSaved = localStorage.getItem(KEY_PER_ROW);
-  const savedIn  = localStorage.getItem(KEY_NORM_IN);
-  const savedOut = localStorage.getItem(KEY_NORM_OUT);
-
-  if (qSel && qSaved != null && Array.from(qSel.options).some(o=>o.value===qSaved)) qSel.value = qSaved;
-  if (prSel && prSaved != null && Array.from(prSel.options).some(o=>o.value===prSaved)) prSel.value = prSaved;
-
-  if (rawEl && savedIn  != null) rawEl.value = savedIn;
-  if (outEl && savedOut != null) outEl.textContent = savedOut;
-
-  // PAKSA bangun ulang Analyze setelah nilai select & textarea sudah terisi
-  if (typeof window.analyze === 'function') {
-    requestAnimationFrame(()=>{ try{ window.analyze(); }catch{} });
-  }
-});
-
-/* Simpan saat user mengubah kontrol */
-document.getElementById('raw')?.addEventListener('input', e=>{
-  localStorage.setItem(KEY_NORM_IN, e.target.value || '');
-});
-document.getElementById('qGlobal')?.addEventListener('change', e=>{
-  localStorage.setItem(KEY_QGLOBAL, String(e.target.value));
-  if (typeof window.analyze === 'function') { try{ window.analyze(); }catch{} }
-});
-document.getElementById('normBarsPerRow')?.addEventListener('change', e=>{
-  localStorage.setItem(KEY_PER_ROW, String(e.target.value));
-});
-
-/* Simpan OUT setelah normalize */
+function saveGridState(){
+  try{
+    const payload = (state.sections||[]).map(sec=>({
+      label: sec.label,
+      lines: (sec.lines||[]).map(ln=>({
+        bars: Number(ln.bars)||1,
+        grid: Array.isArray(ln.grid)? ln.grid : [],
+        lyric: ln.lyric || '',
+        activeChord: ln.activeChord || null
+      }))
+    }));
+    localStorage.setItem(KEY_GRIDSTATE, JSON.stringify(payload));
+  }catch(e){}
+}
 function afterNormalizeHook(){
   const out = (document.getElementById('out')?.textContent || '').trim();
   localStorage.setItem(KEY_NORM_OUT, out);
 }
+
+/* === Auto-save paket lengkap === */
+function saveAll(){
+  if (typeof saveNormState === 'function') saveNormState();
+  if (typeof saveGridState === 'function') saveGridState();
+  if (typeof afterNormalizeHook === 'function') afterNormalizeHook();
+}
+
+/* === Aktifkan auto-save saat user klik "Send to Editor" === */
+(() => {
+  const btn = document.getElementById('btnSend');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    // Simpan semua state + tandai resume
+    saveAll();
+    localStorage.setItem(KEY_RESUME, '1');
+    // ...lanjutkan logic kirim OUT + redirect milikmu di listener ini...
+  }, { capture: true }); // pastikan ini kepanggil duluan
+})();
+
+/* === Cadangan: auto-save saat tab ditutup/di-switch === */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') saveAll();
+});
+window.addEventListener('pagehide', saveAll);
+
+/* === Saat kembali ke halaman normalize ===
+   Restore biasa + kalau ada flag resume, fokuskan ke yang kamu mau */
+document.addEventListener('DOMContentLoaded', () => {
+  const fromResume = localStorage.getItem(KEY_RESUME) === '1';
+
+  // ...di sini jalankan restore yang sudah kamu punya:
+  // - set qGlobal, normBarsPerRow dari storage
+  // - isi #raw, #out
+  // - requestAnimationFrame(() => analyze(); loadGridStateMerge(); )
+
+  // contoh fokus opsional:
+  if (fromResume) {
+    document.getElementById('sec-analyze')?.scrollIntoView({behavior:'smooth', block:'start'});
+    localStorage.removeItem(KEY_RESUME); // bersihkan flag
+  }
+});
 </script>
 <script>
 /* Analyze: pastikan state tersimpan meski user belum mengetik */
