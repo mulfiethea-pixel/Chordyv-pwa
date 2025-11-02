@@ -4416,49 +4416,47 @@ document.addEventListener('visibilitychange', () => {
   #cvToast.error   { background: #dc2626; }
 </style>
 <script>
-/* ==== Boot: bila datang dari Normalize (#ed), paksa buka Editor, lalu tempel hasil ==== */
-(function () {
-  window.addEventListener('load', () => {
-    const fromNormalize = (location.hash === '#ed');
-    const incoming = localStorage.getItem('chordyv:incoming');
-    if (!fromNormalize && !incoming) return;
+/* ====== 1) Klik tombol Normalize → buka form normalize (delegation) ====== */
+const CV_IS_STAGING = location.pathname.includes('/staging');
 
-    // Pastikan masuk ke view Editor
-    if (typeof window.cv_switchView === 'function') {
-      window.cv_switchView('ed');
-    } else {
-      document.getElementById('editorView')?.classList.add('active');
-      document.getElementById('editorView')?.scrollIntoView({behavior:'instant'});
-    }
-
-    // Setelah view aktif, tempel datanya
-    setTimeout(() => {
-      const editor = document.getElementById('ed_content') || document.getElementById('raw');
-      if (editor && incoming) {
-        editor.value = incoming;
-        if (typeof window.analyze === 'function') {
-          try { window.analyze(); } catch (e) {}
-        }
-        editor.focus();
-        editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        localStorage.removeItem('chordyv:incoming');
-      }
-    }, 50);
-  });
-})();
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('cv_btnNormalize');
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('#cv_btnNormalize');
   if (!btn) return;
 
-  const IS_STAGING = location.pathname.includes('/staging');
-  const HOST = 'https://mulfiethea-pixel.github.io/Chordyv-pwa';
-  const target = IS_STAGING
-    ? `${HOST}/staging/normalize.html`
-    : `${HOST}/normalize.html`;
+  // karena <base href="/Chordyv-pwa/"> sudah ada, relative path cukup:
+  const target = CV_IS_STAGING ? 'staging/normalize.html' : 'normalize.html';
+  location.href = target;
+});
 
-  btn.addEventListener('click', () => { location.href = target; });
+
+/* ====== 2) Balik dari normalize → paksa buka Editor & tempel hasil ====== */
+window.addEventListener('load', () => {
+  const incoming = localStorage.getItem('chordyv:incoming');
+  const fromNormalize = (location.hash === '#ed');
+  if (!incoming && !fromNormalize) return;
+
+  // Pastikan view Editor aktif (SPA kamu default ke 'lib')
+  if (typeof window.cv_switchView === 'function') {
+    try { window.cv_switchView('ed'); } catch {}
+  }
+
+  // Tunggu editor jadi, lalu tempel
+  const t0 = Date.now();
+  const tryFill = () => {
+    const editor = document.getElementById('ed_content') || document.getElementById('raw');
+    if (!editor) {
+      if (Date.now() - t0 < 3000) return requestAnimationFrame(tryFill);
+      return; // timeout aman
+    }
+    if (incoming) {
+      editor.value = incoming;
+      if (typeof window.analyze === 'function') { try { window.analyze(); } catch {} }
+      editor.focus();
+      editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      localStorage.removeItem('chordyv:incoming');
+    }
+  };
+  tryFill();
 });
 </script>
 </body>
