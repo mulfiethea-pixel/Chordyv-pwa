@@ -1697,6 +1697,46 @@ body.theme-navy {
   flex-shrink: 0 !important;
   display: block !important;
 }
+/* --- Normalize button: hard override --- */
+button#cv_btnNormalize.btn-normalize {
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: .95rem;
+  padding: 8px 16px;
+  border-radius: 12px !important;
+
+  /* Kunci warna & layer agar tak “ketarik” class .btn lama */
+  background: linear-gradient(180deg,#5aa3ff 0%,#3d7df5 55%,#2f6fe8 100%) !important;
+  color: #fff !important;
+  border: 1px solid rgba(59,130,246,.25) !important;
+  box-shadow: 0 6px 14px rgba(37,99,235,.25), inset 0 1px 0 rgba(255,255,255,.4) !important;
+
+  /* Matikan efek “pucat” dari rule lain */
+  opacity: 1 !important;
+  filter: none !important;
+  pointer-events: auto !important;
+  text-shadow: none !important;
+  transform: none !important;
+  transition: filter .18s ease;
+}
+button#cv_btnNormalize.btn-normalize:hover { filter: brightness(1.07) !important; }
+button#cv_btnNormalize.btn-normalize .sec-icon{
+  width:16px;height:16px;stroke:currentColor;stroke-width:1.8;fill:none;
+}
+
+/* Jika di dalam .seg, rapikan spacing */
+.seg button#cv_btnNormalize.btn-normalize { margin-left: 8px; }
+
+/* Dark theme harmony */
+body.premium-dark button#cv_btnNormalize.btn-normalize{
+  background: linear-gradient(180deg,#4f8cff 0%,#2b6af0 60%,#255be0 100%) !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.22) !important;
+}
 </style>
 </head>
 
@@ -1997,36 +2037,36 @@ else
   cv_onViewInit('ed', ()=>{
     const wrap=document.getElementById('editorView');
     wrap.innerHTML = `
-      <div class="card">
-        <div class="form-grid">
-          <div>
-            <label>song title</label>
-            <input id="ed_title" type="text" placeholder="Song title"/>
-          </div>
-          <div>
-            <label>Key</label>
-            <select id="ed_key"></select>
-          </div>
-          <div>
-            <label>Preset Beat</label>
-           <div class="beat-group">
-  <button type="button" class="preset-beat is-selected" data-beat="2/4">2/4</button>
-  <button type="button" class="preset-beat" data-beat="3/4">3/4</button>
-  <button type="button" class="preset-beat" data-beat="4/4">4/4</button>
-  <button type="button" class="preset-beat" data-beat="6/8">6/8</button>
-</div>
-          </div>
-        </div>
-      </div>
+    <div class="card">
+  <div class="form-grid">
+    <div>
+      <label>Song title</label>
+      <input id="ed_title" type="text" placeholder="Song title" />
+    </div>
 
-      <div class="card">
+    <div>
+      <label>Key</label>
+      <select id="ed_key"></select>
+    </div>
+
+    <div>
+      <label>Preset Beat</label>
+      <div class="beat-group">
+        <button type="button" class="preset-beat is-selected" data-beat="2/4">2/4</button>
+        <button type="button" class="preset-beat" data-beat="3/4">3/4</button>
+        <button type="button" class="preset-beat" data-beat="4/4">4/4</button>
+        <button type="button" class="preset-beat" data-beat="6/8">6/8</button>
+      </div>
+    </div>
+  </div>
+</div>
 
   <!-- Bar khusus notasi -->
-  <div class="note-bar" style="margin-bottom:8px;">
-    <button id="ed_note_halfbeat"   title="Not 1/2 ketuk (eighth)">♪</button>
+  <div class="note-bar" style="margin-bottom: 8px;">
+    <button id="ed_note_halfbeat" title="Not 1/2 ketuk (eighth)">♪</button>
     <button id="ed_note_quarterbeat" title="Not 1/4 ketuk (sixteenth)">♬</button>
   </div>
-
+</div>
   <!-- Bar tombol editor -->
   <div class="shortcut-bar">
     <button id="ed_btnPipe">|</button>
@@ -2047,18 +2087,24 @@ else
   <!-- FAB tetap terpisah -->
   <button id="ed_btnNew" class="cv-fab" title="New song"></button>
 
-  <!-- Group: Save / Library / Open jadi kapsul -->
-  <div class="seg tight">
-    <button id="ed_btnSave"    class="btn primary">Save</button>
-    <button id="ed_btnLibrary" class="btn ghost">Library</button>
-    <button id="ed_btnPerf"    class="btn ghost">Open</button>
-  </div>
-
-  <div class="grow"></div>
+<!-- Group: Save / Library / Open jadi kapsul -->
+<div class="seg tight">
+  <button id="ed_btnSave"    class="btn primary">Save</button>
+  <button id="ed_btnLibrary" class="btn ghost">Library</button>
+  <button id="ed_btnPerf"    class="btn ghost">Open</button>
 </div>
-      </div>
-    `;
 
+<!-- Tombol Normalize berdiri sendiri tapi masih sejajar -->
+<button id="cv_btnNormalize" class="btn-normalize" type="button">
+  <svg class="sec-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>
+    <path d="m8 16 8-8M9 7l-1-1M16 18l1 1"/>
+  </svg>
+  Normalize
+</button>
+
+<div class="grow"></div>
+    `;
     let db=cv_loadDB();
     let currentId=localStorage.getItem('cv_edit_id')||null;
     let beatPreset=4;
@@ -4369,5 +4415,43 @@ document.addEventListener('visibilitychange', () => {
   #cvToast.info    { background: #2563eb; }
   #cvToast.error   { background: #dc2626; }
 </style>
+<script>
+/* ===== Env flag (staging/prod) – tulis SEKALI di atas semua listener ===== */
+const CV_IS_STAGING = location.pathname.includes('/staging');
+
+/* ===== Listener: Normalize (buka form normalize) ===== */
+(() => {
+  const btn = document.getElementById('cv_btnNormalize');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const base = `${location.origin}/Chordyv-pwa/`;
+    const url  = CV_IS_STAGING ? `${base}staging/normalize.html` : `${base}normalize.html`;
+    location.href = url;
+  });
+})();
+
+/* ===== Receive data from Normalize → tempel ke editor ===== */
+document.addEventListener('DOMContentLoaded', () => {
+  const incoming = localStorage.getItem('chordyv:incoming');
+  if (!incoming) return;
+
+  // Cari textarea editor (id: #ed_content atau #raw)
+  const editor = document.getElementById('ed_content') || document.getElementById('raw');
+  if (editor) {
+    editor.value = incoming;
+
+    // Optional: auto-run analyze kalau fungsinya ada
+    if (typeof window.analyze === 'function') {
+      try { window.analyze(); } catch (e) { console.warn('Analyze auto-run gagal', e); }
+    }
+
+    editor.focus();
+    editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // Bersihkan biar gak nyangkut reload berikutnya
+  localStorage.removeItem('chordyv:incoming');
+});
+</script>
 </body>
 </html>
