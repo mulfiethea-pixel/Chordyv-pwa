@@ -4418,18 +4418,18 @@ document.addEventListener('visibilitychange', () => {
 <script>
 /* ===== Env flag (staging/prod) – tulis SEKALI ===== */
 const CV_IS_STAGING = location.pathname.includes('/staging');
-
-/* ===== Listener: Normalize (buka form normalize) ===== */
-(() => {
+document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('cv_btnNormalize');
   if (!btn) return;
-  btn.addEventListener('click', () => {
-    const base = `${location.origin}/Chordyv-pwa/`;
-    const url  = CV_IS_STAGING ? `${base}staging/normalize.html`
-                                : `${base}normalize.html`;
-    location.href = url;
-  });
-})();
+
+  // Karena head sudah pakai <base href="/Chordyv-pwa/">,
+  // kita cukup pakai relative path:
+  const target = location.pathname.includes('/staging')
+    ? 'staging/normalize.html'
+    : 'normalize.html';
+
+  btn.addEventListener('click', () => { location.href = target; });
+});
 
 /* ===== Receive dari Normalize → tempel ke editor ===== */
 document.addEventListener('DOMContentLoaded', () => {
