@@ -4459,5 +4459,89 @@ window.addEventListener('load', () => {
   tryFill();
 });
 </script>
+<!-- === PATCH: Limit Normalize ke 3x untuk Free (terintegrasi Billing/Auth) === -->
+<script>
+(function(){
+  // Hanya untuk MENGHITUNG klik normalize user Free (bukan status Pro)
+  const KEY_NORM_COUNT = 'cv_norm_count';
+  const MAX_FREE = 3;                  // 3x free; ke-4 → tampilkan modal upgrade
+  const BTN_SEL = '#cv_btnNormalize';  // id tombol Normalize di Editor
+
+  // Buka modal upgrade (pakai sistem modal yang sudah ada)
+  function openNormalizeUpgrade(){
+    // Pakai alasan khusus "normalize-limit" → fallback ke "Upgrade to Pro" kalau titleMap tak punya key ini.
+    if (typeof window.showUpgradeModal === 'function') {
+      window.showUpgradeModal('normalize-limit');
+    } else if (typeof window.openUpgrade === 'function') {
+      window.openUpgrade('normalize-limit');
+    } else {
+      // fallback super minimal kalau modal belum ter-wire (harusnya sudah ada di file kamu)
+      alert('Upgrade to Pro to use Normalize more than 3 times.');
+    }
+  }
+
+  // Reset counter kalau user sudah Pro (biar bersih)
+  function resetIfPro(){
+    if (window.cvIsPro) {
+      try { localStorage.removeItem(KEY_NORM_COUNT); } catch {}
+    }
+  }
+
+  // Pasang guard ke tombol Normalize
+  function wireNormalizeGate(){
+    const btn = document.querySelector(BTN_SEL);
+    if (!btn || btn.dataset.normGateWired === '1') return;
+
+    // Pakai capture=true supaya handler ini jalan duluan
+    btn.addEventListener('click', function(e){
+      // Kalau Pro → bebas
+      if (window.cvIsPro) return;
+
+      // Hitung jatah Free
+      let count = 0;
+      try { count = parseInt(localStorage.getItem(KEY_NORM_COUNT) || '0', 10) || 0; } catch {}
+
+      if (count >= MAX_FREE){
+        // Sudah melewati jatah → blokir aksi asli & tampilkan modal
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        openNormalizeUpgrade();
+        return;
+      }
+
+      // Masih dalam jatah → biarkan handler asli jalan, lalu increment di tick berikutnya
+      setTimeout(()=>{
+        try {
+          const cur = parseInt(localStorage.getItem(KEY_NORM_COUNT) || '0', 10) || 0;
+          localStorage.setItem(KEY_NORM_COUNT, String(cur + 1));
+        } catch {}
+      }, 0);
+    }, true);
+
+    btn.dataset.normGateWired = '1';
+  }
+
+  // Inisialisasi saat halaman siap
+  document.addEventListener('DOMContentLoaded', function(){
+    resetIfPro();        // bersihkan counter jika sudah Pro
+    wireNormalizeGate(); // pasang limiter
+  });
+
+  // Kalau app kamu mengubah view secara SPA, jaga-jaga saat kembali ke Editor
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') {
+      resetIfPro();
+      wireNormalizeGate();
+    }
+  });
+
+  // (Opsional) helper debug di console:
+  window.cv_normDebug = function(v){
+    if (typeof v === 'number') localStorage.setItem(KEY_NORM_COUNT, String(v));
+    return {count: Number(localStorage.getItem(KEY_NORM_COUNT) || 0), isPro: !!window.cvIsPro};
+  };
+})();
+</script>
+<!-- === END PATCH === -->
 </body>
 </html>
