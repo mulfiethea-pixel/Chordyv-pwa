@@ -4428,20 +4428,35 @@ document.addEventListener('click', (e) => {
   const target = CV_IS_STAGING ? 'staging/normalize.html' : 'normalize.html';
   location.href = target;
 });
-
-/* ===== Receive dari Normalize → tempel ke editor ===== */
 document.addEventListener('DOMContentLoaded', () => {
-  const incoming = localStorage.getItem('chordyv:incoming');
-  if (!incoming) return;
+  const payload = localStorage.getItem('chordyv:incoming');
+  if (!payload) return;
 
-  const editor = document.getElementById('ed_content') || document.getElementById('raw');
-  if (editor) {
-    editor.value = incoming;
-    if (typeof window.analyze === 'function') { try { window.analyze(); } catch(e){} }
-    editor.focus();
-    editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // kalau dapat hint hash, set tapi jangan paksa reload
+  if (!location.hash || location.hash.toLowerCase() !== '#ed') {
+    try { history.replaceState(null, '', '#ed'); } catch {}
   }
-  localStorage.removeItem('chordyv:incoming');
+
+  function tryFill(){
+    const editor = document.getElementById('ed_content') || document.getElementById('raw');
+    if (!editor) return false;
+
+    editor.value = payload;
+    if (typeof window.analyze === 'function') { try { window.analyze(); } catch {} }
+    editor.focus();
+    editor.scrollIntoView({ behavior:'smooth', block:'center' });
+
+    localStorage.removeItem('chordyv:incoming');
+    return true;
+  }
+
+  // langsung coba; kalau belum ada, polling sebentar sampai UI editor jadi
+  if (!tryFill()){
+    const t0 = Date.now();
+    const timer = setInterval(() => {
+      if (tryFill() || Date.now() - t0 > 3000) clearInterval(timer);
+    }, 120);
+  }
 });
 </script>
 </body>

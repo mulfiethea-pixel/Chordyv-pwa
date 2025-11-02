@@ -1085,16 +1085,21 @@ document.getElementById('btnHome').onclick = () => {
     ? 'https://mulfiethea-pixel.github.io/Chordyv-pwa/staging/'
     : 'https://mulfiethea-pixel.github.io/Chordyv-pwa/';
 };
+document.getElementById('btnSend')?.addEventListener('click', () => {
+  const out = (document.getElementById('out')?.innerText || '').trim();
+  if (!out) { alert('Belum ada hasil yang bisa dikirim!'); return; }
 
-/* ===== Listener: Send to Editor ===== */
-document.getElementById('btnSend').onclick = () => {
-  const text = document.getElementById('out').innerText.trim();
-  if (!text) return alert('Belum ada hasil!');
-  localStorage.setItem('chordyv:incoming', text);
-  location.href = isStaging
-    ? 'https://mulfiethea-pixel.github.io/Chordyv-pwa/staging/'
-    : 'https://mulfiethea-pixel.github.io/Chordyv-pwa/';
-};
+  // simpan hasil normalize
+  localStorage.setItem('chordyv:incoming', out);
+
+  // absolute target biar tidak nyasar ke root
+  const BASE = 'https://mulfiethea-pixel.github.io/Chordyv-pwa';
+  const target = location.pathname.includes('/staging')
+    ? `${BASE}/staging/#ed`
+    : `${BASE}/#ed`;
+
+  location.href = target;
+});
 /* ===== Global Quantize ===== */
 $('#qGlobal').addEventListener('change', ()=>{
   const u=getGlobalQuant();
