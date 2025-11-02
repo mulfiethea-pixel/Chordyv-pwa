@@ -1223,54 +1223,63 @@ if(homeBtn){
   });
 </script>
 <script>
-/* ===== Persist Normalize (full sections) ===== */
+/* ===== Persist Normalize (full sections) — versi stabil ===== */
 const KEY_NORM_IN   = 'chordyv:norm:lastIn';
 const KEY_NORM_OUT  = 'chordyv:norm:lastOut';
 const KEY_QGLOBAL   = 'chordyv:qGlobal';
 const KEY_PER_ROW   = 'chordyv:norm:perRow';
 
 document.addEventListener('DOMContentLoaded', () => {
-  const rawEl   = document.getElementById('raw');
-  const outEl   = document.getElementById('out');
-  const qSel    = document.getElementById('qGlobal');
-  const perRow  = document.getElementById('normBarsPerRow');
+  const rawEl  = document.getElementById('raw');
+  const outEl  = document.getElementById('out');
+  const qSel   = document.getElementById('qGlobal');
+  const prSel  = document.getElementById('normBarsPerRow');
 
-  // 1) Pulihkan pilihan kontrol dulu (quantize & bars/row)
-  const qSaved   = localStorage.getItem(KEY_QGLOBAL);
-  const prSaved  = localStorage.getItem(KEY_PER_ROW);
-  if (qSel && qSaved != null)  { qSel.value = qSaved; }
-  if (perRow && prSaved != null) { perRow.value = prSaved; }
+  // 1) Pulihkan pilihan kontrol (dengan validasi)
+  const qSaved  = localStorage.getItem(KEY_QGLOBAL);
+  const prSaved = localStorage.getItem(KEY_PER_ROW);
 
-  // 2) Pulihkan RAW + OUT
+  if (qSel && qSaved != null) {
+    // hanya set kalau ada di option
+    const ok = Array.from(qSel.options).some(o => o.value === qSaved);
+    qSel.value = ok ? qSaved : qSel.value; // jangan isi nilai "liar"
+  }
+  if (prSel && prSaved != null) {
+    const ok = Array.from(prSel.options).some(o => o.value === prSaved);
+    prSel.value = ok ? prSaved : prSel.value;
+  }
+
+  // 2) Pulihkan RAW & OUT
   const savedIn  = localStorage.getItem(KEY_NORM_IN);
   const savedOut = localStorage.getItem(KEY_NORM_OUT);
-  if (rawEl  && savedIn  != null) rawEl.value = savedIn;
-  if (outEl  && savedOut != null) outEl.textContent = savedOut;
 
-  // 3) Bangun ulang ANALYZE GRID dari RAW + Q
-  //   (tidak mengubah #out; hanya merender ulang analisisnya)
-  if (savedIn && typeof window.analyze === 'function') {
-    try { window.analyze(); } catch(e){}
+  if (rawEl && savedIn != null)  rawEl.value = savedIn;
+  if (outEl && savedOut != null) outEl.textContent = savedOut;
+
+  // 3) SELALU render ulang Analyze setelah semua value masuk
+  //    (pakai rAF biar DOM & value select sudah settle)
+  if (typeof window.analyze === 'function') {
+    requestAnimationFrame(() => {
+      try { window.analyze(); } catch {}
+    });
   }
 });
 
-/* Simpan saat user ubah RAW */
+/* Simpan saat #raw berubah */
 document.getElementById('raw')?.addEventListener('input', (e)=>{
   localStorage.setItem(KEY_NORM_IN, e.target.value || '');
 });
 
-/* Simpan saat user ubah Quantize & Bars/row */
+/* Simpan saat Quantize & Bars/row berubah */
 document.getElementById('qGlobal')?.addEventListener('change', (e)=>{
   localStorage.setItem(KEY_QGLOBAL, String(e.target.value));
-  // opsional: langsung bangun ulang grid
-  if (typeof window.analyze === 'function') { try { window.analyze(); } catch(e){} }
+  if (typeof window.analyze === 'function') { try { window.analyze(); } catch {} }
 });
 document.getElementById('normBarsPerRow')?.addEventListener('change', (e)=>{
   localStorage.setItem(KEY_PER_ROW, String(e.target.value));
-  // kamu sudah punya listener normalize() sendiri; biarkan apa adanya
 });
 
-/* Panggil ini DI AKHIR normalize() setelah menulis #out */
+/* Panggil ini DI AKHIR normalize() (setelah menulis #out) */
 function afterNormalizeHook(){
   const out = (document.getElementById('out')?.textContent || '').trim();
   localStorage.setItem(KEY_NORM_OUT, out);
