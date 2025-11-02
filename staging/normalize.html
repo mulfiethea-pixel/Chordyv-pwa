@@ -1118,29 +1118,40 @@ $('#qGlobal').addEventListener('change', ()=>{
 /* ===== Normalize (slot kosong = '.', bar terakhir juga pakai '|') ===== */
 function normalize(){
   if(!state.sections.length) analyze();
-  const units = Number(document.getElementById('qGlobal')?.value)||4;
-  const perRow = Math.max(1, Math.min(8, +(document.getElementById('normBarsPerRow')?.value)||2));
+
+  const units  = Number(document.getElementById('qGlobal')?.value) || 4;
+  const perRow = Math.max(1, Math.min(8, +(document.getElementById('normBarsPerRow')?.value) || 2));
   const out = [];
+
   state.sections.forEach(sec=>{
-    const sectionSegs=[];
+    const sectionSegs = [];
     (sec.lines||[]).forEach(ln=>{
-      const bars = Math.max(1, Number(ln.bars)||1);
+      const bars  = Math.max(1, Number(ln.bars)||1);
       const total = units * bars;
-      const grid = (ln.grid||[]).slice(0,total).map(x=>x&&x.trim()?x.trim():'.');
-      for(let b=0;b<bars;b++){
-        const seg = grid.slice(b*units,b*units+units).join(' ');
-        sectionSegs.push(seg+' |');
+      const grid  = (ln.grid||[]).slice(0, total).map(x => x && x.trim() ? x.trim() : '.');
+      for (let b=0; b<bars; b++){
+        const seg = grid.slice(b*units, b*units + units).join(' ');
+        sectionSegs.push(seg + ' |');
       }
     });
+
     out.push(`[${sec.label}]`);
-    for(let i=0;i<sectionSegs.length;i+=perRow){
-      out.push(sectionSegs.slice(i,i+perRow).join(' '));
+    for (let i=0; i<sectionSegs.length; i+=perRow){
+      out.push(sectionSegs.slice(i, i+perRow).join(' '));
     }
     out.push('');
   });
+
+  // tulis hasil
   document.getElementById('out').textContent = out.join('\n');
+
+  // simpan hasil terakhir (pastikan fungsi tersedia)
+  if (typeof afterNormalizeHook === 'function') {
+    afterNormalizeHook();
+  }
 }
 
+// listeners
 document.getElementById('btnNormalize').onclick = normalize;
 document.getElementById('normBarsPerRow')?.addEventListener('change', normalize);
 /* ===== Buttons (aman) ===== */
@@ -1210,6 +1221,37 @@ if(homeBtn){
   document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('sections-animate');
   });
+</script>
+<script>
+/* ===== Persist last input/output (Normalize) ===== */
+const KEY_NORM_IN  = 'chordyv:norm:lastIn';
+const KEY_NORM_OUT = 'chordyv:norm:lastOut';
+
+/* Restore saat halaman dibuka */
+document.addEventListener('DOMContentLoaded', () => {
+  const rawEl = document.getElementById('raw');
+  const outEl = document.getElementById('out');
+
+  const savedIn  = localStorage.getItem(KEY_NORM_IN);
+  const savedOut = localStorage.getItem(KEY_NORM_OUT);
+
+  if (rawEl && savedIn != null)  rawEl.value = savedIn;
+  if (outEl && savedOut != null) outEl.textContent = savedOut;
+
+  // opsional: kalau mau langsung render grid saat balik (kalau ada input)
+  // if (savedIn) { try { analyze(); } catch(e){} }
+});
+
+/* Simpan input setiap ketik */
+document.getElementById('raw')?.addEventListener('input', (e) => {
+  localStorage.setItem(KEY_NORM_IN, e.target.value || '');
+});
+
+/* Dipanggil setiap selesai normalize */
+function afterNormalizeHook(){
+  const out = (document.getElementById('out')?.textContent || '').trim();
+  localStorage.setItem(KEY_NORM_OUT, out);
+}
 </script>
 </body>
 </html>
