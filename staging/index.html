@@ -4416,7 +4416,7 @@ document.addEventListener('visibilitychange', () => {
   #cvToast.error   { background: #dc2626; }
 </style>
 <script>
-/* ===== Env flag (staging/prod) – tulis SEKALI di atas semua listener ===== */
+/* ===== Env flag (staging/prod) – tulis SEKALI ===== */
 const CV_IS_STAGING = location.pathname.includes('/staging');
 
 /* ===== Listener: Normalize (buka form normalize) ===== */
@@ -4425,51 +4425,26 @@ const CV_IS_STAGING = location.pathname.includes('/staging');
   if (!btn) return;
   btn.addEventListener('click', () => {
     const base = `${location.origin}/Chordyv-pwa/`;
-    const url  = CV_IS_STAGING ? `${base}staging/normalize.html` : `${base}normalize.html`;
+    const url  = CV_IS_STAGING ? `${base}staging/normalize.html`
+                                : `${base}normalize.html`;
     location.href = url;
   });
 })();
 
-/* ===== Receive data from Normalize → tempel ke editor ===== */
+/* ===== Receive dari Normalize → tempel ke editor ===== */
 document.addEventListener('DOMContentLoaded', () => {
   const incoming = localStorage.getItem('chordyv:incoming');
   if (!incoming) return;
 
-  // Cari textarea editor (id: #ed_content atau #raw)
   const editor = document.getElementById('ed_content') || document.getElementById('raw');
   if (editor) {
     editor.value = incoming;
-
-    // Optional: auto-run analyze kalau fungsinya ada
-    if (typeof window.analyze === 'function') {
-      try { window.analyze(); } catch (e) { console.warn('Analyze auto-run gagal', e); }
-    }
-
+    if (typeof window.analyze === 'function') { try { window.analyze(); } catch(e){} }
     editor.focus();
     editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-
-  // Bersihkan biar gak nyangkut reload berikutnya
   localStorage.removeItem('chordyv:incoming');
 });
-</script>
-<script>
-/* ===== Env flag (staging / prod) – tulis SEKALI ===== */
-const CV_IS_STAGING = location.pathname.includes('/staging');
-
-/* ===== Listener: Tombol Normalize (buka form normalize) ===== */
-(() => {
-  const btn = document.getElementById('cv_btnNormalize');
-  if (!btn) return;
-
-  btn.addEventListener('click', () => {
-    const base = `${location.origin}/Chordyv-pwa/`;
-    const url = CV_IS_STAGING
-      ? `${base}staging/normalize.html`
-      : `${base}normalize.html`;
-    location.href = url;
-  });
-})();
 </script>
 </body>
 </html>
