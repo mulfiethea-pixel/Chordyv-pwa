@@ -1144,11 +1144,8 @@ function normalize(){
 
   // tulis hasil
   document.getElementById('out').textContent = out.join('\n');
-
-  // simpan hasil terakhir (pastikan fungsi tersedia)
-  if (typeof afterNormalizeHook === 'function') {
-    afterNormalizeHook();
-  }
+  saveNormState();
+  if (typeof afterNormalizeHook === 'function') afterNormalizeHook();
 }
 
 // listeners
@@ -1223,49 +1220,55 @@ if(homeBtn){
   });
 </script>
 <script>
-/* ===== Persist Normalize (full sections) — versi stabil ===== */
+/* ===== Persist Normalize (full sections) ===== */
 const KEY_NORM_IN   = 'chordyv:norm:lastIn';
 const KEY_NORM_OUT  = 'chordyv:norm:lastOut';
 const KEY_QGLOBAL   = 'chordyv:qGlobal';
 const KEY_PER_ROW   = 'chordyv:norm:perRow';
 
-document.addEventListener('DOMContentLoaded', () => {
-  const rawEl  = document.getElementById('raw');
-  const outEl  = document.getElementById('out');
-  const qSel   = document.getElementById('qGlobal');
-  const prSel  = document.getElementById('normBarsPerRow');
+/* Simpan semua state penting: RAW + kontrol */
+function saveNormState(){
+  const raw  = document.getElementById('raw')?.value ?? '';
+  const qSel = document.getElementById('qGlobal')?.value;
+  const pr   = document.getElementById('normBarsPerRow')?.value;
 
-  // 1) Pulihkan pilihan kontrol (dengan validasi)
+  localStorage.setItem(KEY_NORM_IN, raw);
+  if (qSel != null) localStorage.setItem(KEY_QGLOBAL, String(qSel));
+  if (pr   != null) localStorage.setItem(KEY_PER_ROW, String(pr));
+}
+
+/* Pulihkan semua saat halaman dibuka, lalu rebuild Analyze */
+document.addEventListener('DOMContentLoaded', () => {
+  const rawEl = document.getElementById('raw');
+  const outEl = document.getElementById('out');
+  const qSel  = document.getElementById('qGlobal');
+  const prSel = document.getElementById('normBarsPerRow');
+
+  // 1) Pulihkan kontrol (validasi agar hanya set value yang ada di <option>)
   const qSaved  = localStorage.getItem(KEY_QGLOBAL);
   const prSaved = localStorage.getItem(KEY_PER_ROW);
-
   if (qSel && qSaved != null) {
-    // hanya set kalau ada di option
     const ok = Array.from(qSel.options).some(o => o.value === qSaved);
-    qSel.value = ok ? qSaved : qSel.value; // jangan isi nilai "liar"
+    if (ok) qSel.value = qSaved;
   }
   if (prSel && prSaved != null) {
     const ok = Array.from(prSel.options).some(o => o.value === prSaved);
-    prSel.value = ok ? prSaved : prSel.value;
+    if (ok) prSel.value = prSaved;
   }
 
   // 2) Pulihkan RAW & OUT
   const savedIn  = localStorage.getItem(KEY_NORM_IN);
   const savedOut = localStorage.getItem(KEY_NORM_OUT);
-
-  if (rawEl && savedIn != null)  rawEl.value = savedIn;
+  if (rawEl && savedIn  != null) rawEl.value = savedIn;
   if (outEl && savedOut != null) outEl.textContent = savedOut;
 
-  // 3) SELALU render ulang Analyze setelah semua value masuk
-  //    (pakai rAF biar DOM & value select sudah settle)
+  // 3) SELALU render ulang Analyze setelah semua value masuk (DOM settle)
   if (typeof window.analyze === 'function') {
-    requestAnimationFrame(() => {
-      try { window.analyze(); } catch {}
-    });
+    requestAnimationFrame(() => { try { window.analyze(); } catch {} });
   }
 });
 
-/* Simpan saat #raw berubah */
+/* Simpan saat user mengetik RAW */
 document.getElementById('raw')?.addEventListener('input', (e)=>{
   localStorage.setItem(KEY_NORM_IN, e.target.value || '');
 });
@@ -1279,11 +1282,43 @@ document.getElementById('normBarsPerRow')?.addEventListener('change', (e)=>{
   localStorage.setItem(KEY_PER_ROW, String(e.target.value));
 });
 
-/* Panggil ini DI AKHIR normalize() (setelah menulis #out) */
+/* Dipanggil DI AKHIR normalize() setelah menulis #out */
 function afterNormalizeHook(){
   const out = (document.getElementById('out')?.textContent || '').trim();
   localStorage.setItem(KEY_NORM_OUT, out);
 }
+</script>
+<script>
+/* Analyze: pastikan state tersimpan meski user belum mengetik */
+(() => {
+  const btn = document.getElementById('btnAnalyze');
+  if (!btn) return;
+  const orig = typeof window.analyze === 'function' ? window.analyze : null;
+  btn.onclick = () => {
+    saveNormState();
+    if (orig) orig();
+  };
+})();
+
+/* Send to Editor: simpan dulu RAW+kontrol sebelum kirim OUT */
+(() => {
+  const btn = document.getElementById('btnSend');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    saveNormState();
+    // sisanya: logic kirim OUT + redirect kamu yang sudah ada
+  }, { capture: true }); // pastikan jalan duluan
+})();
+
+/* Home: simpan dulu sebelum navigate */
+(() => {
+  const btn = document.getElementById('btnHome');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    saveNormState();
+    // sisanya: redirect ke home kamu yang sudah ada
+  }, { capture: true });
+})();
 </script>
 </body>
 </html>
