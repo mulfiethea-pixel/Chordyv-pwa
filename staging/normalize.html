@@ -1338,5 +1338,124 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { capture: true });
 })();
 </script>
+
+<!-- === Patch: full restore + merge + autosave listeners === -->
+<script>
+(function(){
+  // 1) Restore controls and raw input
+  function restoreNormState(){
+    try{
+      const raw = localStorage.getItem('chordyv:norm:lastIn') || '';
+      const q   = localStorage.getItem('chordyv:qGlobal');
+      const pr  = localStorage.getItem('chordyv:norm:perRow');
+      const rawEl = document.getElementById('raw');
+      const qEl   = document.getElementById('qGlobal');
+      const prEl  = document.getElementById('normBarsPerRow');
+      if(rawEl) rawEl.value = raw;
+      if(qEl && q!=null) qEl.value = String(q);
+      if(prEl && pr!=null) prEl.value = String(pr);
+    }catch(e){}
+  }
+  window.restoreNormState = window.restoreNormState || restoreNormState;
+
+  // 2) Merge saved grid state into parsed state
+  function mergeGridState(){
+    try{
+      const json = localStorage.getItem('chordyv:norm:grid:v1');
+      if(!json) return;
+      const saved = JSON.parse(json)||[];
+      const byKey = new Map();
+      saved.forEach(sec => {
+        (sec.lines||[]).forEach((ln,li) => {
+          byKey.set((sec.label||'')+'__'+li, ln);
+        });
+      });
+      (state.sections||[]).forEach(sec=>{
+        (sec.lines||[]).forEach((ln,li)=>{
+          const keep = byKey.get((sec.label||'')+'__'+li);
+          if(!keep) return;
+          ln.bars        = Number(keep.bars)||ln.bars||1;
+          ln.grid        = Array.isArray(keep.grid) ? keep.grid.slice() : (ln.grid||[]);
+          ln.lyric       = (keep.lyric ?? ln.lyric ?? '');
+          ln.activeChord = (keep.activeChord ?? ln.activeChord ?? null);
+        });
+      });
+      // re-render with restored values
+      if(typeof renderAnalysis==='function') renderAnalysis();
+    }catch(e){}
+  }
+  window.mergeGridState = window.mergeGridState || mergeGridState;
+
+  // 3) After-render: attach autosave listeners
+  if(typeof renderAnalysis === 'function'){
+    const _origRender = renderAnalysis;
+    window.renderAnalysis = function(){
+      _origRender();
+      try{
+        document.querySelectorAll('.sel-bars').forEach(sel=>{
+          sel.addEventListener('change', () => {
+            if(typeof saveGridState==='function') saveGridState();
+            if(typeof afterNormalizeHook==='function') afterNormalizeHook();
+          }, {once:false});
+        });
+        document.querySelectorAll('.cell').forEach(cell=>{
+          cell.addEventListener('click', () => {
+            if(typeof saveGridState==='function') saveGridState();
+            if(typeof afterNormalizeHook==='function') afterNormalizeHook();
+          }, {once:false});
+        });
+        document.querySelectorAll('.lyric').forEach(area=>{
+          area.addEventListener('input', () => {
+            if(typeof saveGridState==='function') saveGridState();
+            if(typeof afterNormalizeHook==='function') afterNormalizeHook();
+          }, {once:false});
+        });
+        document.querySelectorAll('.chips').forEach(wrap=>{
+          wrap.addEventListener('click', () => {
+            if(typeof saveGridState==='function') saveGridState();
+            if(typeof afterNormalizeHook==='function') afterNormalizeHook();
+          }, {once:false});
+        });
+        // global controls
+        document.getElementById('qGlobal')?.addEventListener('change', ()=>{
+          if(typeof saveNormState==='function') saveNormState();
+        }, {once:false});
+        document.getElementById('normBarsPerRow')?.addEventListener('change', ()=>{
+          if(typeof saveNormState==='function') saveNormState();
+        }, {once:false});
+      }catch(e){}
+    };
+  }
+
+  // 4) Clear button wipes storage
+  document.getElementById('btnClear')?.addEventListener('click', ()=>{
+    ['chordyv:norm:lastIn','chordyv:norm:lastOut','chordyv:qGlobal','chordyv:norm:perRow','chordyv:norm:grid:v1'].forEach(k=>{
+      localStorage.removeItem(k);
+    });
+  });
+
+  // 5) On load restore/merge
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const fromResume = localStorage.getItem('chordyv:norm:resume') === '1';
+    // restore inputs
+    if(typeof restoreNormState==='function') restoreNormState();
+    const raw = document.getElementById('raw')?.value.trim();
+    if(raw){
+      if(typeof analyze==='function') analyze();
+      if(typeof mergeGridState==='function') mergeGridState();
+      const out = localStorage.getItem('chordyv:norm:lastOut');
+      if(out) {
+        const outEl = document.getElementById('out');
+        if(outEl) outEl.textContent = out;
+      }
+    }
+    if(fromResume){
+      document.getElementById('sec-analyze')?.scrollIntoView({behavior:'smooth',block:'start'});
+      localStorage.removeItem('chordyv:norm:resume');
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
