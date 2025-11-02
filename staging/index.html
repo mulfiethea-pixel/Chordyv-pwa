@@ -4542,6 +4542,60 @@ window.addEventListener('load', () => {
   };
 })();
 </script>
+<!-- === PATCH: Limit Normalize 3x (document-level capture, override delegation) === -->
+<script>
+(function(){
+  const KEY_NORM_COUNT = 'cv_norm_count';
+  const MAX_FREE = 3;
+
+  function openNormalizeUpgrade(){
+    if (typeof window.showUpgradeModal === 'function') {
+      window.showUpgradeModal('normalize-limit');
+    } else if (typeof window.openUpgrade === 'function') {
+      window.openUpgrade('normalize-limit');
+    } else {
+      alert('Upgrade to Pro to use Normalize more than 3 times.');
+    }
+  }
+
+  function resetIfPro(){
+    if (window.cvIsPro) {
+      try { localStorage.removeItem(KEY_NORM_COUNT); } catch {}
+    }
+  }
+
+  // Guard di LEVEL DOKUMEN (capture=true) → selalu menang dari delegation bubble
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('#cv_btnNormalize');
+    if (!btn) return;
+
+    // Pro → bebas
+    if (window.cvIsPro) { return; }
+
+    // Free → cek jatah
+    let count = 0;
+    try { count = parseInt(localStorage.getItem(KEY_NORM_COUNT) || '0', 10) || 0; } catch {}
+
+    if (count >= MAX_FREE){
+      // Blokir redirect delegation & tampilkan modal upgrade
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      openNormalizeUpgrade();
+      return;
+    }
+
+    // Masih dalam jatah → increment dulu, biarkan delegation-mu redirect
+    try { localStorage.setItem(KEY_NORM_COUNT, String(count + 1)); } catch {}
+  }, true); // << capture
+
+  // Bersihkan counter saat status berubah jadi Pro (tanpa reload pun aman)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') resetIfPro();
+  });
+  window.addEventListener('load', resetIfPro);
+})();
+</script>
 <!-- === END PATCH === -->
 </body>
 </html>
