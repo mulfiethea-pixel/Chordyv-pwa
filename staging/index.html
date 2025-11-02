@@ -4418,17 +4418,15 @@ document.addEventListener('visibilitychange', () => {
 <script>
 /* ===== Env flag (staging/prod) – tulis SEKALI ===== */
 const CV_IS_STAGING = location.pathname.includes('/staging');
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('cv_btnNormalize');
+
+/* ===== Delegasi klik: tombol dibuat dinamis jadi tangkap di document ===== */
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('#cv_btnNormalize');
   if (!btn) return;
 
-  // Karena head sudah pakai <base href="/Chordyv-pwa/">,
-  // kita cukup pakai relative path:
-  const target = location.pathname.includes('/staging')
-    ? 'staging/normalize.html'
-    : 'normalize.html';
-
-  btn.addEventListener('click', () => { location.href = target; });
+  // karena <base href="/Chordyv-pwa/"> sudah ada, relative path cukup:
+  const target = CV_IS_STAGING ? 'staging/normalize.html' : 'normalize.html';
+  location.href = target;
 });
 
 /* ===== Receive dari Normalize → tempel ke editor ===== */
