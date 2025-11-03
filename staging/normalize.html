@@ -1456,6 +1456,88 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 })();
 </script>
+<!-- === PATCH: Keamanan Input (Readonly Normalize + Plaintext Input + Plaintext Lyric) === -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  /* 1) Kunci hanya kalau memang ADA textarea normalize */
+  const norm = document.getElementById('normalize') 
+            || document.querySelector('textarea[data-role="normalize"]') 
+            || document.querySelector('textarea.normalize');
 
+  if (norm) {
+    norm.setAttribute('readonly', 'readonly');
+    const block = e => { e.preventDefault(); e.stopPropagation(); };
+    ['paste','drop','beforeinput','keydown','input'].forEach(ev =>
+      norm.addEventListener(ev, block, true)
+    );
+    norm.style.background = '#f9fafb';
+    norm.style.cursor = 'not-allowed';
+  }
+  // Catatan: kalau output kamu <pre id="out"> (sekarang), tidak perlu dikunci apa pun.
+
+  /* 2) INPUT (#raw) — izinkan paste tapi paksa plaintext */
+  const raw = document.getElementById('raw');
+  if (raw) {
+    raw.removeAttribute('readonly');
+    raw.style.background = '';
+    raw.style.cursor = '';
+
+    const toPlain = s => (s || '').replace(/\r\n?/g, '\n');
+
+    raw.addEventListener('paste', (e) => {
+      const clip = e.clipboardData || window.clipboardData;
+      const txt = toPlain((clip && (clip.getData('text/plain') || clip.getData('text'))) || '');
+      if (!txt) return;
+      e.preventDefault();
+
+      if (document.queryCommandSupported && document.queryCommandSupported('insertText')) {
+        document.execCommand('insertText', false, txt);
+      } else {
+        const start = raw.selectionStart || 0;
+        const end   = raw.selectionEnd   || 0;
+        const val   = raw.value || '';
+        raw.value   = val.slice(0, start) + txt + val.slice(end);
+        const pos   = start + txt.length;
+        raw.setSelectionRange(pos, pos);
+      }
+    }, { capture: true });
+
+    // Opsional: cegah drag&drop HTML ke input
+    raw.addEventListener('drop', (e) => { e.preventDefault(); }, { capture: true });
+  }
+
+  /* 3) Lyric contenteditable — plaintext-only (punyamu sudah oke) */
+  document.querySelectorAll('.lyric').forEach(el => {
+    el.setAttribute('contenteditable', 'true');
+    el.addEventListener('paste', (e) => {
+      const clip = e.clipboardData || window.clipboardData;
+      const plain = (clip && (clip.getData('text/plain') || clip.getData('text'))) || '';
+      if (!plain) return;
+      e.preventDefault();
+      el.focus();
+
+      const text = plain.replace(/\r\n?/g, '\n');
+
+      if (document.queryCommandSupported && document.queryCommandSupported('insertText')) {
+        document.execCommand('insertText', false, text);
+        return;
+      }
+
+      const sel = window.getSelection && window.getSelection();
+      if (sel && sel.rangeCount) {
+        const range = sel.getRangeAt(0);
+        text.split('\n').forEach((seg, i, arr) => {
+          if (seg) range.insertNode(document.createTextNode(seg));
+          if (i < arr.length - 1) range.insertNode(document.createElement('br'));
+        });
+        sel.collapseToEnd();
+      } else {
+        el.appendChild(document.createTextNode(text));
+      }
+    });
+  });
+});
+</script>
+<!-- === END PATCH === -->
 </body>
 </html>
