@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ChordyV • Normalize Chord Chart (Tap Grid — Decoupled Bar)</title>
+<style>
+  :root{
+    /* Ukuran & jarak utama */
+    --cellW: 48px;       /* lebar kotak chord */
+    --cellH: 36px;       /* tinggi kotak chord */
+    --colGap: 10px;      /* jarak horizontal antar kolom */
+    --rowGap: 8px;       /* jarak vertikal antar baris */
+    --barSpW: 14px;      /* lebar kolom khusus bar (di antara birama) */
+    --barlineW: 2px;     /* tebal garis bar */
+
+    /* Warna */
+    --bg:#f8fafc; --panel:#ffffff; --line:#e5e7eb;
+    --text:#0f172a; --muted:#64748b; --accent:#0ea5e9;
+    --chip:#f1f5f9; --chip-border:#cbd5e1; --chip-active:#e0f2fe;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font:14px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Inter;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:16px}
+
+  /* Seksi flat (header strip + body) */
+  .sec{margin:14px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+  .sec-h{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:10px 12px;border-bottom:1px solid var(--line);
+    background:#eef2f7;color:#0f172a;font-weight:700
+  }
+  .sec-b{padding:12px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .muted{color:var(--muted)}
+  .lbl{font-size:12px;color:#64748b}
+
+  /* Input/Output */
+  textarea,pre{
+    width:100%;min-height:260px;border:1px solid var(--line);border-radius:10px;
+    padding:10px;background:#fff;color:#0f172a;
+    font-family:ui-monospace,Menlo,Consolas,monospace
+  }
+  pre{white-space:pre-wrap}
+
+  /* Buttons */
+  .btn{border:1px solid var(--line);background:#fff;color:var(--text);
+       height:34px;padding:0 12px;border-radius:10px;cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  select.btn{height:32px}
+
+  /* Subheader label section */
+  .subh{
+    font-weight:600;color:#334155;
+    padding:6px 0;border-bottom:1px dashed #e2e8f0;margin-top:6px;
+  }
+
+  /* Chips (chord palette) */
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  .chip{
+    background:var(--chip); border:1px solid var(--chip-border);
+    padding:6px 10px;border-radius:999px;cursor:pointer;
+    font-size:13px; user-select:none;
+  }
+  .chip.active{outline:2px solid rgba(14,165,233,.35); background:var(--chip-active)}
+
+  /* Grid container */
+  .gridwrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+  .grid{
+    display:grid;
+    column-gap:var(--colGap);
+    row-gap:var(--rowGap);
+  }
+
+  /* Cell chord */
+  .cell{
+    width:var(--cellW); height:var(--cellH);
+    border:1px solid #cbd5e1; border-radius:8px;
+    background:#fff; color:#0f172a;
+    display:flex; align-items:center; justify-content:center;
+    font:13px ui-monospace,Menlo,Consolas,monospace;
+  }
+  .cell.active{
+    background:#e0f2fe;border-color:#7dd3fc;
+    box-shadow:inset 0 0 0 2px rgba(14,165,233,.15);
+  }
+
+  /* Kolom bar terpisah */
+  .barsp{
+    width:var(--barSpW); height:var(--cellH); position:relative;
+  }
+  .barsp::before{
+    content:"";
+    position:absolute;
+    left:50%; transform:translateX(-50%);
+    top:4px; bottom:4px;
+    width:var(--barlineW);
+    background:#cbd5e1;border-radius:2px;
+    pointer-events:none;
+  }
+
+  /* Lyric editable */
+  .lyric{
+    color:#0f172a;background:#fff;border:1px dashed var(--line);
+    border-radius:10px;padding:8px;margin-top:6px;min-height:24px
+  }
+
+  /* Responsive kecil */
+  @media (max-width:420px){
+    .wrap{padding:12px}
+    .btn{height:32px}
+    :root{
+      --cellW: 44px; --cellH: 34px; --colGap: 8px; --barSpW: 12px;
+    }
+  }
+/* ===== Blend textarea ke container (tanpa border di dalam) ===== */
+
+/* 1) Hilangkan border/box textarea di SEMUA section */
+.sec-b textarea{
+  border:none !important;
+  outline:none !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  border-radius:10px;       /* biar sudut teks terasa lembut */
+  padding:8px 6px;          /* jarak teks dari tepi section */
+  -webkit-appearance:none;
+}
+
+/* 2) Efek fokus nempel ke wrapper-nya (section body) */
+.sec-b:has(textarea:focus){
+  /* highlight lembut saat fokus */
+  box-shadow:0 0 0 3px rgba(14,165,233,.15) inset;
+  border-radius:10px;
+}
+
+/* 3) Opsional: selaraskan output <pre> agar juga nyatu */
+#sec-out pre{
+  border:none !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  padding:8px 6px;
+}
+
+/* 4) Mode gelap opsional (biar konsisten) */
+@media (prefers-color-scheme: dark){
+  .sec-b:has(textarea:focus){
+    box-shadow:0 0 0 3px rgba(96,165,250,.22) inset;
+  }
+}
+/* ====== Native-style section header: title center, toolbar di bawah ====== */
+.sec-h{
+  display:flex;
+  flex-direction:column;         /* tumpuk vertikal */
+  align-items:center;            /* center horizontal */
+  justify-content:center;
+  gap:10px;
+  text-align:center;
+  padding:12px 12px;             /* sedikit lega */
+}
+
+/* Elemen pertama di header = judul section */
+.sec-h > :first-child{
+  font-weight:800;
+  letter-spacing:.2px;
+  font-size:1.06rem;
+}
+
+/* Toolbar (deretan tombol / select) → center & wrap */
+.sec-h .row{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* Tombol pill biar lebih “native” */
+.btn{
+  border-radius:999px;
+  padding:10px 14px;
+  height:auto;                   /* supaya nyaman saat wrap */
+}
+.btn.primary{
+  font-weight:700;
+  box-shadow:0 2px 6px rgba(14,165,233,.25);
+}
+
+/* Select versi pill */
+select.btn{
+  border-radius:999px;
+  padding:8px 12px;
+  height:auto;
+}
+
+/* Mobile tune */
+@media (max-width:480px){
+  .sec-h > :first-child{ font-size:1rem; }
+  .btn{ padding:9px 12px; }
+}
+
+/* (Opsional) Header sticky supaya toolbar selalu kelihatan saat scroll */
+.sec-h.sticky{
+  position:sticky; top:0; z-index:4;
+  background:#eef2f7;           /* sama seperti header kamu sekarang */
+}
+@media (prefers-color-scheme: dark){
+  .btn.primary{ box-shadow:0 2px 6px rgba(56,189,248,.3); }
+}
+/* === Section Title + Icon (biru outline) === */
+.sec-title{
+  display:flex;
+  align-items:center;
+  justify-content:center;   /* judul di tengah (sinkron dgn layout .sec-h) */
+  gap:10px;
+  font-weight:800;
+  letter-spacing:.2px;
+  font-size:1.06rem;
+}
+.sec-icon{
+  width:26px; height:26px;
+  stroke:#0ea5e9; fill:none;
+  stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;
+}
+@media (prefers-color-scheme: dark){
+  .sec-icon{ stroke:#38bdf8; }
+}
+/* === MAIN HEADER: gaya Library (gradient biru) === */
+.main-header {
+  background: linear-gradient(135deg, #0ea5e9 0%, #4c84ff 100%);
+  color: #fff;
+  padding: 14px 16px 16px;
+  text-align: center;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.main-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+.main-header p {
+  margin: 0;
+  font-size: 14px;
+  opacity: .9;
+}
+
+/* === BACKGROUND UTAMA PUTIH === */
+body {
+  background: #ffffff !important;
+  color: #0f172a;
+}
+
+/* === HEADER SETIAP SECTION: biru langit solid === */
+.sec-h {
+  background: #e7f4ff !important;
+  color: #0f172a !important;
+  border-bottom: 1px solid #cfe7ff !important;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  padding: 12px 16px;
+}
+.sec-icon {
+  stroke: #0ea5e9 !important;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* === BODY SETIAP SECTION: putih + shadow lembut === */
+.sec-b {
+  background: #ffffff !important;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* === Sentuhan rapi === */
+.section {
+  border: 1px solid #e6ebf1 !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+textarea::placeholder {
+  color: #94a3b8;
+}
+/* ==== POLISH HOTFIX (strong) ==== */
+
+/* 1) App bar: paksa shadow kelihatan */
+.main-header{
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 10px 22px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06) !important;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,.08)); /* kalau box-shadow terklip */
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  margin-bottom: 10px; /* beri ruang agar shadow terlihat */
+}
+
+/* Kalau ada kontainer yang mengklip shadow, longgarkan */
+.wrap, main, .page { overflow: visible !important; }
+
+/* 2) Section fade-in: pasang di selector yang lebih kuat */
+body.sections-animate .section{
+  opacity: 0; transform: translateY(6px);
+  will-change: opacity, transform;
+  animation: sectionFade .38s cubic-bezier(.22,.61,.36,1) forwards !important;
+}
+body.sections-animate .section:nth-of-type(2){ animation-delay: .04s; }
+body.sections-animate .section:nth-of-type(3){ animation-delay: .08s; }
+@keyframes sectionFade{ to{ opacity:1; transform:translateY(0) } }
+
+/* 3) Tombol: transisi & ripple yang kontras (primary & normal) */
+.btn{
+  transition: transform .08s ease, box-shadow .12s ease, background-color .12s ease !important;
+  position: relative; overflow: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active{ transform: translateY(1px) scale(.995); }
+.btn.primary{ box-shadow: 0 4px 12px rgba(14,165,233,.28) !important; }
+.btn.primary:active{ box-shadow: 0 2px 6px rgba(14,165,233,.22) !important; }
+
+/* Ripple: beda warna agar selalu kelihatan */
+.btn::after{
+  content:""; position:absolute; left:50%; top:50%;
+  width:0; height:0; border-radius:999px; pointer-events:none;
+  transform: translate(-50%,-50%);
+  transition: width .28s ease, height .28s ease, opacity .28s ease;
+  opacity:.18;
+}
+.btn.primary::after{ background:#fff; }               /* ripple putih di tombol biru */
+.btn:not(.primary)::after{ background:rgba(0,0,0,.25);}/* ripple gelap di tombol putih */
+.btn:active::after{ width:220%; height:220%; }
+
+/* Hormati reduced-motion */
+@media (prefers-reduced-motion: reduce){
+  body.sections-animate .section{ animation:none !important; opacity:1; transform:none; }
+  .btn{ transition:none !important; }
+  .btn::after{ transition:none !important; }
+}
+/* ===== Premium Light Polish (UI only, no logic changes) ===== */
+:root{
+  --pl-accent: #3b82f6;
+  --pl-accent-2: #60a5fa;
+  --pl-ink: #0f172a;
+  --pl-ink-soft:#334155;
+  --pl-line: #e6ebf1;
+  --pl-chip:#ffffff;
+  --pl-chip-br:#cbd5e1;
+  --pl-chip-on:#e9f2ff;
+  --pl-radius-lg: 14px;
+  --pl-radius-md: 12px;
+  --pl-radius-sm: 9px;
+  --pl-fs-title: 14.5px;
+  --pl-fs-body: 13.25px;
+  --pl-fs-ctrl: 11.5px;
+  --pl-fs-mono: 12px;
+  --pl-sans: -apple-system,BlinkMacSystemFont,Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  --pl-mono: ui-monospace,Menlo,Consolas,monospace;
+}
+
+/* Typography scale (lebih padat & halus) */
+body{
+  font: var(--pl-fs-body)/1.48 var(--pl-sans) !important;
+  color: var(--pl-ink) !important;
+}
+.sec-h{ font-size: var(--pl-fs-title) !important; }
+textarea, pre#out{ font: var(--pl-fs-mono)/1.55 var(--pl-mono) !important; }
+
+/* Header utama: gradient premium + shadow lembut */
+.main-header{
+  background: linear-gradient(135deg, var(--pl-accent) 0%, var(--pl-accent-2) 100%) !important;
+  color:#fff !important;
+  border-bottom: 1px solid rgba(59,130,246,.15) !important;
+  padding: 14px 16px 16px !important;
+  text-align:center;
+  border-radius: 0 0 14px 14px !important;
+  box-shadow: 0 10px 22px rgba(0,0,0,.08), 0 2px 8px rgba(0,0,0,.06) !important;
+}
+
+/* Panel / Section */
+.sec{
+  border:1px solid var(--pl-line) !important;
+  border-radius: var(--pl-radius-lg) !important;
+  background:#fff !important;
+  box-shadow: 0 18px 40px rgba(22,35,73,.06) !important;
+  overflow:hidden !important;
+}
+.sec-h{
+  background: linear-gradient(180deg, rgba(59,130,246,.08) 0%, rgba(59,130,246,0) 100%) !important;
+  color: var(--pl-ink) !important;
+  border-bottom:1px solid var(--pl-line) !important;
+  padding: 12px 16px !important;
+}
+.sec-title{
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  font-weight:800; letter-spacing:.2px;
+}
+.sec-icon{ width:26px;height:26px; stroke:var(--pl-accent); fill:none; stroke-width:1.8 }
+
+/* Body panel */
+.sec-b{
+  background:#fff !important;
+  padding: 14px 16px 16px !important;
+  border-bottom-left-radius: var(--pl-radius-md);
+  border-bottom-right-radius: var(--pl-radius-md);
+  box-shadow: 0 2px 8px rgba(0,0,0,.04) inset;
+}
+
+/* Input/Output surface menyatu & bersih */
+.sec-b textarea{
+  background:transparent !important; border:none !important; outline:none !important;
+  padding: 10px 8px !important; border-radius: 10px !important;
+}
+#sec-out pre#out{
+  background:transparent !important; border:none !important; padding: 10px 8px !important;
+}
+
+/* Chips & controls */
+.chips{ gap:8px !important; }
+.chip{
+  background: var(--pl-chip) !important;
+  border:1px solid var(--pl-chip-br) !important;
+  border-radius:999px !important;
+  padding:7px 11px !important;
+  font-size: var(--pl-fs-ctrl) !important;
+  font-weight:700 !important;
+  color: var(--pl-ink-soft) !important;
+}
+.chip.active{
+  background: var(--pl-chip-on) !important;
+  outline:2px solid rgba(59,130,246,.28) !important;
+}
+
+/* Buttons & selects (pill) */
+.btn{
+  background:#fff !important; color:#223153 !important;
+  border:1px solid rgba(24,40,72,.18) !important;
+  border-radius: 999px !important;
+  padding: 9px 13px !important;
+  min-width: 72px; font-weight:800 !important;
+  font-size: var(--pl-fs-ctrl) !important;
+  transition: transform .08s ease, box-shadow .12s ease, background-color .12s ease !important;
+  box-shadow: 0 10px 30px rgba(22,35,73,.06) !important;
+}
+.btn:hover{ border-color: rgba(59,130,246,.35) !important; box-shadow: 0 12px 34px rgba(59,130,246,.15) !important; }
+.btn:active{ transform: translateY(1px) scale(.995) !important; }
+
+.btn.primary{
+  background: linear-gradient(180deg, var(--pl-accent-2) 0%, var(--pl-accent) 100%) !important;
+  color:#fff !important; border-color: rgba(59,130,246,.55) !important;
+  text-shadow: 0 0 10px rgba(255,255,255,.6) !important;
+  box-shadow: 0 16px 38px rgba(59,130,246,.35), inset 0 2px 2px rgba(255,255,255,.55) !important;
+}
+
+select.btn{
+  padding: 7px 11px !important; height:auto !important; min-width: 56px !important;
+  background:#f7faff !important; color:#0b1324 !important; border:1px solid rgba(24,40,72,.16) !important;
+}
+
+/* Analyze grid */
+.gridwrap{
+  background:#fff !important;
+  border:1px solid var(--pl-line) !important;
+  border-radius: var(--pl-radius-md) !important;
+  padding:8px !important;
+  box-shadow: 0 10px 26px rgba(22,35,73,.05) inset, 0 2px 8px rgba(22,35,73,.05);
+}
+.cell{
+  border:1px solid rgba(24,40,72,.18) !important;
+  background:#f9fbff !important; color:#0b1324 !important;
+  border-radius: 8px !important; padding:0 !important;
+  font: var(--pl-fs-mono)/1.4 var(--pl-mono) !important;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,.9), 0 8px 18px rgba(22,35,73,.08) !important;
+}
+.cell.active{
+  border-color:#3b82f6 !important;
+  box-shadow: 0 12px 26px rgba(59,130,246,.18), inset 0 1px 1px rgba(255,255,255,.95) !important;
+  background:#eef6ff !important;
+}
+
+/* Bar separator lebih tegas */
+.barsp::before{ background:#d2d9e6 !important; opacity:.95 !important }
+
+/* Label & helper text */
+.lbl{ color:#48546b !important; font-weight:700 !important; font-size: var(--pl-fs-ctrl) !important; }
+.muted{ color:#6b7a92 !important; }
+
+/* Micro-motion (hormati prefers-reduced-motion) */
+@media (prefers-reduced-motion: no-preference){
+  .sec{ animation: cardRise .28s ease both }
+  @keyframes cardRise{ from{ opacity:.0; transform:translateY(6px) } to{ opacity:1; transform:none } }
+}
+/* ===== Premium Dark Polish (UI only, pairs with your existing classes) ===== */
+:root{
+  --pd-accent: #6aa6ff;
+  --pd-accent-2: #456dff;
+  --pd-ink: #e9eef8;
+  --pd-ink-soft:#9db2d9;
+  --pd-line: rgba(135,173,255,.14);
+  --pd-surface: rgba(18,22,30,.45);
+  --pd-surface-2: rgba(12,15,22,.6);
+  --pd-chip:#1a2334;
+  --pd-chip-br: rgba(135,173,255,.24);
+  --pd-radius-lg: 14px;
+  --pd-radius-md: 12px;
+  --pd-radius-sm: 9px;
+  --pd-fs-title: 14.5px;
+  --pd-fs-body: 13.25px;
+  --pd-fs-ctrl: 11.5px;
+  --pd-fs-mono: 12px;
+  --pd-sans: -apple-system,BlinkMacSystemFont,Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  --pd-mono: ui-monospace,Menlo,Consolas,monospace;
+}
+
+/* Root body */
+body.premium-dark{
+  background: radial-gradient(circle at 20% 20%, #1a2431 0%, #0e1117 60%, #0a0c10 100%) !important;
+  color: var(--pd-ink) !important;
+  font: var(--pd-fs-body)/1.48 var(--pd-sans) !important;
+}
+
+/* Header */
+.premium-dark .main-header{
+  background: rgba(15,18,24,.6) !important;
+  color:#eef3ff !important;
+  border-bottom:1px solid rgba(135,173,255,.12) !important;
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 20px 40px rgba(0,0,0,.6) !important;
+  border-radius: 0 0 14px 14px !important;
+}
+
+/* Panels / Sections */
+.premium-dark .sec{
+  background: var(--pd-surface) !important;
+  border:1px solid var(--pd-line) !important;
+  border-radius: var(--pd-radius-lg) !important;
+  box-shadow: 0 30px 80px rgba(0,0,0,.9), 0 2px 3px rgba(255,255,255,.08) inset !important;
+  overflow:hidden !important;
+}
+.premium-dark .sec-h{
+  background: radial-gradient(circle at 0% 0%, rgba(106,166,255,.16) 0%, rgba(0,0,0,0) 60%) !important;
+  border-bottom:1px solid rgba(135,173,255,.18) !important;
+  color:#eef3ff !important;
+  font-size: var(--pd-fs-title) !important;
+  padding:12px 16px !important;
+}
+.premium-dark .sec-title{ font-weight:800; letter-spacing:.2px }
+
+/* Section body */
+.premium-dark .sec-b{
+  background: var(--pd-surface-2) !important;
+  border:1px solid rgba(135,173,255,.16) !important;
+  border-radius: var(--pd-radius-md) !important;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.8), 0 24px 60px rgba(0,0,0,.9) !important;
+  padding:14px 16px 16px !important;
+}
+
+/* Text areas & Output */
+.premium-dark textarea{
+  background:transparent !important; border:0 !important; outline:none !important;
+  color:#f2f6ff !important;
+  font: var(--pd-fs-mono)/1.55 var(--pd-mono) !important;
+  padding:10px 8px !important; border-radius:10px !important;
+}
+.premium-dark #sec-out pre#out{
+  background:transparent !important; border:0 !important; color:#f2f6ff !important;
+  font: var(--pd-fs-mono)/1.55 var(--pd-mono) !important;
+  padding:10px 8px !important;
+}
+
+/* Chips & controls */
+.premium-dark .chips{ gap:8px !important; }
+.premium-dark .chip{
+  background: var(--pd-chip) !important;
+  border:1px solid var(--pd-chip-br) !important;
+  color: var(--pd-ink-soft) !important;
+  border-radius: 999px !important;
+  padding:7px 11px !important;
+  font-size: var(--pd-fs-ctrl) !important;
+  font-weight:800 !important;
+}
+.premium-dark .chip.active{
+  background: rgba(106,166,255,.10) !important;
+  outline:2px solid rgba(106,166,255,.28) !important;
+}
+
+/* Buttons & selects */
+.premium-dark .btn{
+  background:#1a2334 !important; color:#dbe6ff !important;
+  border:1px solid rgba(135,173,255,.24) !important;
+  border-radius:999px !important;
+  padding:9px 13px !important; min-width:72px !important;
+  font-weight:800 !important; font-size: var(--pd-fs-ctrl) !important;
+  box-shadow:0 16px 40px rgba(0,0,0,.8) !important;
+  transition: transform .08s ease, box-shadow .12s ease, background-color .12s ease !important;
+}
+.premium-dark .btn:hover{
+  background: rgba(106,166,255,.12) !important;
+  border-color: rgba(135,173,255,.5) !important;
+  color:#fff !important;
+  box-shadow:0 18px 44px rgba(106,166,255,.35) !important;
+}
+.premium-dark .btn:active{ transform: translateY(1px) scale(.995) !important; }
+
+.premium-dark .btn.primary{
+  background: radial-gradient(circle at 20% 20%, var(--pd-accent) 0%, var(--pd-accent-2) 50%, #1b2450 100%) !important;
+  color:#0b1020 !important; border-color: rgba(255,255,255,.4) !important;
+  text-shadow:0 0 10px rgba(255,255,255,.6) !important;
+  box-shadow:0 20px 40px rgba(106,166,255,.6), inset 0 2px 2px rgba(255,255,255,.45) !important;
+}
+
+.premium-dark select.btn{
+  background:#0e1420 !important; color:#eef3ff !important;
+  border:1px solid #24314a !important; padding:7px 11px !important;
+}
+
+/* Analyze grid */
+.premium-dark .gridwrap{
+  background: rgba(9,12,18,.5) !important;
+  border:1px solid rgba(135,173,255,.14) !important;
+  border-radius: var(--pd-radius-md) !important;
+  padding:8px !important;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.8), 0 20px 50px rgba(0,0,0,.9) !important;
+}
+.premium-dark .cell{
+  background: rgba(255,255,255,.03) !important;
+  border:1px solid rgba(135,173,255,.28) !important;
+  color:#eaf2ff !important;
+  border-radius:8px !important; padding:0 !important;
+  font: var(--pd-fs-mono)/1.4 var(--pd-mono) !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.9), 0 1px 1px rgba(255,255,255,.15) inset !important;
+}
+.premium-dark .cell.active{
+  border-color: var(--pd-accent) !important;
+  box-shadow: 0 16px 40px rgba(106,166,255,.5), inset 0 1px 1px rgba(255,255,255,.4) !important;
+  background: rgba(106,166,255,.10) !important;
+}
+
+/* Bar separator */
+.premium-dark .barsp::before{ background:#cbd5e1 !important; opacity:.9 !important }
+
+/* Helper texts / labels */
+.premium-dark .lbl{ color:#cdd7ef !important; font-weight:800 !important; font-size: var(--pd-fs-ctrl) !important }
+.premium-dark .muted{ color:#9db2d9 !important }
+
+/* Footer (kalau ada) */
+.premium-dark .footer{
+  background:rgba(10,12,18,.7) !important;
+  border-top:1px solid rgba(135,173,255,.2) !important;
+  backdrop-filter: blur(20px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  box-shadow:0 -30px 60px rgba(0,0,0,.8) !important;
+  color:#9db2d9 !important;
+}
+/* === FLAT TANPA BORDER untuk toolbar & tombol utility === */
+
+/* 1) Toolbar (Home, Tema) */
+.head-actions .btn{
+  background: transparent !important;
+  color: #1e293b !important;
+  border: 0 !important;                 /* <- hapus garis pinggir */
+  box-shadow: none !important;           /* <- kalau sebelumnya pakai inset/outline */
+  background-image: none !important;     /* <- kalau ada gradient bawaan */
+  -webkit-appearance: none;              /* safari/android */
+  border-radius: 999px !important;
+  padding: 8px 14px !important;
+  font-weight: 700 !important;
+}
+.head-actions .btn:hover{
+  background: rgba(2,6,23,.05) !important;
+}
+
+/* 2) Tombol utility di section INPUT (Load Sample, Clear) */
+#sec-input .sec-h .row .btn:not(.primary){
+  background: transparent !important;
+  color: #1e293b !important;
+  border: 0 !important;                  /* <- hilangkan border */
+  box-shadow: none !important;
+  background-image: none !important;
+  -webkit-appearance: none;
+  border-radius: 999px !important;
+  padding: 8px 14px !important;
+  font-weight: 700 !important;
+}
+#sec-input .sec-h .row .btn:not(.primary):hover{
+  background: rgba(2,6,23,.05) !important;
+}
+
+/* 3) Tombol utility di OUTPUT (Copy) */
+#sec-out .btn:not(.primary){
+  background: transparent !important;
+  color: #1e293b !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background-image: none !important;
+  border-radius: 999px !important;
+}
+#sec-out .btn:not(.primary):hover{
+  background: rgba(2,6,23,.05) !important;
+}
+
+/* 4) Varian Dark */
+body.premium-dark .head-actions .btn,
+body.premium-dark #sec-input .sec-h .row .btn:not(.primary),
+body.premium-dark #sec-out .btn:not(.primary){
+  color: #e2e8f0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background-image: none !important;
+}
+body.premium-dark .head-actions .btn:hover,
+body.premium-dark #sec-input .sec-h .row .btn:not(.primary):hover,
+body.premium-dark #sec-out .btn:not(.primary):hover{
+  background: rgba(255,255,255,.08) !important;
+}
+
+/* 5) Fokus ring (biar tetap ada aksesibilitas, tapi halus) */
+.head-actions .btn:focus-visible,
+#sec-input .sec-h .row .btn:not(.primary):focus-visible,
+#sec-out .btn:not(.primary):focus-visible{
+  outline: 2px solid rgba(59,130,246,.35) !important;
+  outline-offset: 2px !important;
+}
+.head-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;
+}
+
+.head-actions .btn .sec-icon {
+  width: 22px;
+  height: 22px;
+  transform: translateY(-2px); /* naik/turun halus biar sejajar teks */
+}
+</style>
+</head>
+<body>
+  <header class="main-header">
+  <h1>ChordyV — Normalize Chord Chart</h1>
+  <p>Paste • Analyze • Tap Grid • Normalize</p>
+</header>
+<div class="head-actions">
+ <button id="btnHome" class="btn" title="Home">
+  <svg viewBox="0 0 24 24" class="sec-icon" aria-hidden="true">
+    <!-- atap -->
+    <path d="M3 10.5L12 3l9 7.5"/>
+    <!-- dinding rumah -->
+    <rect x="5" y="10" width="14" height="11" rx="2.5"/>
+    <!-- pintu -->
+    <rect x="10" y="14" width="4" height="5" rx="1.2"/>
+  </svg>
+  <span>Home</span>
+</button>
+  <button id="themeToggle" class="btn">🌗 Tema</button>
+</div>
+
+   <!-- 1) INPUT -->
+    <section class="sec" id="sec-input">
+      <div class="sec-h">
+        <div class="sec-title">
+  <svg viewBox="0 0 24 24" class="sec-icon" aria-hidden="true">
+    <path d="M9 5h6"/>
+    <rect x="8" y="3" width="8" height="4" rx="1.5"/>
+    <rect x="5" y="7" width="14" height="14" rx="2.5"/>
+  </svg>
+  <span>Paste / Input</span>
+</div>
+        <div class="row">
+          <button id="btnSample" class="btn">Load Sample</button>
+          <button id="btnClear" class="btn">Clear</button>
+          <button id="btnAnalyze" class="btn primary">Analyze ↓</button>
+        </div>
+      </div>
+      <div class="sec-b">
+        <textarea id="raw" placeholder="Paste chord chart"></textarea>
+      </div>
+    </section>
+
+    <!-- 2) ANALYZE -->
+    <section class="sec" id="sec-analyze">
+      <div class="sec-h">
+        <div class="sec-title">
+  <svg viewBox="0 0 24 24" class="sec-icon" aria-hidden="true">
+    <rect x="3" y="3" width="8" height="8" rx="1.6"/>
+    <rect x="13" y="3" width="8" height="8" rx="1.6"/>
+    <rect x="3" y="13" width="8" height="8" rx="1.6"/>
+    <rect x="13" y="13" width="8" height="8" rx="1.6"/>
+  </svg>
+  <span>Analyze &amp; Tap Grid</span>
+</div>
+        <!-- Quantize GLOBAL -->
+        <div class="row">
+          <label class="lbl">Quantize</label>
+          <select id="qGlobal" class="btn">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="6">6</option>
+          </select>
+        </div>
+      </div>
+      <div class="sec-b" id="analysis"><span class="muted">Paste teks & klik Analyze untuk mulai.</span></div>
+    </section>
+
+    <!-- 3) OUTPUT -->
+    <section class="sec" id="sec-out">
+      <div class="sec-h">
+        <div class="sec-title">
+  <svg viewBox="0 0 24 24" class="sec-icon" aria-hidden="true">
+    <path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>
+    <path d="m8 16 8-8M9 7l-1-1M16 18l1 1"/>
+  </svg>
+  <span>Normalized Output</span>
+</div>
+       <div class="row">
+  <label class="lbl">Bars/row</label>
+  <select id="normBarsPerRow" class="btn">
+    <option value="1">1</option>
+    <option value="2" selected>2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="6">5</option>
+    <option value="8">6</option>
+  </select>
+
+  <button id="btnNormalize" class="btn primary">Normalize ▶</button>
+<button id="btnSend" class="btn">Send to Editor</button>
+</div>
+      </div>
+      <div class="sec-b">
+        <pre id="out"></pre>
+      </div>
+    </section>
+  </div>
+<script>
+/* ===== Helpers ===== */
+const $ = s => document.querySelector(s);
+const esc = s => (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+/* ===== Chord detection (praktis) ===== */
+const CHORD_RE = /\b([A-G](?:#|b)?)(?:(maj7|maj9|maj11|maj13|maj|mMaj7|m7b5|m7|m6|m|dim7|dim|aug|sus2|sus4|add9|6\/9|6|7|9|11|13)?)(?:\/(?:[A-G](?:#|b)?))?\b/g;
+function isChord(t){ CHORD_RE.lastIndex=0; return CHORD_RE.test(t); }
+
+/* ===== Parse sections & pair chord/lyric ===== */
+function classifyLine(line){
+  const clean = line.replace(/\[[^\]]+\]/g,'').trim();
+  if(!clean) return {type:'empty'};
+  const toks = clean.split(/\s+/).filter(Boolean);
+  const hits = toks.filter(isChord).length;
+  const ratio = hits/(toks.length||1);
+  return ratio>=0.6? {type:'chord',tokens:toks}:{type:'lyric',tokens:toks};
+}
+function splitSections(raw){
+  const lines=(raw||'').replace(/\r/g,'').split(/\n/);
+  const out=[]; let cur={label:'(No Label)', rows:[]};
+  const push=()=>{ if(cur.rows.some(r=>r.text.trim()!=='')) out.push(cur); };
+  for(const ln of lines){
+    const m=/^\s*\[([^\]]+)\]\s*$/.exec(ln);
+    if(m){ push(); cur={label:m[1].trim(), rows:[]}; continue; }
+    cur.rows.push({text:ln, meta:classifyLine(ln)});
+  }
+  push(); return out;
+}
+function pairChordLyric(rows){
+  const pairs=[];
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];
+    if(r.meta.type==='chord' && rows[i+1] && rows[i+1].meta.type==='lyric'){
+      pairs.push({chord:r.text, lyric:rows[i+1].text}); i++;
+    } else if(r.meta.type==='chord'){
+      pairs.push({chord:r.text, lyric:''});
+    } else if(r.meta.type==='lyric'){
+      pairs.push({chord:'', lyric:r.text});
+    }
+  }
+  return pairs;
+}
+function extractChordPositions(line){
+  if(!line) return [];
+  let s=line.replace(/\s+$/,'');
+  const res=[]; let idx=0,col=0,buf="",start=0;
+  while(idx<=s.length){
+    const ch=s[idx]||' ';
+    if(/\s/.test(ch) || idx===s.length){
+      if(buf){ res.push({name:buf, col:start}); buf=""; }
+      col++; idx++; continue;
+    }
+    if(!buf) start=col; buf+=ch; col++; idx++;
+  }
+  const out=[];
+  for(const t of res){
+    const parts=t.name.split(/\s*-\s*/g).filter(Boolean);
+    if(parts.length>1){ let off=0; for(const p of parts){ if(isChord(p)) out.push({name:p,col:t.col+off}); off+=2; }
+    } else { if(isChord(t.name)) out.push(t); }
+  }
+  return out;
+}
+function uniqueChords(str){
+  const pos=extractChordPositions(str||'');
+  return Array.from(new Set(pos.map(p=>p.name)));
+}
+
+/* ===== State ===== */
+let state={sections:[]};
+const getGlobalQuant = ()=> Number($('#qGlobal').value)||4;
+
+/* ===== Analyze ===== */
+function analyze(){
+  const raw = $('#raw').value || '';
+  state.sections = splitSections(raw).map(sec=>{
+    const pairs = pairChordLyric(sec.rows);
+    const lines = pairs.map(p=>({
+      sourceChordText: p.chord||'',
+      lyric: p.lyric||'',
+      grid: [],             // array chord per slot
+      bars: 1,              // jumlah bar per line
+      activeChord: null
+    }));
+    return { label: sec.label, lines };
+  });
+
+  renderAnalysis();
+  $('#sec-analyze').scrollIntoView({behavior:'smooth'});
+}
+
+/* ===== Render Analyze (chips + bars + grid + lyric) ===== */
+function renderAnalysis(){
+  const box = $('#analysis');
+  if(!box) return;
+
+  // simpan posisi scroll (vertikal + horizontal)
+  const scrollY = box.scrollTop;
+  const hScroll = {};
+  box.querySelectorAll('.gridwrap').forEach(w=>{
+    const key = (w.dataset.si||'') + '-' + (w.dataset.li||'');
+    hScroll[key] = w.scrollLeft || 0;
+  });
+
+  if(!state.sections.length){
+    box.innerHTML = '<div class="muted">No sections detected.</div>';
+    return;
+  }
+
+  let html = '';
+  state.sections.forEach((sec,si)=>{
+    html+=`<div>
+      <div class="subh">[${esc(sec.label)}]</div>`;
+
+    sec.lines.forEach((ln,li)=>{
+      const chips = uniqueChords(ln.sourceChordText);
+
+      // chips
+      html+=`<div class="chips" data-si="${si}" data-li="${li}">`;
+      if(chips.length){
+        chips.forEach(c=>{
+          html+=`<div class="chip ${ln.activeChord===c?'active':''}" data-chord="${esc(c)}">${esc(c)}</div>`;
+        });
+      }else{
+        html+=`<div class="muted" style="font-size:12px">No chords detected</div>`;
+      }
+      html+=`<div class="chip ${!ln.activeChord?'active':''}" data-chord="">(None)</div>`;
+      html+=`</div>`;
+
+      // bars control
+      html+=`<div class="row" style="justify-content:flex-end;margin:4px 0 2px">
+        <label class="lbl">Bars</label>
+        <select class="sel-bars" data-si="${si}" data-li="${li}">
+          ${[1,2,3,4].map(v=>`<option value="${v}" ${v===(Number(ln.bars)||1)?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>`;
+
+      // grid
+      const units=getGlobalQuant();
+      const bars=Math.max(1,Number(ln.bars)||1);
+      const total=units*bars;
+
+      if(!Array.isArray(ln.grid)) ln.grid=[];
+      if(ln.grid.length!==total){
+        const ng=new Array(total).fill("");
+        for(let i=0;i<Math.min(ln.grid.length,total);i++) ng[i]=ln.grid[i]||"";
+        ln.grid=ng;
+      }
+
+      const cols=[];
+      for(let b=0;b<bars;b++){
+        for(let u=0;u<units;u++) cols.push('var(--cellW)');
+        if(b<bars-1) cols.push('var(--barSpW)');
+      }
+
+      html+=`<div class="gridwrap" data-si="${si}" data-li="${li}">
+                <div class="grid" style="grid-template-columns:${cols.join(' ')}">`;
+      for(let b=0;b<bars;b++){
+        for(let u=0;u<units;u++){
+          const idx=b*units+u;
+          const val=ln.grid[idx]||"";
+          html+=`<div class="cell ${val?'active':''}" data-si="${si}" data-li="${li}" data-idx="${idx}">${esc(val)}</div>`;
+        }
+        if(b<bars-1) html+=`<div class="barsp" aria-hidden="true"></div>`;
+      }
+      html+=`</div></div>`;
+
+      // lyric
+      html+=`<div class="lyric" contenteditable="true" data-si="${si}" data-li="${li}">${esc(ln.lyric||'')}</div>`;
+    });
+
+    html+=`</div>`;
+  });
+
+  box.innerHTML = html;
+
+  // restore posisi scroll
+  box.scrollTop = scrollY;
+  box.querySelectorAll('.gridwrap').forEach(w=>{
+    const key = (w.dataset.si||'') + '-' + (w.dataset.li||'');
+    if (key in hScroll) w.scrollLeft = hScroll[key];
+  });
+
+  // listener bar select
+  box.querySelectorAll('.sel-bars').forEach(sel=>{
+    sel.onchange = ()=>{
+      const si=+sel.dataset.si, li=+sel.dataset.li;
+      const v=Math.max(1, Math.min(8, +sel.value||1));
+      const units=getGlobalQuant();
+      const ln=state.sections[si].lines[li];
+
+      const newLen=units*v;
+      const ng=new Array(newLen).fill("");
+      const old=ln.grid||[];
+      for(let i=0;i<Math.min(old.length,newLen);i++) ng[i]=old[i]||"";
+
+      ln.bars=v;
+      ln.grid=ng;
+      renderAnalysis();
+    };
+  });
+
+  // listener chips
+  box.querySelectorAll('.chips').forEach(wrap=>{
+    wrap.onclick = e=>{
+      const chip=e.target.closest('.chip'); if(!chip) return;
+      const si=+wrap.dataset.si, li=+wrap.dataset.li;
+      const chord=chip.getAttribute('data-chord')||"";
+      state.sections[si].lines[li].activeChord=chord||null;
+      renderAnalysis();
+    };
+  });
+
+  // listener cell
+  box.querySelectorAll('.cell').forEach(cell=>{
+    cell.onclick = ()=>{
+      const si=+cell.dataset.si, li=+cell.dataset.li, idx=+cell.dataset.idx;
+      const ln=state.sections[si].lines[li];
+      const active=ln.activeChord;
+      if(active){ ln.grid[idx]=(ln.grid[idx]===active?"":active); } else { ln.grid[idx]=""; }
+      renderAnalysis();
+    };
+  });
+
+  // listener lyric
+  box.querySelectorAll('.lyric').forEach(d=>{
+    d.oninput = ()=>{
+      const si=+d.dataset.si, li=+d.dataset.li;
+      state.sections[si].lines[li].lyric=d.textContent||'';
+    };
+  });
+}
+/* ===== Env flag (staging / prod) ===== */
+const isStaging = location.pathname.includes('/staging');
+
+/* ===== Listener: Home ===== */
+document.getElementById('btnHome').onclick = () => {
+  location.href = isStaging
+    ? 'https://mulfiethea-pixel.github.io/Chordyv-pwa/staging/'
+    : 'https://mulfiethea-pixel.github.io/Chordyv-pwa/';
+};
+document.getElementById('btnSend')?.addEventListener('click', () => {
+  const out = (document.getElementById('out')?.innerText || '').trim();
+  if (!out) { alert('Belum ada hasil yang bisa dikirim!'); return; }
+
+  // simpan hasil normalize
+  localStorage.setItem('chordyv:incoming', out);
+
+  // absolute target biar tidak nyasar ke root
+  const BASE = 'https://mulfiethea-pixel.github.io/Chordyv-pwa';
+  const target = location.pathname.includes('/staging')
+    ? `${BASE}/staging/#ed`
+    : `${BASE}/#ed`;
+
+  location.href = target;
+});
+/* ===== Global Quantize ===== */
+$('#qGlobal').addEventListener('change', ()=>{
+  const u=getGlobalQuant();
+  state.sections.forEach(sec=>{
+    sec.lines.forEach(ln=>{
+      const bars = Number(ln.bars)||1;
+      const newLen = u*bars;
+      const ng = new Array(newLen).fill("");
+      const old = ln.grid||[];
+      for(let i=0;i<Math.min(old.length,newLen);i++) ng[i]=old[i]||"";
+      ln.grid=ng;
+    });
+  });
+  renderAnalysis();
+});
+/* ===== Normalize (slot kosong = '.', bar terakhir juga pakai '|') ===== */
+function normalize(){
+  if(!state.sections.length) analyze();
+
+ // Ambil nilai dari select (pakai data tersimpan kalau ada)
+const qEl = document.getElementById('qGlobal');
+const brEl = document.getElementById('normBarsPerRow');
+
+const units  = Number(qEl?.value || localStorage.getItem('chordyv:qGlobal') || 4);
+const perRow = Math.max(1, Math.min(8, +(brEl?.value || localStorage.getItem('chordyv:norm:perRow') || 2)));
+
+const out = [];
+
+  state.sections.forEach(sec=>{
+    const sectionSegs = [];
+    (sec.lines||[]).forEach(ln=>{
+      const bars  = Math.max(1, Number(ln.bars)||1);
+      const total = units * bars;
+      const grid  = (ln.grid||[]).slice(0, total).map(x => x && x.trim() ? x.trim() : '.');
+      for (let b=0; b<bars; b++){
+        const seg = grid.slice(b*units, b*units + units).join(' ');
+        sectionSegs.push(seg + ' |');
+      }
+    });
+
+    out.push(`[${sec.label}]`);
+    for (let i=0; i<sectionSegs.length; i+=perRow){
+      out.push(sectionSegs.slice(i, i+perRow).join(' '));
+    }
+    out.push('');
+  });
+
+// tulis hasil
+document.getElementById('out').textContent = out.join('\n');
+
+if (typeof saveNormState === 'function') saveNormState();
+if (typeof afterNormalizeHook === 'function') afterNormalizeHook();
+}
+// listeners
+document.getElementById('btnNormalize').onclick = normalize;
+document.getElementById('normBarsPerRow')?.addEventListener('change', normalize);
+/* ===== Buttons (aman) ===== */
+$('#btnAnalyze').onclick = analyze;
+$('#btnNormalize').onclick = normalize;
+$('#btnClear').onclick = ()=>{
+  $('#raw').value=''; $('#analysis').textContent=''; $('#out').textContent='';
+  state.sections=[];
+};
+/* opsional biar realtime saat dropdown berubah */
+document.getElementById('normBarsPerRow')?.addEventListener('change', normalize);
+
+/* Sample */
+$('#btnSample').onclick = ()=>{
+  $('#raw').value = `[Intro]
+G Am/G D/G Em D  (2x)
+
+[Verse 1]
+G                Am  
+You move like whispers through the light  
+G               Em        D  
+Grace in motion, fading night  
+C             Bm7  
+Among the willow’s gentle sway  
+C              D  
+I hear your laughter drift away  
+
+[Chorus]
+D     G   Am  
+Oh darling...  
+     Bm7         Am  
+Where do your footsteps roam tonight  
+   G  
+Sweet angel...  
+G/F        Em       D#  
+Do you feel my heart still holding tight`;
+  analyze();
+};
+// ====== Theme Toggle ======
+const themeBtn = document.getElementById('themeToggle');
+const body = document.body;
+if(themeBtn){
+  const saved = localStorage.getItem('premium-theme') || 'light';
+  body.classList.toggle('premium-light', saved === 'light');
+  body.classList.toggle('premium-dark', saved !== 'light');
+  themeBtn.textContent = saved === 'light' ? '🌑 Dark' : '🌕 Light';
+
+  themeBtn.addEventListener('click', ()=>{
+    const toLight = !body.classList.contains('premium-light');
+    body.classList.toggle('premium-light', toLight);
+    body.classList.toggle('premium-dark', !toLight);
+    localStorage.setItem('premium-theme', toLight ? 'light' : 'dark');
+    themeBtn.textContent = toLight ? '🌑 Dark' : '🌕 Light';
+  });
+}
+
+// ====== Tombol Home ======
+const homeBtn = document.getElementById('btnHome');
+if(homeBtn){
+  homeBtn.addEventListener('click', ()=>{
+    window.location.href = 'index.html'; // ubah ke halaman utama kamu
+  });
+}
+</script>
+<script>
+  // aktifkan animasi setelah DOM siap
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.classList.add('sections-animate');
+  });
+</script>
+<script>
+/* === Keys yang sudah dipakai === */
+const KEY_NORM_IN   = 'chordyv:norm:lastIn';
+const KEY_NORM_OUT  = 'chordyv:norm:lastOut';
+const KEY_QGLOBAL   = 'chordyv:qGlobal';
+const KEY_PER_ROW   = 'chordyv:norm:perRow';
+const KEY_GRIDSTATE = 'chordyv:norm:grid:v1';
+
+/* === Flag resume: tandai bahwa user datang dari "Send to Editor" === */
+const KEY_RESUME    = 'chordyv:norm:resume';
+
+/* === Util save yang ada === */
+// (pastikan fungsi ini sudah ada; kalau belum, tempel saja)
+function saveNormState(){
+  const raw  = document.getElementById('raw')?.value ?? '';
+  const qSel = document.getElementById('qGlobal')?.value;
+  const pr   = document.getElementById('normBarsPerRow')?.value;
+  localStorage.setItem(KEY_NORM_IN, raw);
+  if (qSel != null) localStorage.setItem(KEY_QGLOBAL, String(qSel));
+  if (pr   != null) localStorage.setItem(KEY_PER_ROW, String(pr));
+}
+function saveGridState(){
+  try{
+    const payload = (state.sections||[]).map(sec=>({
+      label: sec.label,
+      lines: (sec.lines||[]).map(ln=>({
+        bars: Number(ln.bars)||1,
+        grid: Array.isArray(ln.grid)? ln.grid : [],
+        lyric: ln.lyric || '',
+        activeChord: ln.activeChord || null
+      }))
+    }));
+    localStorage.setItem(KEY_GRIDSTATE, JSON.stringify(payload));
+  }catch(e){}
+}
+function afterNormalizeHook(){
+  const out = (document.getElementById('out')?.textContent || '').trim();
+  localStorage.setItem(KEY_NORM_OUT, out);
+}
+
+/* === Auto-save paket lengkap === */
+function saveAll(){
+  if (typeof saveNormState === 'function') saveNormState();
+  if (typeof saveGridState === 'function') saveGridState();
+  if (typeof afterNormalizeHook === 'function') afterNormalizeHook();
+}
+
+/* === Aktifkan auto-save saat user klik "Send to Editor" === */
+(() => {
+  const btn = document.getElementById('btnSend');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    // Simpan semua state + tandai resume
+    saveAll();
+    localStorage.setItem(KEY_RESUME, '1');
+    // ...lanjutkan logic kirim OUT + redirect milikmu di listener ini...
+  }, { capture: true }); // pastikan ini kepanggil duluan
+})();
+
+/* === Cadangan: auto-save saat tab ditutup/di-switch === */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') saveAll();
+});
+window.addEventListener('pagehide', saveAll);
+
+/* === Saat kembali ke halaman normalize ===
+   Restore biasa + kalau ada flag resume, fokuskan ke yang kamu mau */
+document.addEventListener('DOMContentLoaded', () => {
+  const fromResume = localStorage.getItem(KEY_RESUME) === '1';
+
+  // ...di sini jalankan restore yang sudah kamu punya:
+  // - set qGlobal, normBarsPerRow dari storage
+  // - isi #raw, #out
+  // - requestAnimationFrame(() => analyze(); loadGridStateMerge(); )
+
+  // contoh fokus opsional:
+  if (fromResume) {
+    document.getElementById('sec-analyze')?.scrollIntoView({behavior:'smooth', block:'start'});
+    localStorage.removeItem(KEY_RESUME); // bersihkan flag
+  }
+});
+</script>
+<script>
+/* Analyze: pastikan state tersimpan meski user belum mengetik */
+(() => {
+  const btn = document.getElementById('btnAnalyze');
+  if (!btn) return;
+  const orig = typeof window.analyze === 'function' ? window.analyze : null;
+  btn.onclick = () => {
+    saveNormState();
+    if (orig) orig();
+  };
+})();
+
+/* Send to Editor: simpan dulu RAW+kontrol sebelum kirim OUT */
+(() => {
+  const btn = document.getElementById('btnSend');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    saveNormState();
+    // sisanya: logic kirim OUT + redirect kamu yang sudah ada
+  }, { capture: true }); // pastikan jalan duluan
+})();
+
+/* Home: simpan dulu sebelum navigate */
+(() => {
+  const btn = document.getElementById('btnHome');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    saveNormState();
+    // sisanya: redirect ke home kamu yang sudah ada
+  }, { capture: true });
+})();
+</script>
+
+<!-- === Patch: full restore + merge + autosave listeners === -->
+<script>
+(function(){
+  // 1) Restore controls and raw input
+  function restoreNormState(){
+    try{
+      const raw = localStorage.getItem('chordyv:norm:lastIn') || '';
+      const q   = localStorage.getItem('chordyv:qGlobal');
+      const pr  = localStorage.getItem('chordyv:norm:perRow');
+      const rawEl = document.getElementById('raw');
+      const qEl   = document.getElementById('qGlobal');
+      const prEl  = document.getElementById('normBarsPerRow');
+      if(rawEl) rawEl.value = raw;
+      if(qEl && q!=null) qEl.value = String(q);
+      if(prEl && pr!=null) prEl.value = String(pr);
+    }catch(e){}
+  }
+  window.restoreNormState = window.restoreNormState || restoreNormState;
+
+  // 2) Merge saved grid state into parsed state
+  function mergeGridState(){
+    try{
+      const json = localStorage.getItem('chordyv:norm:grid:v1');
+      if(!json) return;
+      const saved = JSON.parse(json)||[];
+      const byKey = new Map();
+      saved.forEach(sec => {
+        (sec.lines||[]).forEach((ln,li) => {
+          byKey.set((sec.label||'')+'__'+li, ln);
+        });
+      });
+      (state.sections||[]).forEach(sec=>{
+        (sec.lines||[]).forEach((ln,li)=>{
+          const keep = byKey.get((sec.label||'')+'__'+li);
+          if(!keep) return;
+          ln.bars        = Number(keep.bars)||ln.bars||1;
+          ln.grid        = Array.isArray(keep.grid) ? keep.grid.slice() : (ln.grid||[]);
+          ln.lyric       = (keep.lyric ?? ln.lyric ?? '');
+          ln.activeChord = (keep.activeChord ?? ln.activeChord ?? null);
+        });
+      });
+      // re-render with restored values
+      if(typeof renderAnalysis==='function') renderAnalysis();
+    }catch(e){}
+  }
+  window.mergeGridState = window.mergeGridState || mergeGridState;
+
+  // 3) After-render: attach autosave listeners
+  if(typeof renderAnalysis === 'function'){
+    const _origRender = renderAnalysis;
+    window.renderAnalysis = function(){
+      _origRender();
+      try{
+        document.querySelectorAll('.sel-bars').forEach(sel=>{
+          sel.addEventListener('change', () => {
+            if(typeof saveGridState==='function') saveGridState();
+            if(typeof afterNormalizeHook==='function') afterNormalizeHook();
+          }, {once:false});
+        });
+        document.querySelectorAll('.cell').forEach(cell=>{
+          cell.addEventListener('click', () => {
+            if(typeof saveGridState==='function') saveGridState();
+            if(typeof afterNormalizeHook==='function') afterNormalizeHook();
+          }, {once:false});
+        });
+        document.querySelectorAll('.lyric').forEach(area=>{
+          area.addEventListener('input', () => {
+            if(typeof saveGridState==='function') saveGridState();
+            if(typeof afterNormalizeHook==='function') afterNormalizeHook();
+          }, {once:false});
+        });
+        document.querySelectorAll('.chips').forEach(wrap=>{
+          wrap.addEventListener('click', () => {
+            if(typeof saveGridState==='function') saveGridState();
+            if(typeof afterNormalizeHook==='function') afterNormalizeHook();
+          }, {once:false});
+        });
+        // global controls
+        document.getElementById('qGlobal')?.addEventListener('change', ()=>{
+          if(typeof saveNormState==='function') saveNormState();
+        }, {once:false});
+        document.getElementById('normBarsPerRow')?.addEventListener('change', ()=>{
+          if(typeof saveNormState==='function') saveNormState();
+        }, {once:false});
+      }catch(e){}
+    };
+  }
+
+  // 4) Clear button wipes storage
+  document.getElementById('btnClear')?.addEventListener('click', ()=>{
+    ['chordyv:norm:lastIn','chordyv:norm:lastOut','chordyv:qGlobal','chordyv:norm:perRow','chordyv:norm:grid:v1'].forEach(k=>{
+      localStorage.removeItem(k);
+    });
+  });
+
+  // 5) On load restore/merge
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const fromResume = localStorage.getItem('chordyv:norm:resume') === '1';
+    // restore inputs
+    if(typeof restoreNormState==='function') restoreNormState();
+    const raw = document.getElementById('raw')?.value.trim();
+    if(raw){
+      if(typeof analyze==='function') analyze();
+      if(typeof mergeGridState==='function') mergeGridState();
+      const out = localStorage.getItem('chordyv:norm:lastOut');
+      if(out) {
+        const outEl = document.getElementById('out');
+        if(outEl) outEl.textContent = out;
+      }
+    }
+    if(fromResume){
+      document.getElementById('sec-analyze')?.scrollIntoView({behavior:'smooth',block:'start'});
+      localStorage.removeItem('chordyv:norm:resume');
+    }
+  });
+})();
+</script>
+<!-- === PATCH: Keamanan Input (Readonly Normalize + Plaintext Input + Plaintext Lyric) === -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  /* 1) Kunci hanya kalau memang ADA textarea normalize */
+  const norm = document.getElementById('normalize') 
+            || document.querySelector('textarea[data-role="normalize"]') 
+            || document.querySelector('textarea.normalize');
+
+  if (norm) {
+    norm.setAttribute('readonly', 'readonly');
+    const block = e => { e.preventDefault(); e.stopPropagation(); };
+    ['paste','drop','beforeinput','keydown','input'].forEach(ev =>
+      norm.addEventListener(ev, block, true)
+    );
+    norm.style.background = '#f9fafb';
+    norm.style.cursor = 'not-allowed';
+  }
+  // Catatan: kalau output kamu <pre id="out"> (sekarang), tidak perlu dikunci apa pun.
+
+  /* 2) INPUT (#raw) — izinkan paste tapi paksa plaintext */
+  const raw = document.getElementById('raw');
+  if (raw) {
+    raw.removeAttribute('readonly');
+    raw.style.background = '';
+    raw.style.cursor = '';
+
+    const toPlain = s => (s || '').replace(/\r\n?/g, '\n');
+
+    raw.addEventListener('paste', (e) => {
+      const clip = e.clipboardData || window.clipboardData;
+      const txt = toPlain((clip && (clip.getData('text/plain') || clip.getData('text'))) || '');
+      if (!txt) return;
+      e.preventDefault();
+
+      if (document.queryCommandSupported && document.queryCommandSupported('insertText')) {
+        document.execCommand('insertText', false, txt);
+      } else {
+        const start = raw.selectionStart || 0;
+        const end   = raw.selectionEnd   || 0;
+        const val   = raw.value || '';
+        raw.value   = val.slice(0, start) + txt + val.slice(end);
+        const pos   = start + txt.length;
+        raw.setSelectionRange(pos, pos);
+      }
+    }, { capture: true });
+
+    // Opsional: cegah drag&drop HTML ke input
+    raw.addEventListener('drop', (e) => { e.preventDefault(); }, { capture: true });
+  }
+
+  /* 3) Lyric contenteditable — plaintext-only (punyamu sudah oke) */
+  document.querySelectorAll('.lyric').forEach(el => {
+    el.setAttribute('contenteditable', 'true');
+    el.addEventListener('paste', (e) => {
+      const clip = e.clipboardData || window.clipboardData;
+      const plain = (clip && (clip.getData('text/plain') || clip.getData('text'))) || '';
+      if (!plain) return;
+      e.preventDefault();
+      el.focus();
+
+      const text = plain.replace(/\r\n?/g, '\n');
+
+      if (document.queryCommandSupported && document.queryCommandSupported('insertText')) {
+        document.execCommand('insertText', false, text);
+        return;
+      }
+
+      const sel = window.getSelection && window.getSelection();
+      if (sel && sel.rangeCount) {
+        const range = sel.getRangeAt(0);
+        text.split('\n').forEach((seg, i, arr) => {
+          if (seg) range.insertNode(document.createTextNode(seg));
+          if (i < arr.length - 1) range.insertNode(document.createElement('br'));
+        });
+        sel.collapseToEnd();
+      } else {
+        el.appendChild(document.createTextNode(text));
+      }
+    });
+  });
+});
+</script>
+<!-- === END PATCH === -->
+</body>
+</html>
