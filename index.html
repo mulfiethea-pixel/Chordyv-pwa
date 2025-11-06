@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.39">
+<meta name="cv-build" content="2025.09.20.40">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -1891,6 +1891,10 @@ body.premium-dark button#cv_btnNormalize.btn-normalize{
       <input id="cv_importFile" type="file" accept="application/json" style="display:none">
     </div>
     <div class="help">Backup/restore songs & folders.</div>
+<div class="tip" style="margin-top:8px;font-size:12px;color:var(--muted);line-height:1.35">
+  💡 This app is web-based. Please remember to save your work using the Export option before clearing browser data.<br>
+  Your data is stored locally (in localStorage) and will be deleted if site data is cleared — except when you only clear browsing history.
+</div>
   </div>
 </aside>
 <!-- =================== VIEWS =================== -->
@@ -2485,10 +2489,10 @@ cv_onViewInit('lib', ()=>{
       <div class="grow"></div>
     </div>
 
-    <div class="tip" style="margin-top:8px;font-size:12px;color:var(--muted)">
-      Tip: double-tap a song to Open (Performance).
-    </div>
-  </div>
+ <div class="tip" style="margin-top:8px;font-size:12px;color:var(--muted)">  
+      Tip: double-tap a song to Open (Performance).  
+    </div>  
+  </div>  
   `;
 
   // ---------- STATE ----------
