@@ -4338,6 +4338,18 @@ async function purchasePro() {
     const resp = await request.show();
     await resp.complete('success');
 
+    // 💎 Tambahan penting: konfirmasi pembelian ke Google
+    const purchases = await dgs.listPurchases?.();
+    const match = purchases?.find(p => p.itemId === window.CV_SKU);
+    if (match && match.purchaseToken) {
+      try {
+        await dgs.acknowledge(match.purchaseToken);
+        console.log('✅ Purchase acknowledged to Google');
+      } catch (ackErr) {
+        console.warn('⚠️ Acknowledge failed:', ackErr);
+      }
+    }
+
     await sleep(500);
     await restorePro({ retries: 8, delayMs: 900 });
 
@@ -4358,7 +4370,6 @@ async function purchasePro() {
 
 window.purchasePro = purchasePro;
 window.restorePro  = restorePro;
-
 // =====================
 // 6. Wire Buttons
 // =====================
