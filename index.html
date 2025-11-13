@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.41">
+<meta name="cv-build" content="2025.09.20.42">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -4265,6 +4265,8 @@ function hasPro(purchases, sku){
 // =====================
 // 4. Restore Status
 // =====================
+let cvAckSwept = false;
+
 async function restorePro({retries=5, delayMs=800} = {}) {
   try {
     if (!('getDigitalGoodsService' in window)) {
@@ -4277,10 +4279,27 @@ async function restorePro({retries=5, delayMs=800} = {}) {
 
     const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
 
-    for (let i=0; i<=retries; i++){
+    for (let i = 0; i <= retries; i++) {
       const purchases = await dgs.listPurchases?.();
       log('listPurchases try', i, purchases);
 
+      // 🔁 Safety: sekali per sesi, coba acknowledge semua purchase yang ada
+      if (!cvAckSwept && Array.isArray(purchases) && purchases.length) {
+        for (const p of purchases) {
+          const token = p.purchaseToken || p.token;
+          if (!token) continue;
+
+          try {
+            await dgs.acknowledge(token);
+            console.log('[Billing][restore] acknowledged from restorePro:', token);
+          } catch (ackErr) {
+            console.warn('[Billing][restore] acknowledge failed:', ackErr);
+          }
+        }
+        cvAckSwept = true;
+      }
+
+      // Cek apakah user sudah PRO
       if (hasPro(purchases, window.CV_SKU)) {
         setTierLabel('Premium User ✨');
         window.cvIsPro = true;
@@ -4292,6 +4311,7 @@ async function restorePro({retries=5, delayMs=800} = {}) {
       if (i < retries) await sleep(delayMs);
     }
 
+    // Kalau gak ketemu purchase PRO
     setTierLabel('Free User');
     window.cvIsPro = false;
     showUpgradeCta(true, '✨ Upgrade to Pro');
@@ -4338,18 +4358,32 @@ async function purchasePro() {
     const resp = await request.show();
     await resp.complete('success');
 
-    // 💎 Tambahan penting: konfirmasi pembelian ke Google
-    const purchases = await dgs.listPurchases?.();
-    const match = purchases?.find(p => p.itemId === window.CV_SKU);
-    if (match && match.purchaseToken) {
-      try {
-        await dgs.acknowledge(match.purchaseToken);
-        console.log('✅ Purchase acknowledged to Google');
-      } catch (ackErr) {
-        console.warn('⚠️ Acknowledge failed:', ackErr);
-      }
-    }
+    // 💎 Tambahan penting: konfirmasi pembelian ke Google (dengan retry)
+let match = null;
 
+for (let i = 0; i < 4 && !match; i++) {
+  const purchases = await dgs.listPurchases?.();
+  log('ack listPurchases try', i, purchases);
+
+  match = purchases?.find(p => p.itemId === window.CV_SKU);
+
+  if (!match) {
+    // kasih waktu Play sinkron dulu
+    await sleep(500);
+  }
+}
+
+if (match && (match.purchaseToken || match.token)) {
+  const token = match.purchaseToken || match.token;
+  try {
+    await dgs.acknowledge(token);
+    console.log('✅ [Billing] Purchase acknowledged to Google:', token);
+  } catch (ackErr) {
+    console.warn('⚠️ [Billing] Acknowledge failed:', ackErr);
+  }
+} else {
+  console.warn('⚠️ [Billing] No matching purchase found to acknowledge');
+}
     await sleep(500);
     await restorePro({ retries: 8, delayMs: 900 });
 
