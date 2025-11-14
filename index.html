@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.42">
+<meta name="cv-build" content="2025.09.20.43">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -4188,7 +4188,7 @@ firebase.auth().onAuthStateChanged((user)=>{
 ==== end nonaktif ==== -->
 <script>
 // =====================
-// 1. Toast System (new)
+//0 . Toast System (new)
 // =====================
 (function(){
   const el = document.createElement('div');
@@ -4207,7 +4207,7 @@ firebase.auth().onAuthStateChanged((user)=>{
 })();
 
 // =====================
-// 2. Modal Upgrade
+// 1. Modal Upgrade
 // =====================
 window.CV_SKU = window.CV_SKU || "premium_unlock";
 
@@ -4231,7 +4231,11 @@ function closeUpgrade(){
 
 window.showUpgradeModal = openUpgrade;
 window.hideUpgradeModal = closeUpgrade;
-
+// =====================
+// 2. Backend Config
+// =====================
+const CV_BACKEND = 'https://chordyv-backend-production.up.railway.app'; // backend di Railway (publik)
+const CV_PACKAGE_NAME = 'io.github.mulfiethea_pixel.twa'; // persis seperti di Play Console
 // =====================
 // 3. Billing Handling
 // =====================
@@ -4326,12 +4330,12 @@ async function restorePro({retries=5, delayMs=800} = {}) {
     return false;
   }
 }
-
 // =====================
 // 5. Purchase Flow
 // =====================
 async function purchasePro() {
   try {
+    // 5.1 Cek dukungan API
     if (!('getDigitalGoodsService' in window)) {
       cvToast('Billing is only available when installed from Google Play.', 'info');
       return;
@@ -4341,12 +4345,14 @@ async function purchasePro() {
       return;
     }
 
+    // 5.2 Ambil Digital Goods Service
     const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
     const details = await dgs.getDetails([window.CV_SKU]);
     if (!details || !details.length) {
       throw new Error('SKU not found on Play Console: ' + window.CV_SKU);
     }
 
+    // 5.3 Buka payment UI
     const request = new PaymentRequest(
       [{
         supportedMethods: 'https://play.google.com/billing',
@@ -4358,32 +4364,81 @@ async function purchasePro() {
     const resp = await request.show();
     await resp.complete('success');
 
-    // 💎 Tambahan penting: konfirmasi pembelian ke Google (dengan retry)
-let match = null;
+    // 5.4 Cari purchase yang barusan terjadi & ambil token
+    let match = null;
 
-for (let i = 0; i < 4 && !match; i++) {
-  const purchases = await dgs.listPurchases?.();
-  log('ack listPurchases try', i, purchases);
+    for (let i = 0; i < 4 && !match; i++) {
+      const purchases = await dgs.listPurchases?.();
+      log('ack listPurchases try', i, purchases);
 
-  match = purchases?.find(p => p.itemId === window.CV_SKU);
+      match = purchases?.find(p =>
+        p.itemId === window.CV_SKU ||
+        p.productId === window.CV_SKU ||
+        p.sku === window.CV_SKU
+      );
 
-  if (!match) {
-    // kasih waktu Play sinkron dulu
-    await sleep(500);
-  }
-}
+      if (!match) {
+        // kasih waktu Play sinkron dulu
+        await sleep(500);
+      }
+    }
 
-if (match && (match.purchaseToken || match.token)) {
-  const token = match.purchaseToken || match.token;
-  try {
-    await dgs.acknowledge(token);
-    console.log('✅ [Billing] Purchase acknowledged to Google:', token);
-  } catch (ackErr) {
-    console.warn('⚠️ [Billing] Acknowledge failed:', ackErr);
-  }
-} else {
-  console.warn('⚠️ [Billing] No matching purchase found to acknowledge');
-}
+    if (!match || !(match.purchaseToken || match.token)) {
+      console.warn('⚠️ [Billing] No matching purchase found to verify');
+      cvToast('⚠️ Purchase not found after payment. Please try again.', 'error');
+      return;
+    }
+
+    const token = match.purchaseToken || match.token;
+    log('Found purchase token:', token);
+
+    // 5.5 VERIFIKASI KE BACKEND
+    try {
+      const verifyRes = await fetch(CV_BACKEND + '/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          packageName: CV_PACKAGE_NAME,
+          purchaseToken: token
+        })
+      });
+      const verifyJson = await verifyRes.json();
+      console.log('[Billing][verify]', verifyJson);
+
+      if (!verifyJson.ok) {
+        console.warn('[Billing] backend verify failed:', verifyJson.error);
+        // kalau mau strict: return;
+      }
+    } catch (e) {
+      console.warn('[Billing][verify] request failed:', e);
+      // masih lanjut ke ack supaya user nggak ke-lock
+    }
+
+    // 5.6 ACK VIA BACKEND (opsional tapi ideal)
+    try {
+      const ackRes = await fetch(CV_BACKEND + '/ack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          packageName: CV_PACKAGE_NAME,
+          purchaseToken: token
+        })
+      });
+      const ackJson = await ackRes.json();
+      console.log('[Billing][ack-backend]', ackJson);
+    } catch (e) {
+      console.warn('[Billing][ack-backend] failed:', e);
+    }
+
+    // 5.7 ACK LOKAL (DGS) – aman karena idempotent
+    try {
+      await dgs.acknowledge(token);
+      console.log('✅ [Billing] Purchase acknowledged via DGS:', token);
+    } catch (ackErr) {
+      console.warn('⚠️ [Billing] DGS acknowledge failed:', ackErr);
+    }
+
+    // 5.8 Sinkron status
     await sleep(500);
     await restorePro({ retries: 8, delayMs: 900 });
 
