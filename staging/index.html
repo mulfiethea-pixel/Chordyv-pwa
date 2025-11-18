@@ -2692,7 +2692,7 @@ btnEdit.addEventListener('click', ()=>{
       title:   s.title   || '',
       artist:  s.artist  || '',
       key:     s.key     || 'C',
-      lyricsHtml: s.lyricsHtml || '''
+      lyricsHtml: s.lyricsHtml || ''
     }));
 
     window.location.href = `/Chordyv-pwa/staging/formlirik.html?open=${encodeURIComponent(selectedId)}&mode=edit`;
