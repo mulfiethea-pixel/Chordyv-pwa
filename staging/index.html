@@ -2649,7 +2649,7 @@ function openSong(id){
 
   // 🔹 Khusus lagu dari Lyrics Form → buka ke PREVIEW form lirik
   if (s.mode === 'lyrics') {
-    // simpan payload biar formlirik8 bisa load
+    // simpan payload biar formlirik bisa load
     localStorage.setItem('cv_lyrics_open_payload', JSON.stringify({
       id,
       title:  s.title  || '',
@@ -2659,7 +2659,7 @@ function openSong(id){
     }));
 
     // lempar ke halaman form lirik (mode preview)
-    window.location.href = `formlirik8.html?open=${encodeURIComponent(id)}&mode=preview`;
+    window.location.href = `formlirik.html?open=${encodeURIComponent(id)}&mode=preview`;
     return;
   }
 
@@ -2695,7 +2695,7 @@ btnEdit.addEventListener('click', ()=>{
       html:    s.lyricsHtml || ''
     }));
 
-    window.location.href = `formlirik8.html?open=${encodeURIComponent(selectedId)}&mode=edit`;
+    window.location.href = `formlirik.html?open=${encodeURIComponent(selectedId)}&mode=edit`;
     return;
   }
 
