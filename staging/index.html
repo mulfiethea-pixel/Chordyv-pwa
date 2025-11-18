@@ -2655,7 +2655,7 @@ function openSong(id){
       title:  s.title  || '',
       artist: s.artist || '',
       key:    s.key    || 'C',
-      html:   s.lyricsHtml || ''
+      lyricsHtml: s.lyricsHtml || ''
     }));
 
     // lempar ke halaman form lirik (mode preview)
@@ -2692,7 +2692,7 @@ btnEdit.addEventListener('click', ()=>{
       title:   s.title   || '',
       artist:  s.artist  || '',
       key:     s.key     || 'C',
-      html:    s.lyricsHtml || ''
+      lyricsHtml: s.lyricsHtml || '''
     }));
 
     window.location.href = `/Chordyv-pwa/staging/formlirik.html?open=${encodeURIComponent(selectedId)}&mode=edit`;
