@@ -2659,7 +2659,7 @@ function openSong(id){
     }));
 
     // lempar ke halaman form lirik (mode preview)
-    window.location.href = `formlirik.html?open=${encodeURIComponent(id)}&mode=preview`;
+    window.location.href = `/Chordyv-pwa/staging/formlirik.html?open=${encodeURIComponent(id)}&mode=preview`;
     return;
   }
 
@@ -2695,7 +2695,7 @@ btnEdit.addEventListener('click', ()=>{
       html:    s.lyricsHtml || ''
     }));
 
-    window.location.href = `formlirik.html?open=${encodeURIComponent(selectedId)}&mode=edit`;
+    window.location.href = `/Chordyv-pwa/staging/formlirik.html?open=${encodeURIComponent(selectedId)}&mode=edit`;
     return;
   }
 
