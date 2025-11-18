@@ -1431,19 +1431,44 @@ if (themeToggle) {
 }
 
 /* ===============================
-   HOME BUTTON (dummy)
+   HOME BUTTON → balik ke Library
 =============================== */
 const homeBtn = document.getElementById('homeBtn');
 if (homeBtn) homeBtn.addEventListener('click', () => {
-  alert('Home tapped. (Nanti bisa diarahkan ke dashboard ChordyV)');
+  window.location.href = '/Chordyv-pwa/staging/index.html#library';
 });
-/* ===============================
-   LOAD DARI LIBRARY (OPEN / EDIT)
+/* /* ===============================
+   LOAD DARI LIBRARY (OPEN / EDIT / NEW)
 =============================== */
 (function () {
   const params = new URLSearchParams(location.search);
   const mode = params.get('mode') || 'preview'; // default: preview
 
+  // 🔹 MODE NEW → halaman blank
+  if (mode === 'new') {
+    document.getElementById('songTitle').value  = '';
+    document.getElementById('songArtist').value = '';
+    document.getElementById('songKey').value    = 'C';
+
+    editor.innerHTML = '';
+    hiddenTa.value   = '';
+
+    currentLyricsId = null;
+    window.currentLyricsId = null;
+
+    // warna default
+    currentLyric = '#ffffff';
+    editor.style.color = currentLyric;
+
+    currentLabel = '#999999';
+    if (typeof recolorLabels === 'function') recolorLabels();
+
+    return; // selesai → tidak load payload apa pun
+  }
+
+  // =============================
+  // MODE OPEN / EDIT
+  // =============================
   const raw = localStorage.getItem('cv_lyrics_open_payload');
   if (!raw) return;
 
@@ -1470,11 +1495,11 @@ if (homeBtn) homeBtn.addEventListener('click', () => {
     hiddenTa.value   = html;
   }
 
-  // simpan id supaya Save Draft update, bukan bikin baru
-  window.currentLyricsId = data.id || null;
-  currentLyricsId = window.currentLyricsId;
+  // id untuk update
+  currentLyricsId = data.id || null;
+  window.currentLyricsId = currentLyricsId;
 
-  // 🔹 restore warna lirik
+  // restore warna lirik
   if (data.lyricsColor) {
     currentLyric = data.lyricsColor;
     editor.style.color = currentLyric;
@@ -1487,7 +1512,7 @@ if (homeBtn) homeBtn.addEventListener('click', () => {
     }
   }
 
-  // 🔹 restore warna label
+  // restore warna label
   if (data.labelColor) {
     currentLabel = data.labelColor;
     if (typeof recolorLabels === 'function') recolorLabels();
@@ -1500,7 +1525,7 @@ if (homeBtn) homeBtn.addEventListener('click', () => {
     }
   }
 
-  // ✨ default: OPEN = preview, EDIT = tetap di editor
+  // AUTO PREVIEW untuk OPEN mode
   if (mode !== 'edit') {
     const btn = document.getElementById('previewBtn');
     if (typeof applyPreviewFont === 'function') {
