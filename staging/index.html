@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.38">
+<meta name="cv-build" content="2025.09.20.43">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -1891,6 +1891,10 @@ body.premium-dark button#cv_btnNormalize.btn-normalize{
       <input id="cv_importFile" type="file" accept="application/json" style="display:none">
     </div>
     <div class="help">Backup/restore songs & folders.</div>
+<div class="tip" style="margin-top:8px;font-size:12px;color:var(--muted);line-height:1.35">
+  💡 This app is web-based. Please remember to save your work using the Export option before clearing browser data.<br>
+  Your data is stored locally (in localStorage) and will be deleted if site data is cleared — except when you only clear browsing history.
+</div>
   </div>
 </aside>
 <!-- =================== VIEWS =================== -->
@@ -2485,10 +2489,10 @@ cv_onViewInit('lib', ()=>{
       <div class="grow"></div>
     </div>
 
-    <div class="tip" style="margin-top:8px;font-size:12px;color:var(--muted)">
-      Tip: double-tap a song to Open (Performance).
-    </div>
-  </div>
+ <div class="tip" style="margin-top:8px;font-size:12px;color:var(--muted)">  
+      Tip: double-tap a song to Open (Performance).  
+    </div>  
+  </div>  
   `;
 
   // ---------- STATE ----------
@@ -2639,28 +2643,66 @@ cv_onViewInit('lib', ()=>{
   }
 
   // ---------- LIST ACTIONS ----------
-  function openSong(id){
-    if(!db[id]) return;
-    const s = db[id];
-    localStorage.setItem('cv_perf_raw', (s.raw||'').trim());
-    localStorage.setItem('cv_perf_id', id);
-    const meta = {
-      id, title: s.title || '(Untitled)',
-      key: s.key || 'C',
-      beat: s.beat || 4
-    };
-    localStorage.setItem('cv_perf_meta', JSON.stringify(meta));
-    cv_switchView('perf');
+function openSong(id){
+  if (!db[id]) return;
+  const s = db[id];
+
+  // 🔹 Khusus lagu dari Lyrics Form → buka ke PREVIEW form lirik
+  if (s.mode === 'lyrics') {
+    // simpan payload biar formlirik8 bisa load
+    localStorage.setItem('cv_lyrics_open_payload', JSON.stringify({
+      id,
+      title:  s.title  || '',
+      artist: s.artist || '',
+      key:    s.key    || 'C',
+      html:   s.lyricsHtml || ''
+    }));
+
+    // lempar ke halaman form lirik (mode preview)
+    window.location.href = `formlirik8.html?open=${encodeURIComponent(id)}&mode=preview`;
+    return;
   }
-  btnOpen.addEventListener('click', ()=>{
-    if(!selectedId){ cvToast('Select a song first.'); return; }
-    openSong(selectedId);
-  });
-  btnEdit.addEventListener('click', ()=>{
-    if(!selectedId){ cvToast('Select a song first.'); return; }
-    localStorage.setItem('cv_edit_id', selectedId);
-    cv_switchView('ed');
-  });
+
+  // 🔸 Default lama → open ke Performance
+  localStorage.setItem('cv_perf_raw', (s.raw||'').trim());
+  localStorage.setItem('cv_perf_id', id);
+  const meta = {
+    id,
+    title: s.title || '(Untitled)',
+    key:   s.key   || 'C',
+    beat:  s.beat  || 4
+  };
+  localStorage.setItem('cv_perf_meta', JSON.stringify(meta));
+  cv_switchView('perf');
+}
+ btnOpen.addEventListener('click', ()=>{
+  if (!selectedId) { cvToast('Select a song first.'); return; }
+  openSong(selectedId);
+});
+
+btnEdit.addEventListener('click', ()=>{
+  if (!selectedId) { cvToast('Select a song first.'); return; }
+
+  const s = db[selectedId];
+
+  // 🔹 Kalau lagu dari Lyrics Form → buka form lirik mode EDIT
+  if (s && s.mode === 'lyrics') {
+    localStorage.setItem('cv_lyrics_open_payload', JSON.stringify({
+      id:      selectedId,
+      title:   s.title   || '',
+      artist:  s.artist  || '',
+      key:     s.key     || 'C',
+      html:    s.lyricsHtml || ''
+    }));
+
+    window.location.href = `formlirik8.html?open=${encodeURIComponent(selectedId)}&mode=edit`;
+    return;
+  }
+
+  // 🔸 Default lama → Editor chord bawaan
+  localStorage.setItem('cv_edit_id', selectedId);
+  cv_switchView('ed');
+});
   btnMove.addEventListener('click', (ev)=>{
     if (!selectedId){ cvToast('Select a song first.'); return; }
     if (!folders || folders.length === 0){ cvToast('No folders yet. Add one first.'); return; }
@@ -4184,7 +4226,7 @@ firebase.auth().onAuthStateChanged((user)=>{
 ==== end nonaktif ==== -->
 <script>
 // =====================
-// 1. Toast System (new)
+//0 . Toast System (new)
 // =====================
 (function(){
   const el = document.createElement('div');
@@ -4203,7 +4245,7 @@ firebase.auth().onAuthStateChanged((user)=>{
 })();
 
 // =====================
-// 2. Modal Upgrade
+// 1. Modal Upgrade
 // =====================
 window.CV_SKU = window.CV_SKU || "premium_unlock";
 
@@ -4227,7 +4269,11 @@ function closeUpgrade(){
 
 window.showUpgradeModal = openUpgrade;
 window.hideUpgradeModal = closeUpgrade;
-
+// =====================
+// 2. Backend Config
+// =====================
+const CV_BACKEND = 'https://chordyv-backend-production.up.railway.app'; // backend di Railway (publik)
+const CV_PACKAGE_NAME = 'io.github.mulfiethea_pixel.twa'; // persis seperti di Play Console
 // =====================
 // 3. Billing Handling
 // =====================
@@ -4261,6 +4307,8 @@ function hasPro(purchases, sku){
 // =====================
 // 4. Restore Status
 // =====================
+let cvAckSwept = false;
+
 async function restorePro({retries=5, delayMs=800} = {}) {
   try {
     if (!('getDigitalGoodsService' in window)) {
@@ -4273,10 +4321,27 @@ async function restorePro({retries=5, delayMs=800} = {}) {
 
     const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
 
-    for (let i=0; i<=retries; i++){
+    for (let i = 0; i <= retries; i++) {
       const purchases = await dgs.listPurchases?.();
       log('listPurchases try', i, purchases);
 
+      // 🔁 Safety: sekali per sesi, coba acknowledge semua purchase yang ada
+      if (!cvAckSwept && Array.isArray(purchases) && purchases.length) {
+        for (const p of purchases) {
+          const token = p.purchaseToken || p.token;
+          if (!token) continue;
+
+          try {
+            await dgs.acknowledge(token);
+            console.log('[Billing][restore] acknowledged from restorePro:', token);
+          } catch (ackErr) {
+            console.warn('[Billing][restore] acknowledge failed:', ackErr);
+          }
+        }
+        cvAckSwept = true;
+      }
+
+      // Cek apakah user sudah PRO
       if (hasPro(purchases, window.CV_SKU)) {
         setTierLabel('Premium User ✨');
         window.cvIsPro = true;
@@ -4288,6 +4353,7 @@ async function restorePro({retries=5, delayMs=800} = {}) {
       if (i < retries) await sleep(delayMs);
     }
 
+    // Kalau gak ketemu purchase PRO
     setTierLabel('Free User');
     window.cvIsPro = false;
     showUpgradeCta(true, '✨ Upgrade to Pro');
@@ -4302,12 +4368,12 @@ async function restorePro({retries=5, delayMs=800} = {}) {
     return false;
   }
 }
-
 // =====================
 // 5. Purchase Flow
 // =====================
 async function purchasePro() {
   try {
+    // 5.1 Cek dukungan API
     if (!('getDigitalGoodsService' in window)) {
       cvToast('Billing is only available when installed from Google Play.', 'info');
       return;
@@ -4317,12 +4383,14 @@ async function purchasePro() {
       return;
     }
 
+    // 5.2 Ambil Digital Goods Service
     const dgs = await window.getDigitalGoodsService('https://play.google.com/billing');
     const details = await dgs.getDetails([window.CV_SKU]);
     if (!details || !details.length) {
       throw new Error('SKU not found on Play Console: ' + window.CV_SKU);
     }
 
+    // 5.3 Buka payment UI
     const request = new PaymentRequest(
       [{
         supportedMethods: 'https://play.google.com/billing',
@@ -4334,6 +4402,81 @@ async function purchasePro() {
     const resp = await request.show();
     await resp.complete('success');
 
+    // 5.4 Cari purchase yang barusan terjadi & ambil token
+    let match = null;
+
+    for (let i = 0; i < 4 && !match; i++) {
+      const purchases = await dgs.listPurchases?.();
+      log('ack listPurchases try', i, purchases);
+
+      match = purchases?.find(p =>
+        p.itemId === window.CV_SKU ||
+        p.productId === window.CV_SKU ||
+        p.sku === window.CV_SKU
+      );
+
+      if (!match) {
+        // kasih waktu Play sinkron dulu
+        await sleep(500);
+      }
+    }
+
+    if (!match || !(match.purchaseToken || match.token)) {
+      console.warn('⚠️ [Billing] No matching purchase found to verify');
+      cvToast('⚠️ Purchase not found after payment. Please try again.', 'error');
+      return;
+    }
+
+    const token = match.purchaseToken || match.token;
+    log('Found purchase token:', token);
+
+    // 5.5 VERIFIKASI KE BACKEND
+    try {
+      const verifyRes = await fetch(CV_BACKEND + '/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          packageName: CV_PACKAGE_NAME,
+          purchaseToken: token
+        })
+      });
+      const verifyJson = await verifyRes.json();
+      console.log('[Billing][verify]', verifyJson);
+
+      if (!verifyJson.ok) {
+        console.warn('[Billing] backend verify failed:', verifyJson.error);
+        // kalau mau strict: return;
+      }
+    } catch (e) {
+      console.warn('[Billing][verify] request failed:', e);
+      // masih lanjut ke ack supaya user nggak ke-lock
+    }
+
+    // 5.6 ACK VIA BACKEND (opsional tapi ideal)
+    try {
+      const ackRes = await fetch(CV_BACKEND + '/ack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          packageName: CV_PACKAGE_NAME,
+          purchaseToken: token
+        })
+      });
+      const ackJson = await ackRes.json();
+      console.log('[Billing][ack-backend]', ackJson);
+    } catch (e) {
+      console.warn('[Billing][ack-backend] failed:', e);
+    }
+
+    // 5.7 ACK LOKAL (DGS) – aman karena idempotent
+    try {
+      await dgs.acknowledge(token);
+      console.log('✅ [Billing] Purchase acknowledged via DGS:', token);
+    } catch (ackErr) {
+      console.warn('⚠️ [Billing] DGS acknowledge failed:', ackErr);
+    }
+
+    // 5.8 Sinkron status
     await sleep(500);
     await restorePro({ retries: 8, delayMs: 900 });
 
@@ -4354,7 +4497,6 @@ async function purchasePro() {
 
 window.purchasePro = purchasePro;
 window.restorePro  = restorePro;
-
 // =====================
 // 6. Wire Buttons
 // =====================
@@ -4546,7 +4688,7 @@ window.addEventListener('load', () => {
 <script>
 (function(){
   const KEY_NORM_COUNT = 'cv_norm_count';
-  const MAX_FREE = 3;
+  const MAX_FREE = 10;
 
   function openNormalizeUpgrade(){
     if (typeof window.showUpgradeModal === 'function') {
