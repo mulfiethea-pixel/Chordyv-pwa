@@ -1436,6 +1436,45 @@ const homeBtn = document.getElementById('homeBtn');
 if (homeBtn) homeBtn.addEventListener('click', () => {
   alert('Home tapped. (Nanti bisa diarahkan ke dashboard ChordyV)');
 });
+// // ===============================
+// LOAD DARI LIBRARY (OPEN / EDIT)
+// ===============================
+(function () {
+  const params = new URLSearchParams(location.search);
+  const mode = params.get('mode') || 'preview'; // default: preview
+
+  const raw = localStorage.getItem('cv_lyrics_open_payload');
+  if (!raw) return;
+
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (e) {
+    return;
+  }
+
+  // isi form dasar
+  if (data.title)  document.getElementById('songTitle').value  = data.title;
+  if (data.artist) document.getElementById('songArtist').value = data.artist;
+  if (data.key)    document.getElementById('songKey').value    = data.key;
+
+  // isi lirik
+  const html = (data.lyricsHtml || '').trim();
+  if (html) {
+    editor.innerHTML = html;
+    hiddenTa.value   = html;
+  }
+
+  // simpan id supaya Save Draft update, bukan bikin baru
+  window.currentLyricsId = data.id || null;
+  currentLyricsId = window.currentLyricsId;
+
+  // ✨ Kalau BUKAN mode edit → auto preview
+  if (mode !== 'edit') {
+    const btn = document.getElementById('previewBtn');
+    if (btn) btn.click();
+  }
+})();
 </script>
 </body>
 </html>
