@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChordyV ◇ Lyrics Form</title>
+  <style>
+:root {
+  --bg-page: #f7f8fa;      /* abu muda lembut banget */
+  --card: #ffffff;         /* putih bersih */
+  --blue: #0f9cf5;         /* aksen biru tetap */
+  --text: #0f1f33;         /* teks utama gelap */
+  --muted: #6b7c95;        /* teks sekunder */
+  --editor-bg: #ffffff;    /* editor putih bersih */
+}
+
+body.dark {
+  --bg-page: #0f172a;      /* latar belakang gelap */
+  --card: #1e293b;         /* card abu gelap */
+  --text: #e2e8f0;         /* teks terang */
+  --muted: #94a3b8;        /* teks sekunder di dark mode */
+  --editor-bg: #111827;    /* editor abu gelap lembut */
+}
+
+/* === frosted layout umum === */
+body {
+  background: var(--bg-page);
+}
+
+/* card utama: form, panel, editor */
+.card,
+.lyrics-shell,
+.form-card,
+.editor-card,
+.lyrics-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(15, 23, 42, 0.03);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+  border-radius: 22px;
+}
+
+/* kalau nama class kamu cuma <div class="lyrics-editor"> ganti aja di sini */
+.lyrics-editor {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(6px);
+}
+
+/* dark mode versi frosted */
+body.dark .card,
+body.dark .lyrics-shell,
+body.dark .form-card,
+body.dark .editor-card,
+body.dark .lyrics-panel {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(148, 163, 184, 0.04);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* tombol bulat di toolbar tetap keliatan */
+body.dark .text-tool-btn {
+  background: rgba(148,163,184,.08);
+}
+
+/* editor kotak (yang lirik editor) biar tetap putih di light */
+#lyricsEditor {
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(4px);
+}
+
+/* preview toolbar biar nyambung style-nya */
+#fsReader .fs-toolbar {
+  background: rgba(15,23,42,.95);
+  backdrop-filter: blur(16px);
+}
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+  margin: 0;
+  /* pakai warna dari :root aja, jangan gradient */
+  background: var(--bg-page);
+  min-height: 100vh;
+  color: var(--text);
+  transition: background .2s ease, color .2s ease;
+}
+
+body.dark {
+  /* dark-nya boleh tetap begini */
+  background: radial-gradient(circle at top, #0f172a, #020617);
+}
+    .topbar {
+      background: linear-gradient(90deg, #0f9cf5 0%, #336dff 100%);
+      color: #fff;
+      padding: 16px 18px 12px;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: .02em;
+      box-shadow: 0 10px 25px rgba(12,97,199,0.22);
+    }
+    .topbar small {
+      display: block;
+      font-weight: 500;
+      opacity: .85;
+      margin-top: 3px;
+      font-size: .72rem;
+    }
+    .subbar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 6px 12px 6px;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .sub-btn {
+      border: none;
+      background: rgba(15,156,245,.08);
+      color: #0f1f33;
+      padding: 5px 12px 6px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: .7rem;
+      cursor: pointer;
+    }
+    body.dark .sub-btn {
+      background: rgba(226,232,240,.04);
+      color: #e2e8f0;
+    }
+    .page {
+      padding: 10px 12px 20px;
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    /* row atas */
+    .layout {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    @media (min-width: 720px) {
+      .layout {
+        flex-direction: row;
+        align-items: stretch;
+      }
+      .left-col { flex: 0 0 38%; }
+      .right-col { flex: 1; }
+    }
+
+    .section-box {
+      background: var(--card);
+      border-radius: 1rem;
+      box-shadow: 0 10px 30px rgba(11, 66, 125, 0.05);
+      border: 1px solid rgba(9,109,217,0.04);
+      overflow: hidden;
+      transition: background .2s ease;
+    }
+    body.dark .section-box {
+      border-color: rgba(255,255,255,.02);
+      box-shadow: 0 10px 25px rgba(0,0,0,.25);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 14px;
+      background: rgba(255,255,255,.45);
+      border-bottom: 1px solid rgba(9,109,217,0.03);
+      backdrop-filter: blur(6px);
+    }
+    body.dark .section-head {
+      background: rgba(15,23,42,.45);
+    }
+    .section-head-title {
+      font-weight: 700;
+      font-size: .79rem;
+    }
+    .section-body {
+      padding: 12px 14px 14px;
+    }
+    .field-label {
+      font-size: .68rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .text-input {
+      width: 100%;
+      background: #fff;
+      border: 1px solid rgba(14,82,169,0.12);
+      border-radius: 14px;
+      padding: 10px 11px;
+      font-size: .75rem;
+      outline: none;
+      transition: .18s ease;
+    }
+    body.dark .text-input {
+      background: rgba(15,23,42,.3);
+      border: 1px solid rgba(148,163,184,.12);
+      color: #e2e8f0;
+    }
+    .text-input:focus {
+      border-color: rgba(15,156,245,.55);
+      box-shadow: 0 0 0 3px rgba(15,156,245,.08);
+    }
+
+  /* === Toolbar dasar === */
+.toolbar-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.toolbar-label {
+  font-size: .66rem;
+  font-weight: 600;
+  color: var(--muted);
+  width: 76px;
+}
+
+/* === Label (warna) toolbar === */
+.label-toolbar { margin-bottom: 10px; }
+
+.label-palette {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.label-color-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.label-color-dot.active {
+  border-color: rgba(15,156,245,1);
+  box-shadow: 0 5px 15px rgba(15,156,245,.18);
+}
+
+/* === Text tools === */
+.text-toolbar { margin-bottom: 10px; }
+
+.text-tools {
+  display: flex;
+  gap: 6px;
+}
+
+.text-tool-btn {
+  border: none;
+  background: #eef2ff;
+  padding: 5px 11px 6px;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #0f1f33;
+}
+
+body.dark .text-tool-btn {
+  background: rgba(148,163,184,.15);
+  color: #e2e8f0;
+}
+
+/* === Section chips global === */
+.global-section-row {
+  background: transparent;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: -2px;
+}
+
+.section-chip-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.section-chip {
+  background: #edf3ff;
+  color: #1f5fcc;
+  border: none;
+  padding: 6px 16px 6px;
+  border-radius: 999px;
+  font-size: .68rem;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+}
+
+.section-chip.active {
+  background: #0f9cf5;
+  color: #fff;
+}
+
+.section-chip .close-tag {
+  display: none;
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  color: #e11d48;
+  border-radius: 50%;
+  font-size: .62rem;
+  line-height: 16px;
+  text-align: center;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  cursor: pointer;
+}
+
+.section-chip.deletable .close-tag { display: block; }
+
+body.dark .section-chip { background: rgba(15,23,42,.55); color: #e2e8f0; }
+body.dark .section-chip.active { background: #0f9cf5; color:#fff; }
+
+.lyric-label {
+  font-weight: 700;
+  margin: 4px 0 2px;  /* jarak proporsional, atas 8px bawah 4px */
+  line-height: 1.2;
+  display: block;
+}
+
+/* === Tombol section === */
+.section-add-btn,
+.section-del-btn {
+  background: #0f9cf5;
+  color: #fff;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: .7rem;
+  cursor: pointer;
+}
+
+.section-del-btn { background: #f97316; }
+    /* editor card di bawah */
+   #lyricsEditor {
+  min-height: 220px;
+  background: transparent;   /* tadinya var(--editor-bg) */
+  border-radius: 0;           /* biar gak keliatan kotak */
+  padding: 8px 0;             /* boleh 0 kalau mau nempel */
+  outline: none;
+  border: none;
+}
+body.dark #lyricsEditor {
+  border: none;
+  background: transparent;
+}
+
+    .action-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 9px 20px;
+      font-weight: 600;
+      font-size: .72rem;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      background: #eef2ff;
+      color: #0f1f33;
+    }
+    .btn-primary {
+      background: #0f9cf5;
+      color: #fff;
+    }
+    body.dark .btn-secondary {
+      background: rgba(148,163,184,.1);
+      color: #e2e8f0;
+    }
+
+    /* fullscreen reader */
+    #fsReader {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0b1623;
+      color: #fff;
+      z-index: 999;
+      padding: 12px 10px 24px;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #fsTopBar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    #fsTopBar .right-group {
+      display: flex;
+      gap: 6px;
+    }
+    .fs-btn {
+      border: none;
+      background: rgba(255,255,255,.05);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: .7rem;
+      cursor: pointer;
+    }
+    #fsContent {
+      flex: 1;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      line-height: 1.65;
+      font-size: 1rem;
+      background: rgba(0,0,0,.12);
+      border-radius: 14px;
+      padding: 12px 12px 16px;
+    }
+/* bikin dua kolom atas sama tinggi */
+.layout {
+  align-items: stretch;
+}
+
+.left-col,
+.right-col {
+  display: flex;
+}
+
+.left-col .section-box,
+.right-col .section-box {
+  flex: 1 1 auto;
+}
+/* === Lyrics color dots === */
+.color-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.color-dot.active {
+  border-color: rgba(15,156,245,1);
+  box-shadow: 0 5px 15px rgba(15,156,245,.18);
+}
+/* 1. toolbar di dalam mode preview biar gak ikut scroll */
+.fs-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #0f172a; /* samain sama warna header preview kamu */
+  padding: 8px 10px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* kalau mau baris tombolnya lebih rapat */
+.fs-toolbar button,
+.fs-toolbar .fs-btn {
+  background: rgba(15,23,42,.25);
+  border: 1px solid rgba(255,255,255,.05);
+  color: #e2e8f0;
+  border-radius: 999px;
+  padding: 4px 10px 5px;
+  font-size: .7rem;
+  cursor: pointer;
+}
+
+/* 2. kontainer isi lirik di preview */
+#fsContent {
+  overflow-y: auto;
+  max-height: calc(100vh - 120px);
+  line-height: 1.4;
+  padding-bottom: 60px;
+}
+
+/* 3. label di preview supaya sama kayak di editor */
+#fsContent .lyric-label {
+  font-weight: 700;
+  margin: 8px 0 4px;
+  line-height: 1.2;
+  display: block;
+}
+
+/* 4. panel auto scroll di kanan-tengah */
+.fs-autoscroll-panel {
+  position: fixed;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: rgba(15,23,42,.25);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 14px;
+  padding: 4px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 54px;
+  align-items: center;
+}
+
+.fs-autoscroll-panel button {
+  background: rgba(15,23,42,0);
+  border: 1px solid rgba(226,232,240,.12);
+  color: #e2e8f0;
+  border-radius: 10px;
+  width: 38px;
+  height: 30px;
+  font-size: .65rem;
+  cursor: pointer;
+}
+
+.fs-autoscroll-panel .fs-speed-display {
+  font-size: .65rem;
+  color: #e2e8f0;
+  padding: 2px 6px;
+}
+
+/* aktif -> blur dan lebih gelap */
+/* aktif (play) -> blur samar biar gak ganggu teks */
+.fs-autoscroll-panel.active {
+  backdrop-filter: blur(10px);
+  background: rgba(15,23,42,.25);
+  opacity: 0.6;
+}
+
+/* nonaktif (pause) -> tampil jelas */
+.fs-autoscroll-panel {
+  position: fixed;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: rgba(15,23,42,.7);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 14px;
+  padding: 4px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 54px;
+  align-items: center;
+  transition: all .25s ease;
+}
+
+/* 5. font-size toolbar display */
+.fs-font-display {
+  background: rgba(15,23,42,.25);
+  border: 1px solid rgba(255,255,255,.03);
+  padding: 3px 10px 4px;
+  border-radius: 999px;
+  font-size: .68rem;
+  color: #e2e8f0;
+}
+/* overlay preview: selalu nutupin halaman, dan ikut tema dari form */
+#fsReader {
+  background: #edf3ff;          /* default: light */
+}
+#fsReader.fs-dark {
+  background: #0f172a;          /* kalau tema dark */
+}
+
+/* isi liriknya flat (gak ada container/card) tapi tetap ikut warna dari fsReader */
+#fsReader #fsContent {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 16px 14px 60px;
+  color: inherit;               /* pakai warna teks sesuai tema fsReader */
+}
+
+/* kalau masih ada elemen bawaan editor di dalam, flatten juga */
+#fsReader #fsContent > div {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+/* preview wrapper jangan kasih padding di kiri kanan */
+#fsReader {
+  padding: 0;
+}
+
+/* toolbar di preview harus full width dan nempel atas */
+#fsReader .fs-toolbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  background: #0f172a; /* warna bar kamu */
+  z-index: 15;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* karena kita nolkan padding wrapper, kasih padding ke konten */
+#fsReader #fsContent {
+  padding: 16px 14px 60px;
+  /* supaya konten gak ketutupan toolbar */
+  margin-top: 4px;
+}
+/* section header jadi tengah */
+.section-head {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: rgba(255,255,255,.45);
+  backdrop-filter: blur(6px);
+}
+
+body.dark .section-head {
+  background: rgba(15,23,42,.35);
+}
+
+.section-head-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: .79rem;
+  color: var(--text);
+}
+
+body.dark .section-head-title {
+  color: #e2e8f0;
+}
+
+.section-head-title .section-icon {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+.sub-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sub-btn .btn-icon {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+}
+/* === Fix background preview agar putih di light mode === */
+#fsReader {
+  background: #ffffff !important;    /* putih bersih */
+}
+
+#fsReader.fs-dark {
+  background: #0f172a !important;    /* tetap gelap untuk dark mode */
+}
+
+/* isi konten preview ikut background-nya */
+#fsReader #fsContent {
+  background: transparent !important;
+  color: inherit;
+}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    ChordyV ◇ Lyrics Form
+    <small>Write ◇ Arrange Sections ◇ Preview</small>
+  </div>
+<div class="subbar">
+  <button class="sub-btn" id="homeBtn">
+    <svg viewBox="0 0 24 24" class="btn-icon" fill="none">
+      <path d="m4 10 8-6 8 6v8h-5v-5H9v5H4v-8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>
+    Home
+  </button>
+  <button class="sub-btn" id="themeToggle">
+    <svg viewBox="0 0 24 24" class="btn-icon" fill="none">
+      <path d="M12 4v2.5M12 17.5V20M5.6 5.6 7.4 7.4M16.6 16.6l1.8 1.8M4 12h2.5M17.5 12H20M7.4 16.6 5.6 18.4M18.4 5.6 16.6 7.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.4"/>
+    </svg>
+    Theme: Light
+  </button>
+</div>
+
+  <div class="page">
+    <!-- BLOK ATAS: 2 CARD -->
+    <div class="layout">
+      <!-- LEFT -->
+      <div class="left-col">
+        <div class="section-box">
+       <div class="section-head">
+  <span class="section-head-title">
+    <svg viewBox="0 0 24 24" class="section-icon" fill="none">
+      <path d="M9 17a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm0 0V7l10-2v10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="17" cy="15" r="2" stroke="currentColor" stroke-width="1.5"/>
+    </svg>
+    Song Info
+  </span>
+</div>
+          <div class="section-body">
+            <div class="field">
+              <div class="field-label">Song Title</div>
+              <input id="songTitle" class="text-input" placeholder="Type song title..." />
+            </div>
+            <div class="field" style="margin-top:7px;">
+              <div class="field-label">Artist</div>
+              <input id="songArtist" class="text-input" placeholder="Type artist name..." />
+            </div>
+            <div class="field" style="margin-top:7px;">
+              <div class="field-label">Key</div>
+              <input id="songKey" class="text-input" placeholder="C" value="C" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="right-col">
+        <div class="section-box">
+        <div class="section-head">
+  <span class="section-head-title">
+    <!-- SVG di sini -->
+    <svg viewBox="0 0 24 24" class="section-icon" fill="none">
+      <path d="M10 15.5a2.5 2.5 0 1 1-2-2.45V6.5l6-1.5v4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="17" cy="15.5" r="1.7" stroke="currentColor" stroke-width="1.2"/>
+      <path d="M17 12.8v-.9M17 19v-.9M14.9 13.6l-.6-.6M19.1 17.9l-.6-.6M13.9 15.5h-.9M21 15.5h-.9M14.3 17.9l-.6.6M19.6 13l-.6.6" stroke="currentColor" stroke-width=".9" stroke-linecap="round"/>
+    </svg>
+    Lyrics Setting
+  </span>
+</div>
+          <div class="section-body">
+  <!-- Lyrics color -->
+<div class="toolbar-row">
+  <div class="toolbar-label">Lyrics</div>
+  <div class="color-wrap" id="lyricPalette">
+    <div class="color-dot" data-color="#c0392b" style="background:#c0392b;"></div> <!-- merah tua -->
+    <div class="color-dot" data-color="#ff6b81" style="background:#ff6b81;"></div> <!-- merah muda -->
+    <div class="color-dot" data-color="#004aad" style="background:#004aad;"></div> <!-- biru tua -->
+    <div class="color-dot" data-color="#3da9fc" style="background:#3da9fc;"></div> <!-- biru muda -->
+    <div class="color-dot" data-color="#000000" style="background:#000000;"></div> <!-- hitam -->
+  </div>
+</div>
+
+<!-- Label color -->
+<div class="toolbar-row label-toolbar">
+  <div class="toolbar-label">Label</div>
+  <div class="label-palette" id="labelPalette">
+    <div class="label-color-dot" data-color="#c0392b" style="background:#c0392b;"></div>
+    <div class="label-color-dot" data-color="#ff6b81" style="background:#ff6b81;"></div>
+    <div class="label-color-dot" data-color="#004aad" style="background:#004aad;"></div>
+    <div class="label-color-dot" data-color="#3da9fc" style="background:#3da9fc;"></div>
+    <div class="label-color-dot" data-color="#000000" style="background:#000000;"></div>
+  </div>
+</div>
+
+<!-- Text tools -->
+<div class="toolbar-row text-toolbar">
+  <div class="toolbar-label">Text</div>
+  <div class="text-tools">
+    <button class="text-tool-btn" id="btnBold">B</button>
+    <button class="text-tool-btn" id="btnItalic"><i>I</i></button>
+  </div>
+</div>
+
+<!-- Add / Delete Section controls -->
+<div class="toolbar-row section-toolbar">
+  <div class="toolbar-label">Sections</div>
+  <div class="section-tools">
+    <button class="section-add-btn" id="addSectionBtn">+ Add Section</button>
+    <button class="section-del-btn" id="toggleDeleteBtn">Delete Sections</button>
+  </div>
+</div>
+            <!-- Inline form -->
+            <div id="addSectionInline" style="display:none; width:100%; margin-top:6px;">
+              <div style="display:flex; gap:6px;">
+                <input id="newSectionName" class="text-input" placeholder="Verse 2 / Pre-Chorus / Outro" style="flex:1; font-size:.7rem;">
+                <button class="btn btn-primary" id="confirmAddSection" style="padding:6px 14px;">Add</button>
+                <button class="btn btn-secondary" id="cancelAddSection" style="padding:6px 14px;">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOK LABEL GLOBAL (VERSE / CHORUS / DLL) -->
+    <div class="global-section-row" id="sectionRow">
+      <button class="section-chip active" data-section="VERSE">Verse<span class="close-tag">&times;</span></button>
+      <button class="section-chip" data-section="CHORUS">Chorus<span class="close-tag">&times;</span></button>
+      <button class="section-chip" data-section="BRIDGE">Bridge<span class="close-tag">&times;</span></button>
+    </div>
+
+    <!-- BLOK BAWAH: EDITOR -->
+ <div class="section-box">
+  <div class="section-head">
+    <span class="section-head-title">
+      <svg viewBox="0 0 24 24" class="section-icon" fill="none">
+        <path d="M5 5h14v14H5z" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M8 9h8M8 12h5M8 15h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      Lyrics Editor
+    </span>
+  </div>
+  <div class="section-body">
+    <div id="lyricsEditor" contenteditable="true"></div>
+    <textarea id="lyricsTextarea" style="display:none;"></textarea>
+
+    <div class="action-row">
+      <button class="btn btn-secondary" id="clearBtn">Clear</button>
+      <button class="btn btn-secondary" id="saveDraftBtn">Save Draft</button>
+      <button class="btn btn-primary" id="previewBtn">Preview Mode</button>
+    </div>
+  </div>
+</div>
+ <!-- FULLSCREEN READER -->
+<div id="fsReader">
+  <div class="fs-toolbar">
+    <button id="fsExit" class="fs-btn">Close</button>
+    <button id="fsFontMinus" class="fs-btn">-A</button>
+    <span id="fsFontLabel" class="fs-font-display">0</span>
+    <button id="fsFontPlus" class="fs-btn">A+</button>
+  </div>
+
+  <div id="fsContent"></div>
+
+  <div id="fsAutoPanel" class="fs-autoscroll-panel">
+    <button id="fsAutoUp">+</button>
+    <div id="fsAutoSpeed" class="fs-speed-display">0</div>
+    <button id="fsAutoDown">-</button>
+    <button id="fsAutoPlay">▶</button>
+  </div>
+</div>
+<script>
+/* ===============================
+   CORE VARIABLES & ELEMENTS
+=============================== */
+const editor   = document.getElementById('lyricsEditor');
+const hiddenTa = document.getElementById('lyricsTextarea');
+let currentLyric = '#0f1f33';
+let currentLabel = '#06b6d4';
+let caretPath = null;
+
+/* ===============================
+   REALTIME SANITIZER
+=============================== */
+function sanitizeHTML(input) {
+  return input
+    .replace(/<script.*?>.*?<\/script>/gi, '')
+    .replace(/<iframe.*?>.*?<\/iframe>/gi, '')
+    .replace(/on\w+=".*?"/g, '')
+}
+
+/* ===============================
+   SYNC FUNCTION
+=============================== */
+function syncToTextarea() {
+  hiddenTa.value = sanitizeHTML(editor.innerHTML);
+}
+
+/* ===============================
+   CARET PATH SYSTEM
+=============================== */
+function getNodePath(node, offset) {
+  const path = [];
+  while (node && node !== editor) {
+    const parent = node.parentNode;
+    const index = Array.prototype.indexOf.call(parent.childNodes, node);
+    path.unshift(index);
+    node = parent;
+  }
+  return { path, offset };
+}
+
+function resolvePath(obj) {
+  let node = editor;
+  for (const i of obj.path) {
+    if (!node.childNodes[i]) return null;
+    node = node.childNodes[i];
+  }
+  const range = document.createRange();
+  const safeOffset = Math.min(obj.offset, node.textContent?.length || 0);
+  range.setStart(node, safeOffset);
+  range.collapse(true);
+  return range;
+}
+
+function saveCaret() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const r = sel.getRangeAt(0);
+  if (!editor.contains(r.startContainer)) return;
+  caretPath = getNodePath(r.startContainer, r.startOffset);
+}
+
+function restoreCaret() {
+  if (!caretPath) return null;
+  const r = resolvePath(caretPath);
+  if (!r) return null;
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(r);
+  return r;
+}
+
+function getCaretRange() {
+  const r = restoreCaret();
+  if (r) return r;
+  const range = document.createRange();
+  range.selectNodeContents(editor);
+  range.collapse(false);
+  return range;
+}
+
+/* ===============================
+   CORE ACTION HANDLER
+=============================== */
+function applyEditorAction(type, value) {
+  restoreCaret();
+  switch (type) {
+    case 'insert-label': insertLabel(value); break;
+    case 'style': document.execCommand(value, false, null); break;
+    case 'label-color': currentLabel = value; recolorLabels(); break;
+    case 'lyric-color': currentLyric = value; editor.style.color = value; break;
+  }
+  saveCaret();
+  syncToTextarea();
+}
+
+/* ===============================
+   LABEL INSERT & RECOLOR
+=============================== */
+function insertLabel(text) {
+  const lbl = document.createElement('div');
+  lbl.className = 'lyric-label';
+  lbl.textContent = text.toUpperCase();
+  lbl.style.color = currentLabel;
+  lbl.dataset.label = '1';
+
+  const range = getCaretRange();
+  let node = range.startContainer;
+
+  // 1) SISIPKAN LABEL
+  range.insertNode(lbl);
+
+  // 2) PASTIKAN ADA SATU <br> DI BAWAH LABEL (tidak dobel)
+  // cek node setelah label
+  let next = lbl.nextSibling;
+  if (!(next && next.nodeName === 'BR')) {
+    const brAfter = document.createElement('br');
+    lbl.after(brAfter);
+    next = brAfter;
+  }
+
+  // 3) PASTIKAN ADA SATU <br> DI ATAS LABEL (biar gak mepet)
+  // cek node sebelum label
+  let prev = lbl.previousSibling;
+  if (!(prev && prev.nodeName === 'BR')) {
+    const brBefore = document.createElement('br');
+    lbl.before(brBefore);
+  }
+
+  // 4) pindahin caret ke bawah label (setelah <br> yang di bawah)
+  const after = document.createRange();
+  after.setStartAfter(next);
+  after.collapse(true);
+
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(after);
+
+  // simpan & sync
+  caretPath = getNodePath(after.startContainer, after.startOffset);
+  syncToTextarea();
+}
+function recolorLabels() {
+  editor.querySelectorAll('[data-label="1"]').forEach(el => {
+    el.style.color = currentLabel;
+  });
+}
+
+/* ===============================
+   COLOR PALETTE INIT
+=============================== */
+function initPalette(id, type, def) {
+  const wrap = document.getElementById(id);
+  if (!wrap) return;
+  const dots = wrap.querySelectorAll('.color-dot, .label-color-dot');
+  dots.forEach((dot, idx) => {
+    if (dot.dataset.color === def || (!def && idx === 0)) dot.classList.add('active');
+    dot.addEventListener('click', () => {
+      dots.forEach(d => d.classList.remove('active'));
+      dot.classList.add('active');
+      applyEditorAction(type, dot.dataset.color);
+    });
+  });
+}
+initPalette('lyricPalette', 'lyric-color', currentLyric);
+initPalette('labelPalette', 'label-color', currentLabel);
+/* === FIX: keep lyric color active on focus/input === */
+editor.addEventListener('focus', () => {
+  editor.style.color = currentLyric;
+});
+editor.addEventListener('input', () => {
+  editor.style.color = currentLyric;
+});
+
+/* ===============================
+   SECTION CHIP LOGIC
+=============================== */
+const sectionRow = document.getElementById('sectionRow');
+let deleteMode = false;
+
+sectionRow.addEventListener('click', e => {
+  const chip = e.target.closest('.section-chip');
+  if (!chip) return;
+  if (chip.classList.contains('deletable') && e.target.classList.contains('close-tag')) {
+    chip.remove(); return;
+  }
+  const secName = (chip.dataset.section || chip.textContent).trim();
+  applyEditorAction('insert-label', secName);
+});
+
+const toggleDeleteBtn = document.getElementById('toggleDeleteBtn');
+if (toggleDeleteBtn) {
+  toggleDeleteBtn.addEventListener('click', () => {
+    deleteMode = !deleteMode;
+    sectionRow.querySelectorAll('.section-chip')
+      .forEach(ch => ch.classList.toggle('deletable', deleteMode));
+  });
+}
+
+/* ===============================
+   ADD SECTION INLINE
+=============================== */
+const addSectionBtn = document.getElementById('addSectionBtn');
+const addSectionInline = document.getElementById('addSectionInline');
+const newSectionName = document.getElementById('newSectionName');
+const confirmAdd = document.getElementById('confirmAddSection');
+const cancelAdd = document.getElementById('cancelAddSection');
+
+if (addSectionBtn) addSectionBtn.addEventListener('click', () => {
+  addSectionInline.style.display = 'block';
+  newSectionName.value = ''; newSectionName.focus();
+});
+if (cancelAdd) cancelAdd.addEventListener('click', () => {
+  addSectionInline.style.display = 'none'; newSectionName.value = '';
+});
+if (confirmAdd) confirmAdd.addEventListener('click', () => {
+  const name = newSectionName.value.trim(); if (!name) return;
+  const btn = document.createElement('button');
+  btn.className = 'section-chip';
+  btn.dataset.section = name.toUpperCase();
+  btn.innerHTML = name + '<span class="close-tag">&times;</span>';
+  if (deleteMode) btn.classList.add('deletable');
+  sectionRow.appendChild(btn);
+  addSectionInline.style.display = 'none'; newSectionName.value = '';
+});
+if (newSectionName) newSectionName.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); confirmAdd.click(); }
+});
+
+/* ===============================
+   TEXT STYLE BUTTONS
+=============================== */
+const btnBold = document.getElementById('btnBold');
+const btnItalic = document.getElementById('btnItalic');
+/* === FONT STYLE BUTTONS (Bold & Italic) === */
+if (btnBold) {
+  btnBold.addEventListener('click', () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount && !sel.isCollapsed) {
+      document.execCommand('bold', false, null);
+      saveCaret();
+      syncToTextarea();
+    }
+  });
+}
+if (btnItalic) {
+  btnItalic.addEventListener('click', () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount && !sel.isCollapsed) {
+      document.execCommand('italic', false, null);
+      saveCaret();
+      syncToTextarea();
+    }
+  });
+}
+/* ===============================
+   PASTE HANDLER
+=============================== */
+editor.addEventListener('paste', e => {
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData('text');
+  document.execCommand('insertHTML', false, text.replace(/\r?\n/g, '<br>'));
+  saveCaret();
+  syncToTextarea();
+});
+
+/* ===============================
+   Bridge ke DB utama ChordyV (cv_songs)
+=============================== */
+const CV_DB_KEY = 'cv_songs';
+
+function cvLoadSongs() {
+  try {
+    return JSON.parse(localStorage.getItem(CV_DB_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function cvSaveSongs(db) {
+  localStorage.setItem(CV_DB_KEY, JSON.stringify(db));
+}
+
+// id lagu khusus lyrics supaya kalau di-save lagi, dia update, bukan bikin baru
+let currentLyricsId = window.currentLyricsId || null;
+
+/* ===============================
+   BASIC EVENTS
+=============================== */
+editor.addEventListener('keyup', saveCaret);
+editor.addEventListener('mouseup', saveCaret);
+editor.addEventListener('input', () => { saveCaret(); syncToTextarea(); });
+editor.addEventListener('touchend', saveCaret);
+/* ===============================
+   CLEAR BUTTON
+=============================== */
+const clearBtn = document.getElementById('clearBtn');
+if (clearBtn) clearBtn.addEventListener('click', () => {
+  editor.innerHTML = '';
+  hiddenTa.value = '';
+  caretPath = null;
+});
+
+/* ===============================
+   SAVE DRAFT → masuk ke Library
+=============================== */
+const saveDraftBtn = document.getElementById('saveDraftBtn');
+if (saveDraftBtn) {
+  saveDraftBtn.addEventListener('click', () => {
+    if (typeof syncToTextarea === 'function') syncToTextarea();
+
+    const title  = (document.getElementById('songTitle')?.value || '').trim();
+    const artist = (document.getElementById('songArtist')?.value || '').trim();
+    const key    = (document.getElementById('songKey')?.value || 'C').trim() || 'C';
+
+    if (!title) {
+      alert('Title cannot be empty.');
+      return;
+    }
+
+    const db = cvLoadSongs();
+    const id = currentLyricsId || ('l_' + Math.random().toString(36).slice(2, 9));
+
+    db[id] = {
+      id,
+      title,
+      artist,
+      key,
+      beat: 4,
+      folder: (db[id]?.folder || ''),
+      raw: '',
+      mode: 'lyrics',
+      lyricsHtml: hiddenTa.value || editor.innerHTML || ''
+    };
+
+    cvSaveSongs(db);
+    currentLyricsId = id;
+    localStorage.setItem('cv_lyrics_last_id', id);
+
+    alert('Lyrics saved to Library.');
+  });
+}
+
+/* ===============================
+   FULLSCREEN PREVIEW
+=============================== */
+const previewBtn = document.getElementById('previewBtn');
+const fsReader  = document.getElementById('fsReader');
+const fsContent = document.getElementById('fsContent');
+const fsExit    = document.getElementById('fsExit');
+
+if (previewBtn) previewBtn.addEventListener('click', () => {
+  const html = editor.innerHTML.trim();
+  fsContent.innerHTML = html ? sanitizeHTML(html) : '<p style="opacity:.6;">(no lyrics yet)</p>';
+
+  const dark = document.body.classList.contains('dark');
+  if (dark) {
+    fsReader.classList.add('fs-dark');
+  } else {
+    fsReader.classList.remove('fs-dark');
+  }
+
+  // ✨ ambil warna lirik yang sedang dipakai di editor
+  const lyricColor = editor.style.color || currentLyric;
+  fsReader.style.color   = lyricColor;
+  fsContent.style.color  = lyricColor;
+
+  fsReader.style.display = 'flex';
+});
+if (fsExit) fsExit.addEventListener('click', () => {
+  fsReader.style.display = 'none';
+});
+/* =========================
+   PREVIEW: FONT SIZE CONTROL
+========================= */
+const fsFontMinus  = document.getElementById('fsFontMinus');   // -A
+const fsFontPlus   = document.getElementById('fsFontPlus');    // A+
+const fsFontLabel  = document.getElementById('fsFontLabel');   // (0)
+
+let previewFontStep = 0;
+const previewBaseFont = 14; // px
+
+function applyPreviewFont() {
+  const size = previewBaseFont + (previewFontStep * 2); // tiap step naik 2px
+  fsContent.style.fontSize = size + 'px';
+  if (fsFontLabel) fsFontLabel.textContent = previewFontStep;
+}
+
+if (fsFontMinus) {
+  fsFontMinus.addEventListener('click', () => {
+    if (previewFontStep > 0) {
+      previewFontStep--;
+      applyPreviewFont();
+    }
+  });
+}
+if (fsFontPlus) {
+  fsFontPlus.addEventListener('click', () => {
+    previewFontStep++;
+    applyPreviewFont();
+  });
+}
+
+/* jalankan sekali pas preview dibuka */
+if (previewBtn) {
+  previewBtn.addEventListener('click', () => {
+    previewFontStep = 0;
+    applyPreviewFont();
+  });
+}
+
+/* =========================
+   PREVIEW: AUTO SCROLL (dengan smooth increase)
+========================= */
+const fsAutoPanel  = document.getElementById('fsAutoPanel');
+const fsAutoUp     = document.getElementById('fsAutoUp');
+const fsAutoDown   = document.getElementById('fsAutoDown');
+const fsAutoPlay   = document.getElementById('fsAutoPlay');
+const fsAutoSpeed  = document.getElementById('fsAutoSpeed');
+
+let autoScrollTimer = null;
+let autoScrollSpeed = 0;          // kecepatan aktual sekarang
+const autoScrollTick = 150;       // 150ms biar enak di tablet
+
+// buat animasi halus
+let smoothTimer = null;
+
+function updateAutoSpeedDisplay() {
+  if (fsAutoSpeed) {
+    fsAutoSpeed.textContent = autoScrollSpeed.toFixed(2); // 0.25, 0.27, dst
+  }
+}
+
+function startAutoScroll() {
+  if (autoScrollTimer) clearInterval(autoScrollTimer);
+  if (autoScrollSpeed <= 0) return;
+  autoScrollTimer = setInterval(() => {
+    fsContent.scrollTop += autoScrollSpeed;
+  }, autoScrollTick);
+  if (fsAutoPanel) fsAutoPanel.classList.add('active');
+  if (fsAutoPlay) fsAutoPlay.textContent = '⏸';
+}
+
+function stopAutoScroll() {
+  if (autoScrollTimer) {
+    clearInterval(autoScrollTimer);
+    autoScrollTimer = null;
+  }
+  if (fsAutoPanel) fsAutoPanel.classList.remove('active');
+  if (fsAutoPlay) fsAutoPlay.textContent = '▶';
+}
+
+// animasi menuju speed target
+// fungsi buat naikin/turunin speed secara halus dengan easing
+function smoothTo(targetSpeed) {
+  // hentikan animasi lama kalau masih jalan
+  if (smoothTimer) clearInterval(smoothTimer);
+
+  const steps = 20;            // dari 10 → 20 langkah biar lebih lembut
+  const duration = 400;        // total durasi animasi (ms)
+  const interval = duration / steps;
+  const start = autoScrollSpeed;
+  const diff = targetSpeed - start;
+  let count = 0;
+
+  smoothTimer = setInterval(() => {
+    count++;
+    // easing: ease-out-quad → mulai cepat, lalu melambat
+    const t = count / steps;
+    autoScrollSpeed = start + diff * (1 - Math.pow(1 - t, 2));
+    updateAutoSpeedDisplay();
+
+    if (autoScrollTimer) {
+      startAutoScroll(); // refresh supaya speed baru langsung dipakai
+    }
+
+    if (count >= steps) {
+      clearInterval(smoothTimer);
+      autoScrollSpeed = +targetSpeed.toFixed(2);
+      updateAutoSpeedDisplay();
+      if (autoScrollTimer) startAutoScroll();
+    }
+  }, interval);
+}
+
+/* ===== tombol + ===== */
+if (fsAutoUp) {
+  fsAutoUp.addEventListener('click', () => {
+    // naiknya kecil banget
+    const target = +(autoScrollSpeed + 0.02).toFixed(2);
+    smoothTo(target);
+    if (!autoScrollTimer) startAutoScroll();
+  });
+}
+
+/* ===== tombol - ===== */
+if (fsAutoDown) {
+  fsAutoDown.addEventListener('click', () => {
+    const target = Math.max(0, +(autoScrollSpeed - 0.02).toFixed(2));
+    smoothTo(target);
+    if (target === 0) {
+      stopAutoScroll();
+    } else {
+      startAutoScroll();
+    }
+  });
+}
+
+/* ===== tombol play / pause ===== */
+if (fsAutoPlay) {
+  fsAutoPlay.addEventListener('click', () => {
+    if (autoScrollTimer) {
+      // lagi jalan → stop
+      stopAutoScroll();
+    } else {
+      // mulai dari 0.25 biar langsung kerasa smooth
+      const minSpeed = 0.25;
+      if (autoScrollSpeed < minSpeed) {
+        smoothTo(minSpeed);
+        // tunggu sebentar sampai smoothTo selesai, baru mulai scroll
+        setTimeout(startAutoScroll, 220); // 220ms = durasi animasi smoothTo
+      } else {
+        startAutoScroll();
+      }
+    }
+  });
+}
+
+/* reset kalau preview dibuka/tutup */
+if (previewBtn) {
+  previewBtn.addEventListener('click', () => {
+    autoScrollSpeed = 0;
+    updateAutoSpeedDisplay();
+    stopAutoScroll();
+  });
+}
+if (fsExit) {
+  fsExit.addEventListener('click', () => {
+    autoScrollSpeed = 0;
+    updateAutoSpeedDisplay();
+    stopAutoScroll();
+  });
+}
+// Pastikan warna font tetap sesuai theme
+fsContent.querySelectorAll('[data-label="1"]').forEach(el => {
+  el.style.color = currentLabel;
+});
+
+/* ===============================
+   THEME TOGGLE
+=============================== */
+const themeToggle = document.getElementById('themeToggle');
+if (themeToggle) {
+  themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    const dark = document.body.classList.contains('dark');
+    themeToggle.textContent = dark ? 'Theme: Dark' : 'Theme: Light';
+
+    const styles = getComputedStyle(document.body);
+    const bg = styles.getPropertyValue('--editor-bg') || '#fff';
+    editor.style.background = bg;
+    editor.style.color = dark ? '#e2e8f0' : currentLyric;
+    hiddenTa.style.background = bg;
+    hiddenTa.style.color = dark ? '#e2e8f0' : currentLyric;
+
+    // ✨ sinkronin preview juga
+    if (fsReader) {
+      if (dark) {
+        fsReader.classList.add('fs-dark');
+      } else {
+        fsReader.classList.remove('fs-dark');
+      }
+    }
+  });
+}
+
+/* ===============================
+   HOME BUTTON (dummy)
+=============================== */
+const homeBtn = document.getElementById('homeBtn');
+if (homeBtn) homeBtn.addEventListener('click', () => {
+  alert('Home tapped. (Nanti bisa diarahkan ke dashboard ChordyV)');
+});
+</script>
+</body>
+</html>
