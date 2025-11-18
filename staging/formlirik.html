@@ -1185,7 +1185,9 @@ if (saveDraftBtn) {
       folder: (db[id]?.folder || ''),
       raw: '',
       mode: 'lyrics',
-      lyricsHtml: hiddenTa.value || editor.innerHTML || ''
+      lyricsHtml: hiddenTa.value || editor.innerHTML || '',
+      lyricsColor: currentLyric,   // warna lirik
+      labelColor:  currentLabel    // warna label
     };
 
     cvSaveSongs(db);
@@ -1195,7 +1197,6 @@ if (saveDraftBtn) {
     alert('Lyrics saved to Library.');
   });
 }
-
 /* ===============================
    FULLSCREEN PREVIEW
 =============================== */
@@ -1436,9 +1437,9 @@ const homeBtn = document.getElementById('homeBtn');
 if (homeBtn) homeBtn.addEventListener('click', () => {
   alert('Home tapped. (Nanti bisa diarahkan ke dashboard ChordyV)');
 });
-// // ===============================
-// LOAD DARI LIBRARY (OPEN / EDIT)
-// ===============================
+/* ===============================
+   LOAD DARI LIBRARY (OPEN / EDIT)
+=============================== */
 (function () {
   const params = new URLSearchParams(location.search);
   const mode = params.get('mode') || 'preview'; // default: preview
@@ -1454,9 +1455,13 @@ if (homeBtn) homeBtn.addEventListener('click', () => {
   }
 
   // isi form dasar
-  if (data.title)  document.getElementById('songTitle').value  = data.title;
-  if (data.artist) document.getElementById('songArtist').value = data.artist;
-  if (data.key)    document.getElementById('songKey').value    = data.key;
+  const tTitle  = document.getElementById('songTitle');
+  const tArtist = document.getElementById('songArtist');
+  const tKey    = document.getElementById('songKey');
+
+  if (tTitle  && data.title)  tTitle.value  = data.title;
+  if (tArtist && data.artist) tArtist.value = data.artist;
+  if (tKey    && data.key)    tKey.value    = data.key;
 
   // isi lirik
   const html = (data.lyricsHtml || '').trim();
@@ -1469,9 +1474,39 @@ if (homeBtn) homeBtn.addEventListener('click', () => {
   window.currentLyricsId = data.id || null;
   currentLyricsId = window.currentLyricsId;
 
-  // ✨ Kalau BUKAN mode edit → auto preview
+  // 🔹 restore warna lirik
+  if (data.lyricsColor) {
+    currentLyric = data.lyricsColor;
+    editor.style.color = currentLyric;
+
+    const lp = document.getElementById('lyricPalette');
+    if (lp) {
+      lp.querySelectorAll('.color-dot').forEach(dot => {
+        dot.classList.toggle('active', dot.dataset.color === currentLyric);
+      });
+    }
+  }
+
+  // 🔹 restore warna label
+  if (data.labelColor) {
+    currentLabel = data.labelColor;
+    if (typeof recolorLabels === 'function') recolorLabels();
+
+    const lp2 = document.getElementById('labelPalette');
+    if (lp2) {
+      lp2.querySelectorAll('.label-color-dot').forEach(dot => {
+        dot.classList.toggle('active', dot.dataset.color === currentLabel);
+      });
+    }
+  }
+
+  // ✨ default: OPEN = preview, EDIT = tetap di editor
   if (mode !== 'edit') {
     const btn = document.getElementById('previewBtn');
+    if (typeof applyPreviewFont === 'function') {
+      previewFontStep = 0;
+      applyPreviewFont();
+    }
     if (btn) btn.click();
   }
 })();

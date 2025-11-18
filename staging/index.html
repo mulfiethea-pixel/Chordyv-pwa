@@ -2650,13 +2650,16 @@ function openSong(id){
   // 🔹 Khusus lagu dari Lyrics Form → buka ke PREVIEW form lirik
   if (s.mode === 'lyrics') {
     // simpan payload biar formlirik bisa load
-    localStorage.setItem('cv_lyrics_open_payload', JSON.stringify({
-      id,
-      title:  s.title  || '',
-      artist: s.artist || '',
-      key:    s.key    || 'C',
-      lyricsHtml: s.lyricsHtml || ''
-    }));
+  // di dalam openSong (mode lyrics)
+localStorage.setItem('cv_lyrics_open_payload', JSON.stringify({
+  id,
+  title:       s.title       || '',
+  artist:      s.artist      || '',
+  key:         s.key         || 'C',
+  lyricsHtml:  s.lyricsHtml  || '',
+  lyricsColor: s.lyricsColor || null,
+  labelColor:  s.labelColor  || null
+}));
 
     // lempar ke halaman form lirik (mode preview)
     window.location.href = `/Chordyv-pwa/staging/formlirik.html?open=${encodeURIComponent(id)}&mode=preview`;
@@ -2687,13 +2690,15 @@ btnEdit.addEventListener('click', ()=>{
 
   // 🔹 Kalau lagu dari Lyrics Form → buka form lirik mode EDIT
   if (s && s.mode === 'lyrics') {
-    localStorage.setItem('cv_lyrics_open_payload', JSON.stringify({
-      id:      selectedId,
-      title:   s.title   || '',
-      artist:  s.artist  || '',
-      key:     s.key     || 'C',
-      lyricsHtml: s.lyricsHtml || ''
-    }));
+  localStorage.setItem('cv_lyrics_open_payload', JSON.stringify({
+  id:          selectedId,
+  title:       s.title       || '',
+  artist:      s.artist      || '',
+  key:         s.key         || 'C',
+  lyricsHtml:  s.lyricsHtml  || '',
+  lyricsColor: s.lyricsColor || null,
+  labelColor:  s.labelColor  || null
+}));
 
     window.location.href = `/Chordyv-pwa/staging/formlirik.html?open=${encodeURIComponent(selectedId)}&mode=edit`;
     return;
