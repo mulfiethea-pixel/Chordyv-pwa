@@ -830,11 +830,12 @@ body.dark #lyricsEditor {
     <div id="lyricsEditor" contenteditable="true"></div>
     <textarea id="lyricsTextarea" style="display:none;"></textarea>
 
-    <div class="action-row">
-      <button class="btn btn-secondary" id="clearBtn">Clear</button>
-      <button class="btn btn-secondary" id="saveDraftBtn">Save Draft</button>
-      <button class="btn btn-primary" id="previewBtn">Preview Mode</button>
-    </div>
+  <div class="action-row">
+  <button class="btn btn-secondary" id="newLyricsBtn">New</button>
+  <button class="btn btn-secondary" id="clearBtn">Clear</button>
+  <button class="btn btn-secondary" id="saveDraftBtn">Save Draft</button>
+  <button class="btn btn-primary" id="previewBtn">Preview Mode</button>
+</div>
   </div>
 </div>
  <!-- FULLSCREEN READER -->
@@ -1205,7 +1206,38 @@ if (clearBtn) clearBtn.addEventListener('click', () => {
   hiddenTa.value = '';
   caretPath = null;
 });
+/* ===============================
+   NEW LYRICS → mulai draft baru (kena limit)
+=============================== */
+const newBtn = document.getElementById('newLyricsBtn');
+if (newBtn) newBtn.addEventListener('click', () => {
+  const tTitle  = document.getElementById('songTitle');
+  const tArtist = document.getElementById('songArtist');
+  const tKey    = document.getElementById('songKey');
 
+  // reset form dasar
+  if (tTitle)  tTitle.value  = '';
+  if (tArtist) tArtist.value = '';
+  if (tKey)    tKey.value    = 'C';
+
+  // kosongkan editor
+  editor.innerHTML = '';
+  hiddenTa.value   = '';
+  caretPath        = null;
+
+  // reset ID → Save berikutnya dianggap draft baru (cek limit)
+  currentLyricsId = null;
+  window.currentLyricsId = null;
+  localStorage.removeItem('cv_lyrics_last_id');
+  localStorage.removeItem('cv_lyrics_open_payload');
+
+  // reset warna ke default seperti MODE NEW
+  currentLyric = '#0f1f33';
+  editor.style.color = currentLyric;
+
+  currentLabel = '#999999';
+  if (typeof recolorLabels === 'function') recolorLabels();
+});
 /* ===============================
    SAVE DRAFT → masuk ke Library (dengan limit Free)
 =============================== */
