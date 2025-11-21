@@ -1691,32 +1691,5 @@ if (homeBtn) homeBtn.addEventListener('click', () => {
 </script>
 <!-- Toast notification -->
 <div id="cvToast" class="toast"></div>
-<div id="cvDebugReset"
-     style="display:none; position:fixed; bottom:20px; right:20px;
-            background:#dc2626; padding:10px 14px; border-radius:8px;
-            color:#fff; font-size:13px; z-index:9999;">
-  Reset App Data
-</div>
-<script>
-  // Tampilkan tombol debug hanya jika environment = 'staging'
-  if (window.CV_ENV === 'staging') {
-    const btn = document.getElementById('cvDebugReset');
-    btn.style.display = 'block';
-
-    btn.addEventListener('click', () => {
-      const ok = confirm("Reset all local app data?");
-      if (!ok) return;
-
-      try {
-        localStorage.clear();
-      } catch (e) {
-        console.warn('Failed to clear localStorage:', e);
-      }
-
-      // Reload app
-      location.reload();
-    });
-  }
-</script>
 </body>
 </html>
