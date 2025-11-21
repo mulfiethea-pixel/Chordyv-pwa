@@ -4824,35 +4824,42 @@ document.addEventListener('click', (e) => {
 });
 
 
-/* ====== 2) Balik dari normalize → paksa buka Editor & tempel hasil ====== */
-window.addEventListener('load', () => {
+/* ====== 2) Balik dari normalize → buka Editor & tempel hasil (reload ATAU history.back) ====== */
+function cvApplyIncomingFromNormalize() {
   const incoming = localStorage.getItem('chordyv:incoming');
-  const fromNormalize = (location.hash === '#ed');
-  if (!incoming && !fromNormalize) return;
+  if (!incoming) return;
 
-  // Pastikan view Editor aktif (SPA kamu default ke 'lib')
+  // Paksa Editor aktif
   if (typeof window.cv_switchView === 'function') {
     try { window.cv_switchView('ed'); } catch {}
   }
 
-  // Tunggu editor jadi, lalu tempel
   const t0 = Date.now();
   const tryFill = () => {
     const editor = document.getElementById('ed_content') || document.getElementById('raw');
     if (!editor) {
-      if (Date.now() - t0 < 3000) return requestAnimationFrame(tryFill);
-      return; // timeout aman
+      if (Date.now() - t0 < 3000) {
+        return requestAnimationFrame(tryFill);
+      }
+      return; // timeout kalau editor gak muncul
     }
-    if (incoming) {
-      editor.value = incoming;
-      if (typeof window.analyze === 'function') { try { window.analyze(); } catch {} }
-      editor.focus();
-      editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      localStorage.removeItem('chordyv:incoming');
+
+    editor.value = incoming;
+    if (typeof window.analyze === 'function') {
+      try { window.analyze(); } catch {}
     }
+    editor.focus();
+    editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    localStorage.removeItem('chordyv:incoming');
   };
   tryFill();
-});
+}
+
+// Jalan kalau index benar-benar reload
+window.addEventListener('load', cvApplyIncomingFromNormalize);
+
+// Jalan juga kalau index muncul lagi setelah history.back / bfcache
+window.addEventListener('pageshow', cvApplyIncomingFromNormalize);
 </script>
 <!-- === PATCH: Limit Normalize ke 3x untuk Free (terintegrasi Billing/Auth) === -->
 <script>
