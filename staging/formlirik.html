@@ -684,6 +684,36 @@ body:not(.dark) #lyricsEditor {
 body.dark #lyricsEditor {
   color: #fff;
 }
+/* Toast notification */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%) translateY(100%);
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 0.9rem;
+  box-shadow: 0 10px 30px rgba(15, 31, 51, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 9999;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.toast--success {
+  background: #16a34a; /* hijau */
+}
+
+.toast.toast--error {
+  background: #dc2626; /* merah */
+}
   </style>
 </head>
 <body>
@@ -1187,8 +1217,37 @@ function showLyricsDraftUpgrade() {
     // pakai key yang sama dengan editor (kalau ada)
     window.showUpgradeModal('save-limit');
   } else {
-    alert('Free user hanya bisa menyimpan maksimal 5 draft lirik. Silakan upgrade ke Pro untuk menyimpan lebih banyak draft.');
+    showToast(
+      'Free users can save up to 5 lyric drafts. Upgrade to Pro for unlimited drafts.',
+      'error'
+    );
   }
+}
+/* ===============================
+   TOAST HELPER
+=============================== */
+let cvToastTimer = null;
+
+function showToast(message, type = 'info') {
+  const el = document.getElementById('cvToast');
+  if (!el) {
+    // fallback kalau elemen belum ketemu
+    alert(message);
+    return;
+  }
+
+  // reset class
+  el.className = 'toast';
+  if (type === 'success') el.classList.add('toast--success');
+  if (type === 'error')   el.classList.add('toast--error');
+
+  el.textContent = message;
+  el.classList.add('show');
+
+  if (cvToastTimer) clearTimeout(cvToastTimer);
+  cvToastTimer = setTimeout(() => {
+    el.classList.remove('show');
+  }, 2500);
 }
 /* ===============================
    BASIC EVENTS
@@ -1251,7 +1310,7 @@ if (saveDraftBtn) {
     const key    = (document.getElementById('songKey')?.value || 'C').trim() || 'C';
 
     if (!title) {
-      alert('Title cannot be empty.');
+      showToast('Title cannot be empty.');
       return;
     }
 
@@ -1288,7 +1347,7 @@ if (saveDraftBtn) {
     currentLyricsId = id;
     localStorage.setItem('cv_lyrics_last_id', id);
 
-    alert('Lyrics saved to Library.');
+    showToast('Lyrics saved to Library.');
   });
 }
 /* ===============================
@@ -1629,6 +1688,35 @@ if (homeBtn) homeBtn.addEventListener('click', () => {
     if (btn) btn.click();
   }
 })();
+</script>
+<!-- Toast notification -->
+<div id="cvToast" class="toast"></div>
+<div id="cvDebugReset"
+     style="display:none; position:fixed; bottom:20px; right:20px;
+            background:#dc2626; padding:10px 14px; border-radius:8px;
+            color:#fff; font-size:13px; z-index:9999;">
+  Reset App Data
+</div>
+<script>
+  // Tampilkan tombol debug hanya jika environment = 'staging'
+  if (window.CV_ENV === 'staging') {
+    const btn = document.getElementById('cvDebugReset');
+    btn.style.display = 'block';
+
+    btn.addEventListener('click', () => {
+      const ok = confirm("Reset all local app data?");
+      if (!ok) return;
+
+      try {
+        localStorage.clear();
+      } catch (e) {
+        console.warn('Failed to clear localStorage:', e);
+      }
+
+      // Reload app
+      location.reload();
+    });
+  }
 </script>
 </body>
 </html>
