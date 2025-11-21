@@ -861,9 +861,13 @@ body.dark #lyricsEditor {
 =============================== */
 const editor   = document.getElementById('lyricsEditor');
 const hiddenTa = document.getElementById('lyricsTextarea');
+
 let currentLyric = '#0f1f33';
 let currentLabel = '#06b6d4';
 let caretPath = null;
+
+// ⭐ Set warna default editor saat halaman load
+editor.style.color = currentLyric;
 
 /* ===============================
    REALTIME SANITIZER
