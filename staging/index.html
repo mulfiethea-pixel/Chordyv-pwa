@@ -4859,7 +4859,7 @@ window.addEventListener('load', () => {
 (function(){
   // Hanya untuk MENGHITUNG klik normalize user Free (bukan status Pro)
   const KEY_NORM_COUNT = 'cv_norm_count';
-  const MAX_FREE = 3;                  // 3x free; ke-4 → tampilkan modal upgrade
+  const MAX_FREE = 999999;                  // 3x free; ke-4 → tampilkan modal upgrade
   const BTN_SEL = '#cv_btnNormalize';  // id tombol Normalize di Editor
 
   // Buka modal upgrade (pakai sistem modal yang sudah ada)
@@ -4941,7 +4941,7 @@ window.addEventListener('load', () => {
 <script>
 (function(){
   const KEY_NORM_COUNT = 'cv_norm_count';
-  const MAX_FREE = 10;
+  const MAX_FREE = 999999;
 
   function openNormalizeUpgrade(){
     if (typeof window.showUpgradeModal === 'function') {

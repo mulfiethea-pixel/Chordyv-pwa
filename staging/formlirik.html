@@ -1140,6 +1140,50 @@ function cvSaveSongs(db) {
 let currentLyricsId = window.currentLyricsId || null;
 
 /* ===============================
+   FREEMIUM: LIMIT SAVE DRAFT LYRICS
+   - Free: max 5 draft (mode:'lyrics')
+   - Pro (cvIsPro === true): unlimited
+   - Edit draft lama (currentLyricsId != null): selalu boleh
+=============================== */
+const CV_LIMIT_FREE = (typeof window.CV_LIMIT_FREE === 'boolean')
+  ? window.CV_LIMIT_FREE
+  : true;
+
+const FREE_MAX_LYRICS_DRAFTS = 5;
+
+function countLyricsDrafts(db) {
+  if (!db) return 0;
+  let count = 0;
+  for (const id in db) {
+    if (!Object.prototype.hasOwnProperty.call(db, id)) continue;
+    const s = db[id];
+    if (!s) continue;
+    if (s.mode === 'lyrics') {
+      count++;
+    }
+  }
+  return count;
+}
+
+function canSaveMoreLyricsDrafts(db) {
+  // kalau sistem limit global dimatikan
+  if (!CV_LIMIT_FREE) return true;
+  // user Pro → selalu boleh
+  if (window.cvIsPro === true) return true;
+
+  const used = countLyricsDrafts(db);
+  return used < FREE_MAX_LYRICS_DRAFTS;
+}
+
+function showLyricsDraftUpgrade() {
+  if (typeof window.showUpgradeModal === 'function') {
+    // pakai key yang sama dengan editor (kalau ada)
+    window.showUpgradeModal('save-limit');
+  } else {
+    alert('Free user hanya bisa menyimpan maksimal 5 draft lirik. Silakan upgrade ke Pro untuk menyimpan lebih banyak draft.');
+  }
+}
+/* ===============================
    BASIC EVENTS
 =============================== */
 editor.addEventListener('keyup', saveCaret);
@@ -1157,7 +1201,7 @@ if (clearBtn) clearBtn.addEventListener('click', () => {
 });
 
 /* ===============================
-   SAVE DRAFT → masuk ke Library
+   SAVE DRAFT → masuk ke Library (dengan limit Free)
 =============================== */
 const saveDraftBtn = document.getElementById('saveDraftBtn');
 if (saveDraftBtn) {
@@ -1173,7 +1217,19 @@ if (saveDraftBtn) {
       return;
     }
 
-    const db = cvLoadSongs();
+    // load DB lagu
+    const db = cvLoadSongs() || {};
+
+    // 🔒 LIMIT hanya untuk draft BARU
+    // - kalau currentLyricsId masih null → bikin draft baru → cek limit
+    // - kalau lagi edit draft lama (currentLyricsId != null) → selalu boleh
+    if (!currentLyricsId) {
+      if (!canSaveMoreLyricsDrafts(db)) {
+        showLyricsDraftUpgrade();
+        return;
+      }
+    }
+
     const id = currentLyricsId || ('l_' + Math.random().toString(36).slice(2, 9));
 
     db[id] = {
