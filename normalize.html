@@ -41,7 +41,7 @@
 
   /* Input/Output */
   textarea,pre{
-    width:100%;min-height:260px;border:1px solid var(--line);border-radius:10px;
+    width:100%;min-height:160px;border:1px solid var(--line);border-radius:10px;
     padding:10px;background:#fff;color:#0f172a;
     font-family:ui-monospace,Menlo,Consolas,monospace
   }
@@ -849,10 +849,14 @@ body.premium-dark #sec-out .btn:not(.primary):hover{
 const $ = s => document.querySelector(s);
 const esc = s => (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 
-/* ===== Chord detection (praktis) ===== */
-const CHORD_RE = /\b([A-G](?:#|b)?)(?:(maj7|maj9|maj11|maj13|maj|mMaj7|m7b5|m7|m6|m|dim7|dim|aug|sus2|sus4|add9|6\/9|6|7|9|11|13)?)(?:\/(?:[A-G](?:#|b)?))?\b/g;
-function isChord(t){ CHORD_RE.lastIndex=0; return CHORD_RE.test(t); }
+/* ===== Chord detection (extended + slash safe) ===== */
+const CHORD_RE =
+/\b([A-G](?:#|b)?)(?:(?:maj|min|M|m)?(?:6|7|9|11|13)?(?:sus2|sus4)?(?:add9)?(?:b5|#5)?(?:b9|#9)?)?(?:\/([A-G](?:#|b)?))?\b/gi;
 
+function isChord(t){
+  CHORD_RE.lastIndex = 0;
+  return CHORD_RE.test(t);
+}
 /* ===== Parse sections & pair chord/lyric ===== */
 function classifyLine(line){
   const clean = line.replace(/\[[^\]]+\]/g,'').trim();
@@ -1087,24 +1091,18 @@ document.getElementById('btnHome').onclick = () => {
 };
 document.getElementById('btnSend')?.addEventListener('click', () => {
   const out = (document.getElementById('out')?.innerText || '').trim();
-  if (!out) {
-    alert('No result to send yet');
-    return;
-  }
+  if (!out) { alert('Belum ada hasil yang bisa dikirim!'); return; }
 
-  // simpan hasil normalize ke localStorage
+  // simpan hasil normalize
   localStorage.setItem('chordyv:incoming', out);
 
-  // 1) Kalau normalize dibuka dari dalam app (TWA / index),
-  //    cukup balik ke halaman sebelumnya → tidak perlu load GitHub lagi.
-  if (document.referrer.includes('Chordyv-pwa') && history.length > 1) {
-    history.back();
-    return;
-  }
+  // absolute target biar tidak nyasar ke root
+  const BASE = 'https://mulfiethea-pixel.github.io/Chordyv-pwa';
+  const target = location.pathname.includes('/staging')
+    ? `${BASE}/staging/#ed`
+    : `${BASE}/#ed`;
 
-  // 2) Fallback: kalau normalize.html dibuka langsung di browser
-  //    (tanpa datang dari app), tetap sediakan redirect manual ke index.
-  location.href = 'index.html#ed';
+  location.href = target;
 });
 /* ===== Global Quantize ===== */
 $('#qGlobal').addEventListener('change', ()=>{
@@ -1343,253 +1341,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // sisanya: redirect ke home kamu yang sudah ada
   }, { capture: true });
 })();
-</script>
-
-<!-- === Patch: full restore + merge + autosave listeners === -->
-<script>
-(function(){
-  // 1) Restore controls and raw input
-  function restoreNormState(){
-    try{
-      const raw = localStorage.getItem('chordyv:norm:lastIn') || '';
-      const q   = localStorage.getItem('chordyv:qGlobal');
-      const pr  = localStorage.getItem('chordyv:norm:perRow');
-      const rawEl = document.getElementById('raw');
-      const qEl   = document.getElementById('qGlobal');
-      const prEl  = document.getElementById('normBarsPerRow');
-      if(rawEl) rawEl.value = raw;
-      if(qEl && q!=null) qEl.value = String(q);
-      if(prEl && pr!=null) prEl.value = String(pr);
-    }catch(e){}
-  }
-  window.restoreNormState = window.restoreNormState || restoreNormState;
-
-  // 2) Merge saved grid state into parsed state
-  function mergeGridState(){
-    try{
-      const json = localStorage.getItem('chordyv:norm:grid:v1');
-      if(!json) return;
-      const saved = JSON.parse(json)||[];
-      const byKey = new Map();
-      saved.forEach(sec => {
-        (sec.lines||[]).forEach((ln,li) => {
-          byKey.set((sec.label||'')+'__'+li, ln);
-        });
-      });
-      (state.sections||[]).forEach(sec=>{
-        (sec.lines||[]).forEach((ln,li)=>{
-          const keep = byKey.get((sec.label||'')+'__'+li);
-          if(!keep) return;
-          ln.bars        = Number(keep.bars)||ln.bars||1;
-          ln.grid        = Array.isArray(keep.grid) ? keep.grid.slice() : (ln.grid||[]);
-          ln.lyric       = (keep.lyric ?? ln.lyric ?? '');
-          ln.activeChord = (keep.activeChord ?? ln.activeChord ?? null);
-        });
-      });
-      // re-render with restored values
-      if(typeof renderAnalysis==='function') renderAnalysis();
-    }catch(e){}
-  }
-  window.mergeGridState = window.mergeGridState || mergeGridState;
-
-  // 3) After-render: attach autosave listeners
-  if(typeof renderAnalysis === 'function'){
-    const _origRender = renderAnalysis;
-    window.renderAnalysis = function(){
-      _origRender();
-      try{
-        document.querySelectorAll('.sel-bars').forEach(sel=>{
-          sel.addEventListener('change', () => {
-            if(typeof saveGridState==='function') saveGridState();
-            if(typeof afterNormalizeHook==='function') afterNormalizeHook();
-          }, {once:false});
-        });
-        document.querySelectorAll('.cell').forEach(cell=>{
-          cell.addEventListener('click', () => {
-            if(typeof saveGridState==='function') saveGridState();
-            if(typeof afterNormalizeHook==='function') afterNormalizeHook();
-          }, {once:false});
-        });
-        document.querySelectorAll('.lyric').forEach(area=>{
-          area.addEventListener('input', () => {
-            if(typeof saveGridState==='function') saveGridState();
-            if(typeof afterNormalizeHook==='function') afterNormalizeHook();
-          }, {once:false});
-        });
-        document.querySelectorAll('.chips').forEach(wrap=>{
-          wrap.addEventListener('click', () => {
-            if(typeof saveGridState==='function') saveGridState();
-            if(typeof afterNormalizeHook==='function') afterNormalizeHook();
-          }, {once:false});
-        });
-        // global controls
-        document.getElementById('qGlobal')?.addEventListener('change', ()=>{
-          if(typeof saveNormState==='function') saveNormState();
-        }, {once:false});
-        document.getElementById('normBarsPerRow')?.addEventListener('change', ()=>{
-          if(typeof saveNormState==='function') saveNormState();
-        }, {once:false});
-      }catch(e){}
-    };
-  }
-
-  // 4) Clear button wipes storage
-  document.getElementById('btnClear')?.addEventListener('click', ()=>{
-    ['chordyv:norm:lastIn','chordyv:norm:lastOut','chordyv:qGlobal','chordyv:norm:perRow','chordyv:norm:grid:v1'].forEach(k=>{
-      localStorage.removeItem(k);
-    });
-  });
-
-  // 5) On load restore/merge
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const fromResume = localStorage.getItem('chordyv:norm:resume') === '1';
-    // restore inputs
-    if(typeof restoreNormState==='function') restoreNormState();
-    const raw = document.getElementById('raw')?.value.trim();
-    if(raw){
-      if(typeof analyze==='function') analyze();
-      if(typeof mergeGridState==='function') mergeGridState();
-      const out = localStorage.getItem('chordyv:norm:lastOut');
-      if(out) {
-        const outEl = document.getElementById('out');
-        if(outEl) outEl.textContent = out;
-      }
-    }
-    if(fromResume){
-      document.getElementById('sec-analyze')?.scrollIntoView({behavior:'smooth',block:'start'});
-      localStorage.removeItem('chordyv:norm:resume');
-    }
-  });
-})();
-</script>
-<!-- === PATCH: Keamanan Input (Readonly Normalize + Plaintext Input + Plaintext Lyric) === -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  /* 1) Kunci hanya kalau memang ADA textarea normalize */
-  const norm = document.getElementById('normalize') 
-            || document.querySelector('textarea[data-role="normalize"]') 
-            || document.querySelector('textarea.normalize');
-
-  if (norm) {
-    norm.setAttribute('readonly', 'readonly');
-    const block = e => { e.preventDefault(); e.stopPropagation(); };
-    ['paste','drop','beforeinput','keydown','input'].forEach(ev =>
-      norm.addEventListener(ev, block, true)
-    );
-    norm.style.background = '#f9fafb';
-    norm.style.cursor = 'not-allowed';
-  }
-  // Catatan: kalau output kamu <pre id="out"> (sekarang), tidak perlu dikunci apa pun.
-
-  /* 2) INPUT (#raw) — izinkan paste tapi paksa plaintext */
-  const raw = document.getElementById('raw');
-  if (raw) {
-    raw.removeAttribute('readonly');
-    raw.style.background = '';
-    raw.style.cursor = '';
-
-    const toPlain = s => (s || '').replace(/\r\n?/g, '\n');
-
-    raw.addEventListener('paste', (e) => {
-      const clip = e.clipboardData || window.clipboardData;
-      const txt = toPlain((clip && (clip.getData('text/plain') || clip.getData('text'))) || '');
-      if (!txt) return;
-      e.preventDefault();
-
-      if (document.queryCommandSupported && document.queryCommandSupported('insertText')) {
-        document.execCommand('insertText', false, txt);
-      } else {
-        const start = raw.selectionStart || 0;
-        const end   = raw.selectionEnd   || 0;
-        const val   = raw.value || '';
-        raw.value   = val.slice(0, start) + txt + val.slice(end);
-        const pos   = start + txt.length;
-        raw.setSelectionRange(pos, pos);
-      }
-    }, { capture: true });
-
-    // Opsional: cegah drag&drop HTML ke input
-    raw.addEventListener('drop', (e) => { e.preventDefault(); }, { capture: true });
-  }
-
-  /* 3) Lyric contenteditable — plaintext-only (punyamu sudah oke) */
-  document.querySelectorAll('.lyric').forEach(el => {
-    el.setAttribute('contenteditable', 'true');
-    el.addEventListener('paste', (e) => {
-      const clip = e.clipboardData || window.clipboardData;
-      const plain = (clip && (clip.getData('text/plain') || clip.getData('text'))) || '';
-      if (!plain) return;
-      e.preventDefault();
-      el.focus();
-
-      const text = plain.replace(/\r\n?/g, '\n');
-
-      if (document.queryCommandSupported && document.queryCommandSupported('insertText')) {
-        document.execCommand('insertText', false, text);
-        return;
-      }
-
-      const sel = window.getSelection && window.getSelection();
-      if (sel && sel.rangeCount) {
-        const range = sel.getRangeAt(0);
-        text.split('\n').forEach((seg, i, arr) => {
-          if (seg) range.insertNode(document.createTextNode(seg));
-          if (i < arr.length - 1) range.insertNode(document.createElement('br'));
-        });
-        sel.collapseToEnd();
-      } else {
-        el.appendChild(document.createTextNode(text));
-      }
-    });
-  });
-});
-</script>
-<script>
-// --- iOS Style TOAST --- //
-function iosToast(msg) {
-  const t = document.createElement('div');
-  t.textContent = msg;
-
-  Object.assign(t.style, {
-    position: 'fixed',
-    left: '50%',
-    bottom: '80px',
-    transform: 'translateX(-50%)',
-    padding: '12px 20px',
-    background: 'rgba(0,0,0,0.75)',
-    color: '#fff',
-    fontSize: '15px',
-    fontWeight: '500',
-    borderRadius: '14px',
-    backdropFilter: 'blur(6px)',
-    WebkitBackdropFilter: 'blur(6px)',
-    boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
-    opacity: '0',
-    transition: 'opacity .35s ease, transform .35s ease',
-    zIndex: '99999',
-    pointerEvents: 'none'
-  });
-
-  document.body.appendChild(t);
-
-  // show (slide-up effect)
-  requestAnimationFrame(() => {
-    t.style.opacity = '1';
-    t.style.transform = 'translateX(-50%) translateY(-6px)';
-  });
-
-  // hide
-  setTimeout(() => {
-    t.style.opacity = '0';
-    t.style.transform = 'translateX(-50%) translateY(0)';
-    setTimeout(() => t.remove(), 350);
-  }, 2200);
-}
-
-// Override alert() → jadi toast iOS otomatis
-window.alert = function(msg) {
-  iosToast(msg);
-};
 </script>
 </body>
 </html>
