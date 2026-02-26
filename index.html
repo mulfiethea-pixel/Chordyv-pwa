@@ -41,7 +41,7 @@
     }
 /* Gradasi “ChordyV” navy → biru */
 .cv-grad{
-  background: linear-gradient(135deg, var(--accent) 0%, #4c84ff 100%); !important;
+  background: linear-gradient(135deg, var(--accent) 0%, #4c84ff 100%) !important;
   color:#fff !important;
   box-shadow: 0 10px 20px rgba(16, 44, 86, .25);
   border: none;
@@ -1890,6 +1890,81 @@ body.premium-dark button#cv_btnNormalize.btn-normalize{
   opacity: 1;
   pointer-events: auto;
 }
+.cv-filter-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999999;
+}
+
+.cv-filter-box{
+  width:85%;
+  max-width:360px;
+  background:var(--card);
+  color:var(--fg);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 20px 50px rgba(0,0,0,.45);
+}
+
+.cv-filter-item{
+  padding:12px;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+}
+
+.cv-filter-item:hover{
+  background:var(--chip);
+}
+
+.cv-filter-close{
+  width:100%;
+  margin-top:12px;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:var(--chip);
+}
+
+.hidden{display:none;}
+.cv-filter-box{
+  width:85%;
+  max-width:360px;
+  background:var(--card);
+  color:var(--fg);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 20px 50px rgba(0,0,0,.45);
+
+  /* ⭐ penting */
+  max-height:80vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* area option jadi scroll */
+#cvFilterList{
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  flex:1;
+}
+.cv-move-item{
+  padding:12px;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+}
+
+.cv-move-item:hover{
+  background:var(--chip);
+}
+
+.cv-move-item.selected{
+  background:rgba(60,130,255,.15);
+  font-weight:600;
+}
 </style>
 </head>
 
@@ -2270,7 +2345,10 @@ else
     const keyEl=document.getElementById('ed_key');
     const contentEl=document.getElementById('ed_content');
 
-    const NAT_KEYS=["C","G","D","A","E","B","F#","C#","F","Bb","Eb","Ab","Db","Gb","Cb"];
+    const NAT_KEYS = [
+  "C","C#","D","Eb","E","F",
+  "F#","G","Ab","A","Bb","B"
+];
     keyEl.innerHTML=NAT_KEYS.map(k=>`<option>${k}</option>`).join(''); keyEl.value='C';
 
     function loadByIdIfAny(){
@@ -2816,7 +2894,10 @@ if (btnNewSong) {
   }
 
   function renderKeys(){
-    const NAT_KEYS = ["C","G","D","A","E","B","F#","C#","F","Bb","Eb","Ab","Db","Gb","Cb"];
+   const NAT_KEYS = [
+  "C","C#","D","Eb","E","F",
+  "F#","G","Ab","A","Bb","B"
+];
     keyEl.innerHTML = ['Keys', ...NAT_KEYS].map(k => `<option>${k}</option>`).join('');
     keyEl.value = filterKey;
   }
@@ -2968,30 +3049,83 @@ return;
     popup.id = 'cv_movePopup';
     popup.style.position = 'fixed';
     popup.style.zIndex = '9999';
-    popup.style.top = (r.bottom + 8) + 'px';
-    popup.style.left = Math.max(12, Math.min(window.innerWidth - 260, r.left)) + 'px';
-    popup.style.width = '240px';
+    popup.style.top = '50%';
+popup.style.left = '50%';
+popup.style.transform = 'translate(-50%, -50%)';
+popup.style.width = 'min(92vw, 360px)';
+popup.style.maxHeight = '80vh';
+popup.style.overflow = 'hidden';
     popup.style.padding = '12px';
     popup.style.borderRadius = '12px';
     popup.style.border = '1px solid var(--border)';
     popup.style.background = 'var(--card)';
     popup.style.boxShadow = '0 12px 28px rgba(0,0,0,.18)';
-    popup.innerHTML = `
-      <div style="font-weight:700; margin-bottom:8px">Move to folder</div>
-      <select id="cv_moveSelect" style="width:100%; margin-bottom:10px">
-        <option>(no folder)</option>
-        ${folders.map(f => `<option>${cv_escapeHtml(f)}</option>`).join('')}
-      </select>
-      <div style="display:flex; gap:8px; justify-content:flex-end">
-        <button id="cv_moveCancel" class="btn">Cancel</button>
-        <button id="cv_moveOk" class="primary btn">Move</button>
-      </div>
-    `;
-    document.body.appendChild(popup);
-    const sel = popup.querySelector('#cv_moveSelect');
-    sel.focus();
+   popup.innerHTML = `
+  <div style="font-weight:700; margin-bottom:8px">Move to folder</div>
 
-    const close = () => { popup.remove(); document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); };
+  <select id="cv_moveSelect" style="display:none">
+    <option>(no folder)</option>
+    ${folders.map(f => `<option>${cv_escapeHtml(f)}</option>`).join('')}
+  </select>
+
+  <div id="cv_moveList"></div>
+
+  <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px">
+    <button id="cv_moveCancel" class="btn">Cancel</button>
+    <button id="cv_moveOk" class="primary btn">Move</button>
+  </div>
+`;
+ /* buat background redup */
+const overlay = document.createElement('div');
+overlay.id = 'cv_moveOverlay';
+overlay.style.position = 'fixed';
+overlay.style.inset = '0';
+overlay.style.background = 'rgba(0,0,0,.35)';
+overlay.style.zIndex = '9998';
+
+/* masukkan ke layar */
+document.body.appendChild(overlay);
+document.body.appendChild(popup);
+const sel = popup.querySelector('#cv_moveSelect');
+const list = popup.querySelector('#cv_moveList');
+list.style.maxHeight = '50vh';
+list.style.overflowY = 'auto';
+list.style.webkitOverflowScrolling = 'touch';
+
+[...sel.options].forEach(opt=>{
+
+  const item = document.createElement('div');
+  item.className = 'cv-move-item';
+  item.textContent = opt.textContent;
+
+  if(opt.value === sel.value){
+    item.classList.add('selected');
+  }
+
+  item.onclick = ()=>{
+
+    sel.value = opt.value;
+
+    popup.querySelectorAll('.cv-move-item')
+      .forEach(el=>el.classList.remove('selected'));
+
+    item.classList.add('selected');
+  };
+
+  list.appendChild(item);
+});
+
+sel.focus();
+  const close = () => {
+  popup.remove();
+
+  if (overlay && overlay.parentNode) {
+    overlay.remove();
+  }
+
+  document.removeEventListener('mousedown', onDoc);
+  document.removeEventListener('keydown', onKey);
+};
     const onDoc = (e) => { if (!popup.contains(e.target)) close(); };
     const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'Enter') doMove(); };
     document.addEventListener('mousedown', onDoc);
@@ -4999,5 +5133,73 @@ window.addEventListener('pageshow', cvApplyIncomingFromNormalize);
 })();
 </script>
 <!-- === END PATCH === -->
+<div id="cvFilterModal" class="cv-filter-modal hidden">
+  <div class="cv-filter-box">
+
+    <h3 id="cvFilterTitle">Select</h3>
+
+    <div id="cvFilterList"></div>
+
+    <button class="cv-filter-close" onclick="cvCloseFilter()">
+      TUTUP
+    </button>
+
+  </div>
+</div>
+<script>
+let activeSelect = null;
+
+function cvOpenFilter(selectEl){
+
+  activeSelect = selectEl;
+
+  const modal = document.getElementById("cvFilterModal");
+  const list  = document.getElementById("cvFilterList");
+  const title = document.getElementById("cvFilterTitle");
+
+  title.textContent =
+    selectEl.id.replace("lib_","Select ").toUpperCase();
+
+  list.innerHTML = "";
+
+  [...selectEl.options].forEach(opt=>{
+
+    const div = document.createElement("div");
+    div.className = "cv-filter-item";
+    div.textContent = opt.textContent;
+
+    div.onclick = ()=>{
+      selectEl.value = opt.value;
+      selectEl.dispatchEvent(new Event("change"));
+      cvCloseFilter();
+    };
+
+    list.appendChild(div);
+  });
+
+  modal.classList.remove("hidden");
+}
+
+function cvCloseFilter(){
+  document.getElementById("cvFilterModal")
+    .classList.add("hidden");
+}
+
+/* ⭐ tunggu halaman siap dulu */
+window.addEventListener("load", ()=>{
+
+  document.querySelectorAll(
+    "#lib_key, #lib_beat, #lib_folder"
+  ).forEach(sel=>{
+
+    sel.addEventListener("mousedown",(e)=>{
+      e.preventDefault();
+      cvOpenFilter(sel);
+    });
+
+  });
+
+});
+</script>
 </body>
 </html>
