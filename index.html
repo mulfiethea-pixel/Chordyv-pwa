@@ -2276,10 +2276,15 @@ else
       <input id="ed_title" type="text" placeholder="Song title" />
     </div>
 
-    <div>
-      <label>Key</label>
-      <select id="ed_key"></select>
-    </div>
+<div>
+  <label>Key</label>
+  <button type="button" id="ed_key_trigger" class="btn ghost" style="width:100%; text-align:left; display:flex; justify-content:space-between; align-items:center;">
+    <span id="ed_key_label">C</span>
+    <svg style="width:12px; height:12px; fill:currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+  </button>
+  
+  <select id="ed_key" data-title="KEY" style="display:none"></select>
+</div>
 
     <div>
       <label>Preset Beat</label>
@@ -2349,7 +2354,27 @@ else
   "C","C#","D","Eb","E","F",
   "F#","G","Ab","A","Bb","B"
 ];
-    keyEl.innerHTML=NAT_KEYS.map(k=>`<option>${k}</option>`).join(''); keyEl.value='C';
+// 1. Tetap isi datanya ke elemen select asli (supaya sistem save/load tetap jalan)
+keyEl.innerHTML = NAT_KEYS.map(k => `<option>${k}</option>`).join('');
+keyEl.value = 'C';
+
+// 2. Ambil referensi ke tombol "pemicu" dan label teksnya
+const keyTrigger = document.getElementById('ed_key_trigger');
+const keyLabel = document.getElementById('ed_key_label');
+
+// 3. Saat tombol Key di Editor diklik, buka popup (sama seperti di Library)
+if (keyTrigger) {
+  keyTrigger.addEventListener('click', (e) => {
+    e.preventDefault(); // Mencegah form submit/refresh
+    cvOpenFilter(keyEl); // Memanggil fungsi popup bawaan ChordyV
+  });
+}
+
+// 4. Update label di tombol saat kita pilih kunci dari popup
+keyEl.addEventListener('change', () => {
+  if (keyLabel) keyLabel.textContent = keyEl.value;
+});
+
 
     function loadByIdIfAny(){
   db = cv_loadDB();
@@ -5044,8 +5069,11 @@ function cvOpenFilter(selectEl){
   const list  = document.getElementById("cvFilterList");
   const title = document.getElementById("cvFilterTitle");
 
-  title.textContent =
-    selectEl.id.replace("lib_","Select ").toUpperCase();
+  // --- BAGIAN INI YANG DIGANTI NAY ---
+  // Kalau ada data-title kita pakai itu, kalau nggak ada baru pakai ID (tapi kita bersihin ed_ nya)
+  title.textContent = selectEl.dataset.title || 
+                      selectEl.id.replace("lib_","").replace("ed_","").toUpperCase();
+  // ----------------------------------
 
   list.innerHTML = "";
 
@@ -5066,6 +5094,7 @@ function cvOpenFilter(selectEl){
 
   modal.classList.remove("hidden");
 }
+
 
 function cvCloseFilter(){
   document.getElementById("cvFilterModal")
