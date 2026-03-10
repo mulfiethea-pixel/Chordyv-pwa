@@ -2181,6 +2181,241 @@ body.onlyText #perf_exitImm{
   display:block;
   height:6em;
 }
+/* ============================================================
+   EDITOR THEME REVISI - ATAS TETAP, BAWAH PUTIH
+   ============================================================ */
+
+/* 1. KONTAINER ATAS (Gradasi Performance - TETAP) */
+.ed-toolbar-perf {
+  background: linear-gradient(180deg, #6aa3f0, #4f83d9) !important;
+  padding: 12px;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.ed-grid { display: grid; gap: 10px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { 
+  .ed-grid { grid-template-columns: 2fr 100px 1.5fr; align-items: end; } 
+}
+
+.ed-group label { 
+  display: block; font-size: 10px; font-weight: bold; 
+  color: white; text-transform: uppercase; margin-bottom: 4px; 
+}
+
+#ed_title, .ed-btn-perf {
+  width: 100%; background: rgba(255,255,255,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+  color: white !important; height: 36px; border-radius: 6px; padding: 0 10px;
+}
+
+/* 2. KONTAINER BAWAH / TOOLS (REVISI JADI PUTIH) */
+.ed-toolbar-tools {
+  background: #ffffff !important;
+  padding: 10px 12px;
+  border-radius: 0 0 12px 12px;
+  border: 1px solid #e2e8f0;
+  border-top: none; 
+
+  /* EFEK SHADOW BARU: Lebih deep dan elegan */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08), 
+              0 4px 6px rgba(0, 0, 0, 0.04) !important;
+  
+  /* Kasih jarak sedikit ke bawah biar bayangannya gak kepotong */
+  margin-bottom: 4px; 
+}
+
+/* 3. TOMBOL DI DALAM AREA PUTIH (Disesuaikan agar cantik) */
+/* Pilih salah satu saja, hapus duplikatnya ya Vie! */
+.ed-tool-btn {
+  width: 38px !important; 
+  height: 38px !important;
+  min-width: 38px !important;
+  border-radius: 6px !important;
+  border: 1px solid #e2e8f0 !important;
+  
+  /* TAMBAHIN INI BIAR TEBAL: */
+  font-weight: bold !important; 
+  
+  /* Opsional: Biar teksnya bener-bener di tengah */
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Warna Pas NON-AKTIF (Dark Slate Style) */
+.ed-chord-mode-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  width: auto !important;
+  min-width: 130px;
+  height: 38px;
+  padding: 0 14px;
+  
+  /* Background abu gelap biar kontras sama label putih */
+  background: #334155 !important; 
+  /* Border abu tua yang lebih tegas */
+  border: 1.5px solid #1e293b !important; 
+  /* Label Putih sesuai request kamu */
+  color: #ffffff !important; 
+  
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Warna Pas AKTIF (Biru Performance - Tetap) */
+.ed-chord-mode-btn.is-active {
+  background: #4f83d9 !important;
+  border: 1.5px solid #4f83d9 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(79, 131, 217, 0.4);
+  transform: translateY(-1px); /* Efek nimbul dikit pas aktif */
+}
+
+/* Efek Hover pas Non-Aktif biar gak kaku */
+.ed-chord-mode-btn:hover:not(.is-active) {
+  background: #475569 !important;
+  border-color: #334155 !important;
+}
+
+/* Ikon SVG */
+.ed-chord-mode-btn svg {
+  stroke: currentColor;
+  width: 17px;
+  height: 17px;
+}
+
+
+/* --- Gaya Input & Grid Atas (TETAP) --- */
+#ed_title, .ed-btn-perf {
+  width: 100%; 
+  background: rgba(255,255,255,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+  color: white !important; 
+  height: 36px; 
+  border-radius: 6px; 
+  padding: 0 10px;
+}
+
+.ed-grid { display: grid; gap: 10px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { 
+  .ed-grid { grid-template-columns: 2fr 100px 1.5fr; align-items: end; } 
+}
+/* --- Tambahan Khusus Preset Beat (Biar ada Border ala Gambar 2) --- */
+
+/* Wadah utama tombol beat */
+.ed-beat-row-perf {
+  display: flex;
+  background: rgba(0, 0, 0, 0.1); /* Background agak gelap dikit biar border putihnya kelihatan */
+  padding: 3px;
+  border-radius: 8px;
+}
+
+/* Gaya tiap tombol angka (2/4, 3/4, dst) */
+.preset-beat {
+  flex: 1;
+  background: transparent !important;
+  border: 1px solid transparent !important; /* Border default gak kelihatan */
+  color: white !important;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 6px 0;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  margin: 0 2px;
+}
+
+/* Efek saat tombol dipilih (Selected) - Ini yang bikin mirip Gambar 2 */
+.preset-beat.is-selected {
+  background: #ffffff !important; /* Putih solid */
+  color: #4f83d9 !important;      /* Teks jadi biru mengikuti gradasi */
+ 
+}
+
+/* Efek hover atau saat tidak dipilih tapi ada border tipis */
+.preset-beat:not(.is-selected) {
+}
+/* REVISI UKURAN: Chord Mode Biar Gak Kegedean */
+.ed-chord-mode-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  
+  /* Ukuran kita pepetin biar sama kayak tombol note */
+  height: 38px !important; 
+  padding: 0 12px !important; 
+  width: auto !important;
+  min-width: 110px; 
+  
+  /* Style Slate kamu */
+  background: #334155 !important;
+  border: 1px solid #1e293b !important;
+  color: #ffffff !important;
+  border-radius: 6px !important; 
+  font-weight: 600;
+  font-size: 12px; 
+  transition: all 0.2s ease;
+}
+
+/* Samain juga tinggi tombol note-nya biar sejajar lurus */
+
+/* Pastikan icon keyboard-nya juga ikut mengecil */
+.ed-chord-mode-btn svg {
+  width: 15px !important;
+  height: 15px !important;
+}
+/* Container pembungkus semua tools */
+.ed-tools-wrapper {
+  display: flex;
+  flex-wrap: wrap; /* Tumpuk di portrait */
+  gap: 8px;
+  align-items: center;
+}
+
+/* Jarak antar baris di portrait */
+.ed-note-row, .ed-shortcut-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* --- TAMPILAN LANDSCAPE / TABLET --- */
+@media (min-width: 720px) {
+  .ed-tools-wrapper {
+    flex-wrap: nowrap !important; /* Paksa satu baris lurus */
+    width: 100%;
+  }
+
+  /* Shortcut bar tidak usah ada margin bawah */
+  .ed-note-row, .ed-shortcut-row {
+    margin-bottom: 0 !important;
+  }
+
+  /* Ini yang nendang Chord Mode ke pojok kanan */
+  .ed-chord-mode-btn {
+    margin-left: auto !important; 
+    order: 3; /* Pastikan dia paling kanan */
+  }
+}
+
+/* --- TAMPILAN PORTRAIT (HP TEGAK) --- */
+@media (max-width: 719px) {
+  .ed-chord-mode-btn {
+    width: 100% !important; /* Di HP tegak, bikin lebar penuh biar simetris */
+    margin-top: 4px;
+  }
+  
+  .ed-shortcut-row {
+    flex-wrap: wrap; /* Biar shortcut gak kepotong layar HP */
+  }
+}
+
 </style>
 </head>
 
@@ -2484,59 +2719,65 @@ else
   <script>
   cv_onViewInit('ed', ()=>{
     const wrap=document.getElementById('editorView');
-    wrap.innerHTML = `
-    <div class="card">
-  <div class="form-grid">
-    <div>
-      <label>Song title</label>
-      <input id="ed_title" type="text" placeholder="Song title" />
-    </div>
+wrap.innerHTML = `
+<div class="ed-container">
+  <div class="ed-toolbar-perf">
+    <div class="ed-grid">
+      <div class="ed-group">
+        <label>Song title</label>
+        <input id="ed_title" type="text" placeholder="Song title" />
+      </div>
 
-<div>
-  <label>Key</label>
-  <button type="button" id="ed_key_trigger" class="btn ghost" style="width:100%; text-align:left; display:flex; justify-content:space-between; align-items:center;">
-    <span id="ed_key_label">C</span>
-    <svg style="width:12px; height:12px; fill:currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
-  </button>
-  
-  <select id="ed_key" data-title="KEY" style="display:none"></select>
-</div>
+      <div class="ed-group">
+        <label>Key</label>
+        <button type="button" id="ed_key_trigger" class="btn ghost ed-btn-perf">
+          <span id="ed_key_label">C</span>
+          <svg style="width:10px; height:10px; fill:currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+        </button>
+        <select id="ed_key" data-title="KEY" style="display:none"></select>
+      </div>
 
-    <div>
-      <label>Preset Beat</label>
-      <div class="beat-group">
-        <button type="button" class="preset-beat is-selected" data-beat="2/4">2/4</button>
-        <button type="button" class="preset-beat" data-beat="3/4">3/4</button>
-        <button type="button" class="preset-beat" data-beat="4/4">4/4</button>
-        <button type="button" class="preset-beat" data-beat="6/8">6/8</button>
+      <div class="ed-group">
+        <label>Preset Beat</label>
+        <div class="beat-group ed-beat-row-perf">
+          <button type="button" class="preset-beat is-selected" data-beat="2/4">2/4</button>
+          <button type="button" class="preset-beat" data-beat="3/4">3/4</button>
+          <button type="button" class="preset-beat" data-beat="4/4">4/4</button>
+          <button type="button" class="preset-beat" data-beat="6/8">6/8</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-  <!-- Bar khusus notasi -->
-  <div class="note-bar" style="margin-bottom: 8px;">
-    <button id="ed_note_halfbeat" title="Not 1/2 ketuk (eighth)">♪</button>
-    <button id="ed_note_quarterbeat" title="Not 1/4 ketuk (sixteenth)">♬</button>
+ <div class="ed-toolbar-tools">
+  <div class="ed-tools-wrapper">
+    <div class="note-bar ed-note-row">
+      <button id="ed_note_halfbeat" class="ed-tool-btn" title="Not 1/2">♪</button>
+      <button id="ed_note_quarterbeat" class="ed-tool-btn" title="Not 1/4">♬</button>
+    </div>
+
+    <div class="shortcut-bar ed-shortcut-row">
+      <button id="ed_btnBar" class="ed-tool-btn">Bar</button>
+      <button id="ed_btnRest" class="ed-tool-btn">-</button>
+      <button id="ed_btnRepeat" class="ed-tool-btn">%</button>
+      <button id="ed_btnSharp" class="ed-tool-btn">#</button>
+      <button id="ed_btnFlat" class="ed-tool-btn">♭</button>
+      <button id="ed_btnSlash" class="ed-tool-btn">/</button>
+    </div>
+
+    <button id="cv_chord_btn" class="mode-chord-btn ed-chord-mode-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;">
+        <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+        <line x1="7" y1="8" x2="7" y2="8"></line><line x1="12" y1="8" x2="12" y2="8"></line><line x1="17" y1="8" x2="17" y2="8"></line>
+        <line x1="7" y1="12" x2="7" y2="12"></line><line x1="12" y1="12" x2="12" y2="12"></line><line x1="17" y1="12" x2="17" y2="12"></line>
+        <line x1="7" y1="16" x2="7" y2="16"></line><line x1="9" y1="16" x2="15" y2="16"></line><line x1="17" y1="16" x2="17" y2="16"></line>
+      </svg>
+      <span>Chord Mode</span>
+    </button>
   </div>
 </div>
-  <!-- Bar tombol editor -->
-  <div class="shortcut-bar">
-    <button id="ed_btnPipe">|</button>
-    <button id="ed_btnBar">Bar</button>
-    <button id="ed_btnRest">-</button>
-    <button id="ed_btnRepeat">%</button>
-    <button id="ed_btnSharp">#</button>
-    <button id="ed_btnFlat">♭</button>
-    <button id="ed_btnSlash">/</button>
-  </div>
+<textarea id="ed_content" style="margin-top: 15px;" spellcheck="false" placeholder="Write your chords, numbers, and text here..."></textarea>
 
-</div>
-
-        <label>content (Chords / Melody / Text)</label>
-        <textarea id="ed_content" spellcheck="false" placeholder="Write chords / melody / text..."></textarea>
-
-       <div class="row" style="margin-top:10px; display:flex; align-items:center; gap:10px">
   <!-- FAB tetap terpisah -->
   <button id="ed_btnNew" class="cv-fab" title="New song"></button>
 
@@ -2700,7 +2941,6 @@ function insertAt(txt){
       return ' ' + ('. '.repeat(Math.max(1, n)).trimEnd()) + ' | ';
     }
 
-document.getElementById('ed_btnPipe').addEventListener('click',()=>insertAt(' | '));
     document.getElementById('ed_btnBar').addEventListener('click',()=>insertAt(makeBar()));
     document.getElementById('ed_btnRest').addEventListener('click',()=>insertAt(' - '));
     document.getElementById('ed_btnRepeat').addEventListener('click',()=>insertAt(' % '));
@@ -5356,5 +5596,262 @@ window.addEventListener("load", ()=>{
 
 });
 </script>
+
+<!-- VIRTUAL KEYBOARD -->
+<div id="cv_keyboard">
+
+  <div class="vk-row labels-row">
+    <button data-label="Intro">Intro</button>
+    <button data-label="Verse">Verse</button>
+    <button data-label="Chorus">Chorus</button>
+    <button data-label="Bridge">Bridge</button>
+    <button data-label="Outro">Outro</button>
+  </div>
+
+  <div class="vk-row">
+    <button>1</button><button>2</button><button>3</button><button>4</button>
+    <button>5</button><button>6</button><button>7</button><button>8</button>
+    <button>9</button><button>0</button>
+  </div>
+
+  <div class="vk-row">
+    <button>C</button><button>C#</button><button>D</button><button>D#</button>
+    <button>E</button><button>F</button><button>F#</button><button>G</button>
+    <button>G#</button><button>A</button><button>A#</button><button>B</button>
+  </div>
+
+  <div class="vk-row">
+    <button>m</button><button>maj</button><button>dim</button>
+    <button>hd</button><button>add</button><button>sus</button>
+    <button>aug</button><button>alt</button> <button>|</button><button>.</button>
+  </div>
+
+  <div class="vk-row">
+    <button data-act="space">Space</button>
+    <button data-act="enter">Enter</button>
+    <button data-act="del" style="display: flex; align-items: center; justify-content: center;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
+        <line x1="18" y1="9" x2="12" y2="15"></line>
+        <line x1="12" y1="9" x2="18" y2="15"></line>
+      </svg>
+    </button>
+    <button data-act="close">Close</button>
+  </div>
+
+</div>
+<style>
+/* CONTAINER UTAMA KEYBOARD */
+#cv_keyboard {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(240, 240, 245, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 12px 6px 30px 6px;
+    display: none;
+    z-index: 999;
+    border-top: 0.5px solid #ccc;
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+}
+
+/* BARIS TOMBOL */
+.vk-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+    gap: 4px;
+}
+
+/* GAYA TOMBOL UMUM (Angka & Chord) */
+#cv_keyboard button {
+    flex: 1;
+    max-width: 45px;
+    height: 42px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #111;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+    transition: background 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#cv_keyboard button:active {
+    background: #adb5bd;
+}
+
+/* BARIS LABEL (Intro, Verse, dll) */
+.labels-row {
+    margin-bottom: 12px;
+}
+
+.labels-row button {
+    max-width: none !important;
+    background: #e8e8ed !important; 
+    color: #007aff !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+    border: 0.5px solid rgba(0,0,0,0.1) !important;
+}
+
+/* TOMBOL KONTROL (Space, Enter, Del, Close) */
+#cv_keyboard button[data-act] {
+    background: #d1d5db;
+    font-size: 13px;
+    max-width: 70px;
+    text-transform: uppercase;
+}
+
+#cv_keyboard button[data-act="space"] {
+    max-width: 130px;
+}
+
+#cv_keyboard button[data-act="close"] {
+    background: #ff453a;
+    color: #fff;
+}
+
+/* WARNA KURSOR DI EDITOR */
+#ed_content {
+    caret-color: #2b7cff;
+    padding-bottom: 20px; /* Jarak aman default */
+}
+
+/* --- BAGIAN YANG TADI KETINGGALAN --- */
+#cv_chord_btn.active {
+    background-color: #007aff !important;
+    color: white !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+/* Agar SVG di tombol Del pas di tengah */
+#cv_keyboard button svg {
+    pointer-events: none;
+}
+
+/* Class tambahan saat keyboard muncul */
+.keyboard-open {
+    padding-bottom: 280px !important; 
+    transition: padding 0.3s ease;
+}
+</style>
+
+<script>
+(function() {
+  function insertAtCursor(myField, myValue) {
+    if (myField.selectionStart || myField.selectionStart == '0') {
+      let startPos = myField.selectionStart;
+      let endPos = myField.selectionEnd;
+      myField.value = myField.value.substring(0, startPos)
+        + myValue
+        + myField.value.substring(endPos, myField.value.length);
+      
+      let newPos = startPos + myValue.length;
+      myField.selectionStart = myField.selectionEnd = newPos;
+    } else {
+      myField.value += myValue;
+    }
+
+    setTimeout(() => {
+      myField.focus();
+      myField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+  }
+
+  document.addEventListener("click", function(e) {
+    const editor = document.getElementById('ed_content');
+    const keyboard = document.getElementById('cv_keyboard');
+    
+    // 1. LOGIKA TOMBOL MODE CHORD (PEMICU UTAMA)
+    const chordBtn = e.target.closest("#cv_chord_btn");
+    if (chordBtn) {
+      e.preventDefault();
+      // Paksa toggle class 'active' di sini biar warnanya berubah
+      const isNowActive = chordBtn.classList.toggle("active");
+
+      if (isNowActive) {
+        // AKTIFKAN MODE
+        if(editor) {
+          editor.setAttribute("inputmode", "none");
+          editor.focus();
+          editor.style.paddingBottom = "280px"; 
+        }
+        if(keyboard) keyboard.style.display = "block";
+      } else {
+        // MATIKAN MODE
+        if(keyboard) keyboard.style.display = "none";
+        if(editor) {
+          editor.removeAttribute("inputmode");
+          editor.style.paddingBottom = "20px";
+        }
+      }
+      return; // Stop di sini kalau yang diklik tombol mode
+    }
+
+    // 2. LOGIKA TOMBOL DI DALAM KEYBOARD VIRTUAL
+    const btn = e.target.closest("#cv_keyboard button");
+    if (btn) {
+      e.preventDefault();
+      if (!editor) return;
+
+      const action = btn.getAttribute("data-act");
+      const label = btn.getAttribute("data-label");
+      const value = btn.innerText;
+
+      if (label) {
+        insertAtCursor(editor, "[" + label + "]\n");
+      } 
+      else if (action) {
+        if (action === "del") {
+          let start = editor.selectionStart;
+          if (start > 0) {
+            editor.value = editor.value.substring(0, start - 1) + editor.value.substring(start);
+            editor.selectionStart = editor.selectionEnd = start - 1;
+          }
+          editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (action === "space") {
+          insertAtCursor(editor, " ");
+        } else if (action === "enter") {
+          insertAtCursor(editor, "\n");
+        } else if (action === "close") {
+          if(keyboard) keyboard.style.display = "none";
+          const cb = document.getElementById("cv_chord_btn");
+          if (cb) cb.classList.remove("active");
+          editor.removeAttribute("inputmode");
+          editor.style.paddingBottom = "20px";
+        }
+      } 
+      else if (value) {
+        insertAtCursor(editor, value);
+      }
+      editor.focus();
+    }
+  });
+
+  document.addEventListener("touchstart", function(e) {
+    if (e.target.id === "ed_content") {
+      const cb = document.getElementById("cv_chord_btn");
+      if (cb && cb.classList.contains("active")) {
+        e.target.setAttribute("inputmode", "none");
+        setTimeout(() => {
+           e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      }
+    }
+  }, {passive: true});
+
+})();
+</script>
+
 </body>
 </html>
