@@ -5231,21 +5231,30 @@ async function purchasePro() {
       // masih lanjut ke ack supaya user nggak ke-lock
     }
 
-    // 5.6 ACK VIA BACKEND (opsional tapi ideal)
-    try {
-      const ackRes = await fetch(CV_BACKEND + '/ack', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          packageName: CV_PACKAGE_NAME,
-          purchaseToken: token
-        })
-      });
-      const ackJson = await ackRes.json();
-      console.log('[Billing][ack-backend]', ackJson);
-    } catch (e) {
-      console.warn('[Billing][ack-backend] failed:', e);
-    }
+    // 5.6 ACK VIA BACKEND (Wajib supaya tidak kena refund otomatis)
+try {
+  console.log('[Billing] Mengirim laporan ke Vercel...');
+  
+  const ackRes = await fetch(CV_BACKEND + '/api/ack', { // Pastikan ada /api/ di sini jika CV_BACKEND cuma link utama
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      productId: window.CV_SKU,  // Ini ID produknya
+      purchaseToken: token       // Ini token dari Google
+    })
+  });
+
+  const ackJson = await ackRes.json();
+  
+  if (ackJson.success) {
+    console.log('[Billing][ack-backend] Berhasil di-acknowledge!', ackJson);
+  } else {
+    console.error('[Billing][ack-backend] Gagal:', ackJson.error);
+  }
+
+} catch (e) {
+  console.warn('[Billing][ack-backend] Network error:', e);
+}
 
     // 5.7 ACK LOKAL (DGS) – aman karena idempotent
     try {
