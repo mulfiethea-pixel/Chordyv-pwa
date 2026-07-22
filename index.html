@@ -15,6 +15,8 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/Chordyv-pwa/ios-180x180.png">  
  <link rel="manifest" href="manifest.webmanifest">  
  <title>V — Editor • Library • Performance (SPA)</title>  
+<!-- Google Identity Services (buat OAuth Google Drive) -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>  
 <!-- ===== CONFIG ===== -->
 <style>
     /* =================== GLOBAL THEME (default WHITE) =================== */
@@ -3179,24 +3181,40 @@ cv_onViewInit('lib', ()=>{
       </table>
     </div>
 
-    <div class="actions" style="margin-<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
-  <button id="lib_btnOpen"
-    style="border:none;background:transparent;color:var(--fg);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;">
-    Open
-  </button>
-  <button id="lib_btnEdit"
-    style="border:none;background:transparent;color:var(--fg);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;">
-    Edit
-  </button>
-  <button id="lib_btnMove"
-    style="border:none;background:transparent;color:var(--fg);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;">
-    Move
-  </button>
-  <button id="lib_btnDelete"
-    style="border:none;background:transparent;color:#e44a4a;font-weight:700;padding:6px 10px;cursor:pointer;border-radius:6px;">
-    Delete
-  </button>
-</div>
+    <div class="actions" style="margin-top:10px">
+      <div style="display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap">
+        <button id="lib_btnOpen"
+          style="border:none;background:transparent;color:var(--fg);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;">
+          Open
+        </button>
+        <button id="lib_btnEdit"
+          style="border:none;background:transparent;color:var(--fg);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;">
+          Edit
+        </button>
+        <button id="lib_btnMove"
+          style="border:none;background:transparent;color:var(--fg);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;">
+          Move
+        </button>
+        <button id="lib_btnDelete"
+          style="border:none;background:transparent;color:#e44a4a;font-weight:700;padding:6px 10px;cursor:pointer;border-radius:6px;">
+          Delete
+        </button>
+      </div>
+
+      <!-- Baris baru: Google Drive backup/restore -->
+      <div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border, rgba(0,0,0,.08));flex-wrap:wrap">
+        <button id="lib_btnSaveDrive"
+          style="border:none;background:transparent;color:var(--accent, #2663FF);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;display:inline-flex;align-items:center;gap:6px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v3H5a4 4 0 0 0 0 8h3v-2H5a2 2 0 0 1 0-4h2v-1a5 5 0 0 1 10 0v1h1a2 2 0 0 1 0 4h-3v2h3a4 4 0 0 0 0-8h-1V7a5 5 0 0 0-5-5zm-1 9h2v4h3l-4 4-4-4h3v-4z"/></svg>
+          Save to Drive
+        </button>
+        <button id="lib_btnRestoreDrive"
+          style="border:none;background:transparent;color:var(--accent, #2663FF);font-weight:600;padding:6px 10px;cursor:pointer;border-radius:6px;display:inline-flex;align-items:center;gap:6px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v3H5a4 4 0 0 0 0 8h3v-2H5a2 2 0 0 1 0-4h2v-1a5 5 0 0 1 10 0v1h1a2 2 0 0 1 0 4h-3v2h3a4 4 0 0 0 0-8h-1V7a5 5 0 0 0-5-5zm3 11h-3V9h-2v4H7l4 4 4-4z"/></svg>
+          Restore
+        </button>
+      </div>
+    </div>
 <div class="libfab-dim"></div>
   <!-- FAB Skill Menu (Library) - versi aman -->
     <div class="libfab-wrap">
@@ -3325,10 +3343,140 @@ cv_onViewInit('lib', ()=>{
   const btnMove   = document.getElementById('lib_btnMove');
   const btnDelete = document.getElementById('lib_btnDelete');
   const btnNewSong = document.getElementById('lib_btnNewSong');
+  const btnSaveDrive    = document.getElementById('lib_btnSaveDrive');
+  const btnRestoreDrive = document.getElementById('lib_btnRestoreDrive');
 
   const keyEl   = document.getElementById('lib_key');
   const beatEl  = document.getElementById('lib_beat');
   const tbodyEl = document.getElementById('lib_tbody');
+
+  // ================= GOOGLE DRIVE BACKUP/RESTORE =================
+  // TODO Vie: ganti dengan Client ID dari Google Cloud Console kamu
+  const CV_DRIVE_CLIENT_ID = '575225159933-gaj5m8a5672pjd2u07i06mjhhdvkdni4.apps.googleusercontent.com';
+  const CV_DRIVE_SCOPE     = 'https://www.googleapis.com/auth/drive.file';
+  const CV_DRIVE_FILENAME  = 'chordyv_backup.json';
+
+  let cvDriveTokenClient = null;
+  let cvDriveAccessToken = null;
+
+  function cvDriveInitClient(){
+    if (cvDriveTokenClient) return cvDriveTokenClient;
+    cvDriveTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CV_DRIVE_CLIENT_ID,
+      scope: CV_DRIVE_SCOPE,
+      callback: ()=>{} // di-override tiap kali request
+    });
+    return cvDriveTokenClient;
+  }
+
+  // Minta access token. Kalau sesi masih ada token valid, coba silent dulu (prompt kosong).
+  function cvDriveEnsureToken(){
+    return new Promise((resolve, reject)=>{
+      const client = cvDriveInitClient();
+      client.callback = (resp)=>{
+        if (resp.error){ reject(resp); return; }
+        cvDriveAccessToken = resp.access_token;
+        resolve(resp.access_token);
+      };
+      client.requestAccessToken({ prompt: cvDriveAccessToken ? '' : 'consent' });
+    });
+  }
+
+  async function cvDriveFindFileId(token){
+    const cached = localStorage.getItem('cv_drive_file_id');
+    if (cached) return cached;
+    const q = encodeURIComponent(`name='${CV_DRIVE_FILENAME}' and trashed=false`);
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name)`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    const found = data.files && data.files[0];
+    if (found){ localStorage.setItem('cv_drive_file_id', found.id); return found.id; }
+    return null;
+  }
+
+  async function cvDriveSave(){
+    try{
+      cvToast?.('Connecting to Google Drive...');
+      const token = await cvDriveEnsureToken();
+      const payload = { songs: cv_loadDB(), folders: (cv_loadFolders?.() || []) };
+      const content = JSON.stringify(payload, null, 2);
+
+      const fileId = await cvDriveFindFileId(token);
+      const metadata = { name: CV_DRIVE_FILENAME, mimeType: 'application/json' };
+      const boundary = 'cvdrive_boundary_' + Date.now();
+
+      const body =
+        `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${fileId ? '{}' : JSON.stringify(metadata)}\r\n` +
+        `--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n--${boundary}--`;
+
+      const url = fileId
+        ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`
+        : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
+
+      const res = await fetch(url, {
+        method: fileId ? 'PATCH' : 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': `multipart/related; boundary=${boundary}`
+        },
+        body
+      });
+      const data = await res.json();
+      if (data.id){ localStorage.setItem('cv_drive_file_id', data.id); }
+      cvToast?.('Saved to Google Drive');
+    }catch(err){
+      console.error('[cvDriveSave]', err);
+      cvToast?.('Failed to save to Drive');
+    }
+  }
+
+  // Restore: merge by id (union) — sama persis alur conflict resolution seperti Import file lokal
+  async function cvDriveRestore(){
+    try{
+      const token = await cvDriveEnsureToken();
+      const fileId = await cvDriveFindFileId(token);
+      if (!fileId){ cvToast?.('No backup found in this Drive account'); return; }
+
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const obj = await res.json();
+
+      const db = cv_loadDB(), folders = (cv_loadFolders?.() || []);
+      const inSongs = obj.songs || {}, inFolders = obj.folders || [];
+
+      inFolders.forEach(name=>{ if (name && !folders.includes(name)) folders.push(name); });
+      cv_saveFolders?.(folders);
+
+      for (const [id, song] of Object.entries(inSongs)){
+        if (!db[id]){
+          db[id] = song; // lagu belum ada lokal -> tambahin (case utama: data lokal ilang/kosong)
+        } else {
+          const action = await cvPrompt(`Konflik: "${song.title || '(Untitled)'}"\nKetik: o=overwrite, k=keep both, s=skip`, 'k');
+          if (action === 'o') db[id] = song;
+          else if (action === 'k') db['s_' + Math.random().toString(36).slice(2,9)] = song;
+        }
+      }
+      cv_saveDB(db);
+      cvToast?.('Restore from Drive complete');
+      window.dispatchEvent(new CustomEvent('cv:view', { detail: { name: 'lib' } }));
+    }catch(err){
+      console.error('[cvDriveRestore]', err);
+      cvToast?.('Failed to restore from Drive');
+    }
+  }
+
+  // Save to Drive: gratis buat semua user (biar semua orang bisa backup)
+  btnSaveDrive?.addEventListener('click', ()=>{
+    cvDriveSave();
+  });
+
+  btnRestoreDrive?.addEventListener('click', ()=>{
+    if (!window.cvIsPro){ showUpgradeModal('drive-restore'); return; }
+    cvDriveRestore();
+  });
+  // ================= END GOOGLE DRIVE =================
 
 // ---------- ACTION: New Song FAB (legacy) ----------
 if (btnNewSong) {
