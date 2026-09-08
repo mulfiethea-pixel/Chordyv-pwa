@@ -5907,6 +5907,7 @@ window.addEventListener("load", ()=>{
 <script>
 (function() {
   function insertAtCursor(myField, myValue) {
+    if (!myField) return;
     if (myField.selectionStart || myField.selectionStart == '0') {
       let startPos = myField.selectionStart;
       let endPos = myField.selectionEnd;
@@ -5926,34 +5927,32 @@ window.addEventListener("load", ()=>{
     }, 50);
   }
 
+  // Delegasi Event Klik Global
   document.addEventListener("click", function(e) {
-    const editor = document.getElementById('ed_content');
-    const keyboard = document.getElementById('cv_keyboard');
+    const keyboard = document.getElementById("cv_keyboard");
+    const editor = document.getElementById("ed_content"); // Ambil dinamis saat klik
     
-    // 1. LOGIKA TOMBOL MODE CHORD (PEMICU UTAMA)
+    // 1. LOGIKA TOMBOL MODE CHORD
     const chordBtn = e.target.closest("#cv_chord_btn");
     if (chordBtn) {
       e.preventDefault();
-      // Paksa toggle class 'active' di sini biar warnanya berubah
       const isNowActive = chordBtn.classList.toggle("active");
 
       if (isNowActive) {
-        // AKTIFKAN MODE
-        if(editor) {
+        if (editor) {
           editor.setAttribute("inputmode", "none");
           editor.focus();
           editor.style.paddingBottom = "280px"; 
         }
-        if(keyboard) keyboard.style.display = "block";
+        if (keyboard) keyboard.style.display = "block";
       } else {
-        // MATIKAN MODE
-        if(keyboard) keyboard.style.display = "none";
-        if(editor) {
+        if (keyboard) keyboard.style.display = "none";
+        if (editor) {
           editor.removeAttribute("inputmode");
           editor.style.paddingBottom = "20px";
         }
       }
-      return; // Stop di sini kalau yang diklik tombol mode
+      return;
     }
 
     // 2. LOGIKA TOMBOL DI DALAM KEYBOARD VIRTUAL
@@ -5982,20 +5981,23 @@ window.addEventListener("load", ()=>{
         } else if (action === "enter") {
           insertAtCursor(editor, "\n");
         } else if (action === "close") {
-          if(keyboard) keyboard.style.display = "none";
-          const cb = document.getElementById("cv_chord_btn");
-          if (cb) cb.classList.remove("active");
-          editor.removeAttribute("inputmode");
-          editor.style.paddingBottom = "20px";
+          forceCloseChordKeyboard();
         }
       } 
       else if (value) {
         insertAtCursor(editor, value);
       }
       editor.focus();
+      return;
+    }
+
+    // 3. TUTUP OTOMATIS JIKA KLIK TOMBOL NAVIGASI EDITOR
+    if (e.target.closest("#ed_btnLibrary, #ed_btnPerf")) {
+      forceCloseChordKeyboard();
     }
   });
 
+  // Cegah keyboard bawaan HP muncul saat Chord Mode aktif
   document.addEventListener("touchstart", function(e) {
     if (e.target.id === "ed_content") {
       const cb = document.getElementById("cv_chord_btn");
@@ -6008,9 +6010,7 @@ window.addEventListener("load", ()=>{
     }
   }, {passive: true});
 
-})();
-
-// Tambahkan fungsi helper untuk tutup keyboard dan reset tombol
+  // Helper penutup keyboard & pembersih status
   function forceCloseChordKeyboard() {
     const kb = document.getElementById("cv_keyboard");
     const cb = document.getElementById("cv_chord_btn");
@@ -6024,19 +6024,14 @@ window.addEventListener("load", ()=>{
     }
   }
 
-  // 1. Tutup otomatis saat ada event perpindahan halaman (Router ChordyV)
+  // Tutup otomatis saat Router berganti view
   window.addEventListener("cv:view", function(e) {
     if (e.detail?.name !== "ed") {
       forceCloseChordKeyboard();
     }
   });
 
-  // 2. Tutup otomatis jika tombol Library atau Open di Editor diklik
-  document.addEventListener("click", function(e) {
-    if (e.target.closest("#ed_btnLibrary, #ed_btnPerf")) {
-      forceCloseChordKeyboard();
-    }
-  });
-
+})();
+</script>
 </body>
 </html>
