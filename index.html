@@ -6009,7 +6009,34 @@ window.addEventListener("load", ()=>{
   }, {passive: true});
 
 })();
-</script>
+
+// Tambahkan fungsi helper untuk tutup keyboard dan reset tombol
+  function forceCloseChordKeyboard() {
+    const kb = document.getElementById("cv_keyboard");
+    const cb = document.getElementById("cv_chord_btn");
+    const ed = document.getElementById("ed_content");
+
+    if (kb) kb.style.display = "none";
+    if (cb) cb.classList.remove("active");
+    if (ed) {
+      ed.removeAttribute("inputmode");
+      ed.style.paddingBottom = "20px";
+    }
+  }
+
+  // 1. Tutup otomatis saat ada event perpindahan halaman (Router ChordyV)
+  window.addEventListener("cv:view", function(e) {
+    if (e.detail?.name !== "ed") {
+      forceCloseChordKeyboard();
+    }
+  });
+
+  // 2. Tutup otomatis jika tombol Library atau Open di Editor diklik
+  document.addEventListener("click", function(e) {
+    if (e.target.closest("#ed_btnLibrary, #ed_btnPerf")) {
+      forceCloseChordKeyboard();
+    }
+  });
 
 </body>
 </html>
