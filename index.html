@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.45">
+<meta name="cv-build" content="2025.09.20.46">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -1892,67 +1892,195 @@ body.premium-dark button#cv_btnNormalize.btn-normalize{
   opacity: 1;
   pointer-events: auto;
 }
-.cv-filter-modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.55);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:999999;
+/* ============================================================
+   CHORDYV 3D HARDWARE MODAL PICKER (KEY, BEAT, FOLDER)
+   ============================================================ */
+.cv-filter-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  padding: 16px;
 }
 
-.cv-filter-box{
-  width:85%;
-  max-width:360px;
-  background:var(--card);
-  color:var(--fg);
-  border-radius:18px;
-  padding:18px;
-  box-shadow:0 20px 50px rgba(0,0,0,.45);
+.cv-filter-modal.hidden {
+  display: none !important;
 }
 
-.cv-filter-item{
-  padding:12px;
-  border-bottom:1px solid var(--border);
-  cursor:pointer;
+.cv-filter-box {
+  width: min(92vw, 340px);
+  max-height: 85vh;
+  background: #090e1a !important;
+  border: 1px solid #1e3a5f !important;
+  border-radius: 18px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  animation: cvPopIn 0.18s cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 
-.cv-filter-item:hover{
-  background:var(--chip);
+@keyframes cvPopIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
-.cv-filter-close{
-  width:100%;
-  margin-top:12px;
-  padding:12px;
-  border:none;
-  border-radius:12px;
-  background:var(--chip);
+/* Header Strip Mixer Bevel */
+.cv-filter-head {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-bottom: 2px solid #075985 !important;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.hidden{display:none;}
-.cv-filter-box{
-  width:85%;
-  max-width:360px;
-  background:var(--card);
-  color:var(--fg);
-  border-radius:18px;
-  padding:18px;
-  box-shadow:0 20px 50px rgba(0,0,0,.45);
-
-  /* ⭐ penting */
-  max-height:80vh;
-  display:flex;
-  flex-direction:column;
+.cv-filter-head span {
+  font-weight: 800;
+  font-size: 0.88rem;
+  letter-spacing: 0.6px;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* area option jadi scroll */
-#cvFilterList{
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  flex:1;
+.cv-filter-x {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
 }
+.cv-filter-x:active { transform: translateY(1px); }
+
+/* Kontainer List */
+#cvFilterList {
+  background: #090e1a;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: 55vh;
+}
+
+/* --- TAMPILAN 1: SYNTH PAD GRID (UNTUK KEY) --- */
+.cv-key-grid-mode {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 14px;
+}
+
+.cv-key-pad-btn {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 3px solid #020617;
+  color: #f8fafc;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 12px 0;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.45);
+  transition: transform 0.08s ease;
+}
+
+.cv-key-pad-btn:active {
+  transform: translateY(2px);
+  border-bottom: 1.5px solid #020617;
+}
+
+.cv-key-pad-btn.selected {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 50%, #0369a1 100%);
+  border-color: #38bdf8;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.7);
+  border-bottom: 3px solid #075985;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* --- TAMPILAN 2: HARDWARE RACK STRIP (UNTUK BEAT & FOLDER) --- */
+.cv-rack-list-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+}
+
+.cv-rack-item-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-bottom: 2px solid #050a14;
+  color: #e2e8f0;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.cv-rack-item-btn:hover,
+.cv-rack-item-btn:active {
+  background: #102a5c;
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.cv-rack-item-btn.selected {
+  background: linear-gradient(90deg, #0284c7 0%, #0f172a 100%);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.cv-rack-tag {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Footer & Tombol Done */
+.cv-filter-foot {
+  padding: 10px 16px 14px;
+  background: #090e1a;
+  border-top: 1px solid #1e293b;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cv-filter-close {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 6px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  width: auto;
+  margin: 0;
+}
+.cv-filter-close:active { transform: translateY(1px); }
+
 .cv-move-item{
   padding:12px;
   border-bottom:1px solid var(--border);
@@ -2769,7 +2897,837 @@ body.onlyText #perf_exitImm{
     transform: translateY(1px) !important;
     border-bottom: 1px solid #020617 !important;
     color: #38bdf8 !important;
-  }</style>
+  }
+/* ============================================================
+   CHORDYV 3D HARDWARE: MOVE TO FOLDER MODAL
+   ============================================================ */
+#cv_moveOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99998;
+}
+
+/* Update pada #cv_movePopup */
+#cv_movePopup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 350px);
+  max-height: 85vh;
+  background: #090e1a !important;
+  color: #f8fafc !important;
+  border: 1px solid #1e3a5f !important;
+  border-radius: 18px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  z-index: 99999;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* Ganti nama animasinya ke cvModalCenterPop */
+  animation: cvModalCenterPop 0.16s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+
+/* Keyframe khusus modal yang diposisikan di tengah layar */
+@keyframes cvModalCenterPop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.93);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+
+.cv-move-head {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  border-bottom: 2px solid #075985;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cv-move-head span {
+  font-weight: 800;
+  font-size: 0.88rem;
+  letter-spacing: 0.6px;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.cv-move-x {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+}
+.cv-move-x:active { transform: translateY(1px); }
+
+#cv_moveList {
+  max-height: 50vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #090e1a;
+}
+
+.cv-move-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-bottom: 2px solid #050a14;
+  color: #e2e8f0;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.cv-move-item:hover,
+.cv-move-item:active {
+  background: #102a5c;
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.cv-move-item.selected {
+  background: linear-gradient(90deg, #0284c7 0%, #0f172a 100%) !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+}
+
+.cv-move-tag {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.cv-move-foot {
+  padding: 10px 16px 14px;
+  background: #090e1a;
+  border-top: 1px solid #1e293b;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.cv-move-btn-cancel {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.4) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  padding: 8px 18px !important;
+  border-radius: 999px !important;
+  cursor: pointer;
+}
+
+.cv-move-btn-ok {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 50%, #0369a1 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.65) !important;
+  border-bottom: 3px solid #0c4a6e !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  padding: 8px 20px !important;
+  border-radius: 999px !important;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 12px rgba(2, 132, 199, 0.45) !important;
+}
+/* ============================================================
+   CHORDYV LIBRARY: SOFT TACTILE PILL (PERSIS FORMLIRIK)
+   ============================================================ */
+
+/* 1. TOMBOL ACTION BAWAH (Open, Edit, Move, Delete) */
+#libraryView .card .actions > div:first-child {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 8px !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#libraryView button#lib_btnOpen,
+#libraryView button#lib_btnEdit,
+#libraryView button#lib_btnMove,
+#libraryView button#lib_btnDelete {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 38px !important;
+  padding: 0 4px !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+
+  /* Formula Asli Form Lirik */
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-top: 1px solid #ffffff !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  color: #0f172a !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 5px rgba(0, 0, 0, 0.08) !important;
+  transition: transform 0.08s ease, box-shadow 0.08s ease !important;
+}
+
+#libraryView button#lib_btnDelete {
+  color: #dc2626 !important;
+}
+
+#libraryView button#lib_btnOpen:active,
+#libraryView button#lib_btnEdit:active,
+#libraryView button#lib_btnMove:active,
+#libraryView button#lib_btnDelete:active {
+  transform: translateY(1.5px) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+#libraryView button#lib_btnOpen:disabled,
+#libraryView button#lib_btnEdit:disabled,
+#libraryView button#lib_btnMove:disabled,
+#libraryView button#lib_btnDelete:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* 2. TOOLBAR FOLDER ATAS (Add Folder, Rename, Delete) */
+#lib_btnAddFolder,
+#lib_btnRenameFolder,
+#lib_btnDeleteFolder {
+  border-radius: 999px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-top: 1px solid #ffffff !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 11.5px !important;
+  padding: 6px 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 5px rgba(0, 0, 0, 0.08) !important;
+  cursor: pointer !important;
+  transition: transform 0.08s ease, box-shadow 0.08s ease !important;
+}
+
+#lib_btnAddFolder:active,
+#lib_btnRenameFolder:active,
+#lib_btnDeleteFolder:active {
+  transform: translateY(1.5px) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 3. KAPSUL FILTER ATAS (Keys, Beats, Folders) */
+#libraryView .row.compact > .seg.tight:nth-of-type(2) {
+  display: flex !important;
+  width: 100% !important;
+  gap: 8px !important;
+  margin-top: 6px !important;
+}
+
+#libraryView .row.compact > .seg.tight:nth-of-type(2) .icon-label {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-top: 1px solid #ffffff !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  border-radius: 999px !important;
+  padding: 6px 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 5px rgba(0, 0, 0, 0.08) !important;
+}
+
+#libraryView .row.compact > .seg.tight:nth-of-type(2) .icon-label select {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #0284c7 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: auto !important;
+  padding: 0 !important;
+}
+
+/* ============================================================
+   CHORDYV EDITOR: BOTTOM ACTIONS (PERSIS FORMLIRIK & SEJAJAR)
+   ============================================================ */
+
+/* 1. Kapsul .seg.tight dipecah jadi deretan tombol elastis */
+#editorView .seg.tight {
+  display: inline-flex !important;
+  flex: 1 1 auto !important;
+  gap: 8px !important;
+  border: none !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+/* 2. TOMBOL LIBRARY & OPEN (#ed_btnLibrary & #ed_btnPerf) - KAPSUL PUTIH FORMLIRIK */
+#editorView button#ed_btnLibrary,
+#editorView button#ed_btnPerf {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+
+  /* Formula Form Lirik Light */
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-top: 1px solid #ffffff !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  color: #0f172a !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 5px rgba(0, 0, 0, 0.08) !important;
+  transition: transform 0.08s ease, box-shadow 0.08s ease !important;
+}
+
+#editorView button#ed_btnLibrary:active,
+#editorView button#ed_btnPerf:active {
+  transform: translateY(1.5px) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 3. TOMBOL SAVE (#ed_btnSave) - KAPSUL CYAN HARDWARE (PRIMARY) */
+#editorView button#ed_btnSave {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 12px !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 50%, #0369a1 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.65) !important;
+  border-bottom: 2.5px solid #075985 !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 3px 8px rgba(2, 132, 199, 0.35) !important;
+  transition: transform 0.08s ease, box-shadow 0.08s ease !important;
+}
+
+#editorView button#ed_btnSave:active {
+  transform: translateY(1.5px) !important;
+  border-bottom: 1.5px solid #075985 !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 4. TOMBOL NORMALIZE (#cv_btnNormalize) - KAPSUL ROYAL BLUE TACTILE */
+#editorView button#cv_btnNormalize.btn-normalize {
+  height: 38px !important;
+  padding: 0 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  margin-left: 8px !important;
+
+  background: linear-gradient(180deg, #60a5fa 0%, #2563eb 50%, #1d4ed8 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.6) !important;
+  border-bottom: 2.5px solid #1e3a8a !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 3px 8px rgba(37, 99, 235, 0.35) !important;
+  transition: transform 0.08s ease, box-shadow 0.08s ease !important;
+}
+
+#editorView button#cv_btnNormalize.btn-normalize:active {
+  transform: translateY(1.5px) !important;
+  border-bottom: 1.5px solid #1e3a8a !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ============================================================
+   CHORDYV LIBRARY: TOOLBAR FOLDER (ADD, RENAME, DELETE)
+   ============================================================ */
+#libraryView button#lib_btnAddFolder,
+#libraryView button#lib_btnRenameFolder,
+#libraryView button#lib_btnDeleteFolder {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  height: 34px !important;
+  padding: 0 12px !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+
+  /* Formula Asli Form Lirik Light */
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-top: 1px solid #ffffff !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  color: #0f172a !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 5px rgba(0, 0, 0, 0.08) !important;
+  transition: transform 0.08s ease, box-shadow 0.08s ease !important;
+}
+
+#libraryView button#lib_btnAddFolder:active,
+#libraryView button#lib_btnRenameFolder:active,
+#libraryView button#lib_btnDeleteFolder:active {
+  transform: translateY(1.5px) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Tombol Delete Folder: aksen merah tegas */
+#libraryView button#lib_btnDeleteFolder {
+  color: #dc2626 !important;
+}
+
+/* Pastikan wadah pembungkusnya memberi jarak napas */
+#libraryView .row.compact > .seg.tight:first-of-type {
+  display: flex !important;
+  gap: 8px !important;
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+}
+/* ============================================================
+   CHORDYV: 6 TOMBOL SIMETRIS 1 BARIS + COUNTER BAWAH (LANDSCAPE/TABLET)
+   ============================================================ */
+@media (min-width: 720px) {
+  /* 1. Kontainer Utama Toolbar */
+  #libraryView .row.compact {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  /* 2. Dua kelompok tombol dibuat bagi dua rata (50% - 50%) */
+  #libraryView .row.compact > .seg.tight:first-of-type,
+  #libraryView .row.compact > .seg.tight:nth-of-type(2) {
+    display: flex !important;
+    flex: 1 1 0 !important; /* Masing-masing ambil separuh lebar layar */
+    min-width: 0 !important;
+    gap: 6px !important;
+    margin: 0 !important;
+  }
+
+  /* 3. Semua 6 Tombol Disamakan Ukuran & Tingginya (Simetris) */
+  #libraryView button#lib_btnAddFolder,
+  #libraryView button#lib_btnRenameFolder,
+  #libraryView button#lib_btnDeleteFolder,
+  #libraryView .row.compact > .seg.tight:nth-of-type(2) .icon-label {
+    flex: 1 1 0 !important; /* Tiap tombol bagi 3 rata di kelompoknya */
+    min-width: 0 !important;
+    height: 36px !important; /* Kunci tinggi simetris */
+    padding: 0 4px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Ikon & teks select di dalam filter */
+  #libraryView .row.compact > .seg.tight:nth-of-type(2) .icon-label select {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    max-width: 70% !important;
+  }
+
+  /* 4. Teks Counter Pindah ke Bawah Tombol (Rata Kanan) */
+  #libraryView #lib_counter {
+    flex-basis: 100% !important;
+    width: 100% !important;
+    order: 3 !important;
+    text-align: right !important;
+    margin-top: 6px !important;
+    margin-left: 0 !important;
+  }
+
+  #libraryView .row.compact > .grow {
+    display: none !important;
+  }
+}
+/* ============================================================
+   CHORDYV LIBRARY: SEARCH SONG (SOFT TACTILE INSET PILL)
+   ============================================================ */
+#libraryView #lib_search {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 40px !important;
+  border-radius: 999px !important; /* Full kapsul */
+  padding: 0 16px !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  outline: none !important;
+
+  /* Efek Cekung/Amblas Lembut (Neumorphic Inset) */
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-top: 1.5px solid #94a3b8 !important;
+  box-shadow: 
+    inset 0 2px 4px rgba(15, 23, 42, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  transition: all 0.15s ease !important;
+}
+
+#libraryView #lib_search::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+}
+
+/* Saat disentuh / fokus mengetik */
+#libraryView #lib_search:focus {
+  background: #ffffff !important;
+  border-color: #38bdf8 !important;
+  border-top-color: #0284c7 !important;
+  box-shadow: 
+    inset 0 2px 4px rgba(2, 132, 199, 0.1),
+    0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+}
+/* ============================================================
+   CHORDYV EDITOR: SOFT TACTILE REVISION (DECK, TEXTAREA & CHORD MODE)
+   ============================================================ */
+
+/* 1. LATAR JUDUL & BIRAMA: LEMBUTKAN DARI HITAM KE NAVY TRANSLUCENT */
+#editorView #ed_title {
+  background: rgba(10, 25, 60, 0.45) !important; /* Biru malam elegan, bukan hitam pekat */
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-top: 1.5px solid rgba(0, 0, 0, 0.35) !important;
+  border-radius: 999px !important; /* Dibuat kapsul serasi dengan search song */
+  color: #ffffff !important;
+  padding: 0 16px !important;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.4),
+    0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+#editorView #ed_title:focus {
+  background: rgba(10, 25, 60, 0.65) !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.5),
+    0 0 0 3px rgba(56, 189, 248, 0.3) !important;
+}
+
+/* Wadah Birama (2/4, 3/4, dst) */
+#editorView .ed-beat-row-perf {
+  background: rgba(10, 25, 60, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-top: 1.5px solid rgba(0, 0, 0, 0.35) !important;
+  border-radius: 999px !important;
+  padding: 4px !important;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.4),
+    0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+#editorView .preset-beat {
+  border-radius: 999px !important;
+}
+
+/* 2. POIN 3: TOMBOL CHORD MODE (KAPSUL TACTILE HARDWARE) */
+#editorView .ed-chord-mode-btn {
+  border-radius: 999px !important; /* Full kapsul */
+  height: 40px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+
+  /* State Non-Aktif: Slate Dark Tactile */
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%) !important;
+  border: 1px solid #475569 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-bottom: 2.5px solid #0f172a !important;
+  color: #f8fafc !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 3px 6px rgba(0, 0, 0, 0.18) !important;
+  transition: transform 0.08s ease, box-shadow 0.08s ease !important;
+}
+
+#editorView .ed-chord-mode-btn:active {
+  transform: translateY(1.5px) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* State Aktif: Cyan/Royal Blue Timbul */
+#editorView .ed-chord-mode-btn.is-active,
+#editorView .ed-chord-mode-btn.active {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 50%, #0369a1 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.65) !important;
+  border-bottom: 3px solid #075985 !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 4px 12px rgba(2, 132, 199, 0.4) !important;
+}
+
+/* 3. POIN 2: AREA TULIS TEXTAREA (WADAH KERTAS INSET FORMLIRIK) */
+#editorView #ed_content {
+  background: #f8fafc !important; /* Abu terang bersih */
+  border: 1px solid #cbd5e1 !important;
+  border-top: 1.5px solid #94a3b8 !important; /* Efek amblas */
+  border-radius: 16px !important;
+  padding: 16px !important;
+  margin-top: 14px !important;
+  color: #0f172a !important;
+  font-weight: 500 !important;
+  box-shadow: 
+    inset 0 2px 5px rgba(15, 23, 42, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  outline: none !important;
+  transition: border-color 0.15s ease !important;
+}
+
+#editorView #ed_content:focus {
+  border-color: #38bdf8 !important;
+  border-top-color: #0284c7 !important;
+  box-shadow: 
+    inset 0 2px 5px rgba(2, 132, 199, 0.08),
+    0 0 0 3px rgba(56, 189, 248, 0.2) !important;
+}
+/* ============================================================
+   CHORDYV DRAWER (LEFT & RIGHT) TACTILE POLISH
+   ============================================================ */
+
+/* 1. DRAWER KIRI: WELCOME & UPGRADE */
+#cv_drawerLeft .account-box {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-bottom: 2px solid #075985 !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 4px 12px rgba(2, 132, 199, 0.25) !important;
+  border-radius: 14px !important;
+  padding: 14px !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 13.5px !important;
+  line-height: 1.4 !important;
+}
+
+#cv_drawerLeft button#cv_btnUpgrade {
+  border-radius: 999px !important;
+  height: 42px !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 50%, #0369a1 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.65) !important;
+  border-bottom: 3px solid #075985 !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 4px 12px rgba(2, 132, 199, 0.35) !important;
+  cursor: pointer !important;
+  transition: transform 0.08s ease !important;
+}
+
+#cv_drawerLeft button#cv_btnUpgrade:active {
+  transform: translateY(1.5px) !important;
+  border-bottom: 1.5px solid #075985 !important;
+}
+
+/* 2. DRAWER KANAN: TOMBOL PILIHAN TEMA (SEGMENTED PILL SWITCH) */
+#cv_drawerRight .drawer-sec .row:has(input[name="cv_theme"]) {
+  display: flex !important;
+  gap: 8px !important;
+  background: #f1f5f9 !important;
+  padding: 4px !important;
+  border-radius: 999px !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.06) !important;
+}
+
+#cv_drawerRight .drawer-sec .row:has(input[name="cv_theme"]) label {
+  flex: 1 1 0 !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 8px 12px !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  font-size: 12.5px !important;
+  color: #475569 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+#cv_drawerRight .drawer-sec .row:has(input[name="cv_theme"]) label:has(input:checked) {
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-top: 1px solid #ffffff !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  color: #0284c7 !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 5px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 3. TOMBOL AKSI DRAWER (USER GUIDE, EXPORT, IMPORT) */
+#cv_drawerRight button.ghost,
+#cv_drawerRight button#cv_btnExport,
+#cv_drawerRight button#cv_btnImport {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 38px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  font-size: 12.5px !important;
+  cursor: pointer !important;
+  width: auto !important;
+
+  /* Formula Asli Form Lirik Light */
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-top: 1px solid #ffffff !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  color: #0f172a !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 5px rgba(0, 0, 0, 0.08) !important;
+  transition: transform 0.08s ease, box-shadow 0.08s ease !important;
+}
+
+#cv_drawerRight button.ghost:active,
+#cv_drawerRight button#cv_btnExport:active,
+#cv_drawerRight button#cv_btnImport:active {
+  transform: translateY(1.5px) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 4. PANEL KARTU DAN CATATAN TIP */
+.drawer-sec {
+  border-top: 1px solid #e2e8f0 !important;
+  padding-top: 14px !important;
+  margin-top: 14px !important;
+}
+
+.drawer-sec label {
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  color: #0284c7 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+#cv_drawerRight .tip {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  color: #64748b !important;
+}
+
+details {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+}
+/* ============================================================
+   HIDE FAB SAAT DRAWER AKTIF / TERBUKA
+   ============================================================ */
+
+/* Sembunyikan FAB Library & Editor saat drawer kanan/kiri terbuka */
+body:has(#cv_drawerLeft.open) .cv-fab,
+body:has(#cv_drawerLeft.open) .libfab-wrap,
+body:has(#cv_drawerRight.open) .cv-fab,
+body:has(#cv_drawerRight.open) .libfab-wrap,
+body:has(#cv_backdrop.show) .cv-fab,
+body:has(#cv_backdrop.show) .libfab-wrap {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity 0.2s ease, visibility 0.2s ease !important;
+}
+
+</style>
 
 </head>
 
@@ -3950,65 +4908,54 @@ cv_onViewInit('lib', ()=>{
     cv_switchView('ed');
   });
 
-  // --- MOVE MULTIPLE SONGS ---
+  // --- MOVE MULTIPLE SONGS (HARDWARE RACK POPUP + OBJECT FIX) ---
   btnMove.addEventListener('click', (ev)=>{
     if (selectedIds.size === 0){ cvToast('Select songs first.'); return; }
     if (!folders || folders.length === 0){ cvToast('No folders yet. Add one first.'); return; }
 
     const old = document.getElementById('cv_movePopup');
     if (old) old.remove();
+    const oldOverlay = document.getElementById('cv_moveOverlay');
+    if (oldOverlay) oldOverlay.remove();
+
+    // Pembersih: Pastikan nama folder berupa string murni (bukan [object Object])
+    const cleanFolders = folders
+      .map(f => (typeof f === 'object' && f !== null) ? (f.name || '') : String(f || ''))
+      .filter(f => f.trim() !== '' && f !== '[object Object]');
 
     const popup = document.createElement('div');
     popup.id = 'cv_movePopup';
-    popup.style.position = 'fixed';
-    popup.style.zIndex = '9999';
-    popup.style.top = '50%';
-    popup.style.left = '50%';
-    popup.style.transform = 'translate(-50%, -50%)';
-    popup.style.width = 'min(92vw, 360px)';
-    popup.style.maxHeight = '80vh';
-    popup.style.overflow = 'hidden';
-    popup.style.padding = '12px';
-    popup.style.borderRadius = '12px';
-    popup.style.border = '1px solid var(--border)';
-    popup.style.background = 'var(--card)';
-    popup.style.boxShadow = '0 12px 28px rgba(0,0,0,.18)';
     popup.innerHTML = `
-      <div style="font-weight:700; margin-bottom:8px">Move ${selectedIds.size} song(s) to folder</div>
+      <div class="cv-move-head">
+        <span>MOVE ${selectedIds.size} SONG(S)</span>
+        <button type="button" class="cv-move-x" id="cv_moveCloseX">✕</button>
+      </div>
       <select id="cv_moveSelect" style="display:none">
-        <option>(no folder)</option>
-        ${folders.map(f => `<option>${cv_escapeHtml(f)}</option>`).join('')}
+        <option value="">(no folder)</option>
+        ${cleanFolders.map(f => `<option value="${cv_escapeHtml(f)}">${cv_escapeHtml(f)}</option>`).join('')}
       </select>
       <div id="cv_moveList"></div>
-      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px">
-        <button id="cv_moveCancel" class="btn">Cancel</button>
-        <button id="cv_moveOk" class="primary btn">Move</button>
+      <div class="cv-move-foot">
+        <button id="cv_moveCancel" class="cv-move-btn-cancel">Cancel</button>
+        <button id="cv_moveOk" class="cv-move-btn-ok">Move</button>
       </div>
     `;
 
     const overlay = document.createElement('div');
     overlay.id = 'cv_moveOverlay';
-    overlay.style.position = 'fixed';
-    overlay.style.inset = '0';
-    overlay.style.background = 'rgba(0,0,0,.35)';
-    overlay.style.zIndex = '9998';
 
     document.body.appendChild(overlay);
     document.body.appendChild(popup);
 
     const sel = popup.querySelector('#cv_moveSelect');
     const list = popup.querySelector('#cv_moveList');
-    list.style.maxHeight = '50vh';
-    list.style.overflowY = 'auto';
-    list.style.webkitOverflowScrolling = 'touch';
 
-    [...sel.options].forEach(opt=>{
+    [...sel.options].forEach(opt => {
       const item = document.createElement('div');
-      item.className = 'cv-move-item';
-      item.textContent = opt.textContent;
-      if(opt.value === sel.value) item.classList.add('selected');
+      item.className = 'cv-move-item' + (opt.value === sel.value ? ' selected' : '');
+      item.innerHTML = `<span>${opt.textContent}</span><span class="cv-move-tag">SELECT</span>`;
 
-      item.onclick = ()=>{
+      item.onclick = () => {
         sel.value = opt.value;
         popup.querySelectorAll('.cv-move-item').forEach(el => el.classList.remove('selected'));
         item.classList.add('selected');
@@ -4018,23 +4965,24 @@ cv_onViewInit('lib', ()=>{
 
     const close = () => {
       popup.remove();
-      if (overlay && overlay.parentNode) overlay.remove();
-      document.removeEventListener('mousedown', onDoc);
+      overlay.remove();
       document.removeEventListener('keydown', onKey);
     };
-    const onDoc = (e) => { if (!popup.contains(e.target)) close(); };
-    const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'Enter') doMove(); };
-    document.addEventListener('mousedown', onDoc);
+
+    const onKey = (e) => { 
+      if (e.key === 'Escape') close(); 
+      if (e.key === 'Enter') doMove(); 
+    };
     document.addEventListener('keydown', onKey);
 
+    overlay.addEventListener('click', close);
+    popup.querySelector('#cv_moveCloseX').addEventListener('click', close);
     popup.querySelector('#cv_moveCancel').addEventListener('click', close);
     popup.querySelector('#cv_moveOk').addEventListener('click', doMove);
 
     function doMove(){
-      const v = sel.value;
-      const target = (v && v !== '(no folder)') ? v : '';
+      const target = sel.value || '';
       
-      // Loop untuk memindahkan semua lagu yang dicentang
       selectedIds.forEach(id => {
         if (db[id]) db[id].folder = target;
       });
@@ -4048,6 +4996,7 @@ cv_onViewInit('lib', ()=>{
       cvToast('Songs moved successfully.');
     }
   });
+
 
   // --- DELETE MULTIPLE SONGS ---
   btnDelete.addEventListener('click', async ()=>{
@@ -4785,31 +5734,106 @@ function applyNoteSuperscript(s) {
 <!-- ===== UI COMPONENT: MODAL ===== -->
 <!-- ===== cv modal (global) ===== -->
 <style>
-  /* simple modal style — tweak sesukamu */
+  /* ============================================================
+     3D HARDWARE PROMPT & CONFIRM MODAL (ADD FOLDER, RENAME, DLL)
+     ============================================================ */
   #cv_modal {
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.45);
-    align-items:center;
-    justify-content:center;
-    z-index:99999;
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    padding: 16px;
   }
-  #cv_modalBox{
-    width:100%;
-    max-width:380px;
-    background:var(--card, #fff);
-    color:var(--fg, #0f172a);
-    border-radius:12px;
-    padding:16px;
-    box-shadow:0 12px 40px rgba(0,0,0,.35);
+
+  #cv_modalBox {
+    width: min(92vw, 360px);
+    background: #090e1a !important;
+    color: #f8fafc !important;
+    border: 1px solid #1e3a5f !important;
+    border-radius: 18px !important;
+    padding: 18px 16px !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    animation: cvPopIn 0.18s cubic-bezier(0.2, 0.8, 0.3, 1);
   }
-  #cv_modalMsg{ margin-bottom:10px; font-size:14px; line-height:1.3; }
-  #cv_modalInput{ width:100%; padding:8px 10px; border-radius:8px; border:1px solid #ddd; margin-bottom:12px; font:inherit; }
-  .cv_modalRow{ display:flex; gap:8px; justify-content:flex-end; }
-  .cv_modalBtn{ padding:8px 12px; border-radius:8px; background:var(--chip,#eef2ff); border:1px solid var(--border,#e5e7eb); cursor:pointer; }
-  .cv_modalPrimary{ background:var(--accent,#3B82F6); color:var(--accent-fg,#fff); border-color:transparent; }
+
+  #cv_modalMsg {
+    margin-bottom: 12px;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #38bdf8;
+    letter-spacing: 0.4px;
+    line-height: 1.4;
+  }
+
+  /* Deep Recessed Input Screen */
+  #cv_modalInput {
+    width: 100%;
+    background: #060c18 !important;
+    color: #ffffff !important;
+    border: 1px solid #1e3a5f !important;
+    border-top: 2px solid #020617 !important;
+    border-radius: 10px !important;
+    padding: 11px 12px !important;
+    font-size: 14px;
+    font-weight: 600;
+    outline: none;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+  }
+
+  #cv_modalInput:focus {
+    border-color: #38bdf8 !important;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7), 0 0 10px rgba(56, 189, 248, 0.3) !important;
+  }
+
+  .cv_modalRow {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  /* Tombol Cancel: Semi-transparan tactile */
+  .cv_modalBtn {
+    background: rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.4) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    padding: 8px 18px !important;
+    border-radius: 999px !important;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+    transition: transform 0.08s ease;
+  }
+
+  .cv_modalBtn:active {
+    transform: translateY(1px);
+  }
+
+  /* Tombol OK: Cyan Bevel Hardware Primary */
+  .cv_modalPrimary {
+    background: linear-gradient(180deg, #38bdf8 0%, #0284c7 50%, #0369a1 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-top: 1.5px solid rgba(255, 255, 255, 0.65) !important;
+    border-bottom: 3px solid #0c4a6e !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 12px rgba(2, 132, 199, 0.45) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .cv_modalPrimary:active {
+    transform: translateY(1.5px);
+    border-bottom: 1.5px solid #0c4a6e !important;
+  }
 </style>
+
 
 <div id="cv_modal" role="dialog" aria-hidden="true">
   <div id="cv_modalBox" class="card">
@@ -6096,59 +7120,80 @@ window.addEventListener('pageshow', cvApplyIncomingFromNormalize);
 <!-- === END PATCH === -->
 <div id="cvFilterModal" class="cv-filter-modal hidden">
   <div class="cv-filter-box">
-
-    <h3 id="cvFilterTitle">Select</h3>
+    <div class="cv-filter-head">
+      <span id="cvFilterTitle">SELECT</span>
+      <button type="button" class="cv-filter-x" onclick="cvCloseFilter()">✕</button>
+    </div>
 
     <div id="cvFilterList"></div>
 
-    <button class="cv-filter-close" onclick="cvCloseFilter()">
-      Close
-    </button>
-
+    <div class="cv-filter-foot">
+      <button type="button" class="cv-filter-close" onclick="cvCloseFilter()">
+        Done
+      </button>
+    </div>
   </div>
 </div>
+
 <script>
 let activeSelect = null;
 
 function cvOpenFilter(selectEl){
-
   activeSelect = selectEl;
 
   const modal = document.getElementById("cvFilterModal");
   const list  = document.getElementById("cvFilterList");
   const title = document.getElementById("cvFilterTitle");
 
-  // --- BAGIAN INI YANG DIGANTI NAY ---
-  // Kalau ada data-title kita pakai itu, kalau nggak ada baru pakai ID (tapi kita bersihin ed_ nya)
-  title.textContent = selectEl.dataset.title || 
-                      selectEl.id.replace("lib_","").replace("ed_","").toUpperCase();
-  // ----------------------------------
+  const titleText = selectEl.dataset.title || 
+                    selectEl.id.replace("lib_","").replace("ed_","").toUpperCase();
+  title.textContent = titleText;
 
   list.innerHTML = "";
 
-  [...selectEl.options].forEach(opt=>{
+  // Cek apakah menu yang dibuka adalah Key (di Editor atau Library)
+  const isKey = selectEl.id === 'lib_key' || selectEl.id === 'ed_key' || titleText === 'KEY';
 
-    const div = document.createElement("div");
-    div.className = "cv-filter-item";
-    div.textContent = opt.textContent;
+  if (isKey) {
+    list.className = "cv-key-grid-mode";
+  } else {
+    list.className = "cv-rack-list-mode";
+  }
 
-    div.onclick = ()=>{
+  [...selectEl.options].forEach(opt => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    
+    if (isKey) {
+      btn.className = "cv-key-pad-btn" + (opt.value === selectEl.value ? " selected" : "");
+      btn.textContent = opt.textContent;
+    } else {
+      btn.className = "cv-rack-item-btn" + (opt.value === selectEl.value ? " selected" : "");
+      btn.innerHTML = `<span>${opt.textContent}</span><span class="cv-rack-tag">SET</span>`;
+    }
+
+    btn.onclick = () => {
       selectEl.value = opt.value;
       selectEl.dispatchEvent(new Event("change"));
-      cvCloseFilter();
+      setTimeout(cvCloseFilter, 120);
     };
 
-    list.appendChild(div);
+    list.appendChild(btn);
   });
 
   modal.classList.remove("hidden");
 }
 
-
 function cvCloseFilter(){
-  document.getElementById("cvFilterModal")
-    .classList.add("hidden");
+  document.getElementById("cvFilterModal").classList.add("hidden");
+  activeSelect = null;
 }
+
+// Tutup otomatis jika latar luar disentuh
+document.getElementById("cvFilterModal")?.addEventListener("click", (e) => {
+  if (e.target.id === "cvFilterModal") cvCloseFilter();
+});
+
 
 /* ⭐ tunggu halaman siap dulu */
 window.addEventListener("load", ()=>{
