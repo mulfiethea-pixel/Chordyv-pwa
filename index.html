@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.47">
+<meta name="cv-build" content="2025.09.20.48">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -3726,6 +3726,14 @@ body:has(#cv_backdrop.show) .libfab-wrap {
   pointer-events: none !important;
   transition: opacity 0.2s ease, visibility 0.2s ease !important;
 }
+/* ============================================================
+   FORCE HIDE UPGRADE BUTTON KETIKA STATUS SUDAH PRO / PREMIUM
+   ============================================================ */
+#cv_drawerLeft button#cv_btnUpgrade[hidden],
+#cv_drawerLeft button#cv_btnUpgrade[style*="none"],
+#cv_drawerLeft button#cv_btnUpgrade:disabled {
+  display: none !important;
+}
 
 </style>
 
@@ -6059,20 +6067,24 @@ function updateUpgradeUI(){
   const lbl = document.getElementById('cv_proStatus');
 
   if (window.cvIsPro){
-    // Kalau sudah Pro, tombol langsung disembunyikan total
-    if (btn) btn.style.display = 'none';
+    // Kalau sudah Pro, sembunyikan total pakai display none dan atribut
+    if (btn) {
+      btn.style.setProperty('display', 'none', 'important');
+      btn.hidden = true;
+      btn.disabled = true;
+    }
     if (lbl) lbl.textContent = 'Pro User ✨';
   } else {
     // Kalau masih Free, tombol ditampilkan lagi
     if (btn) {
       btn.style.display = 'inline-flex';
-      btn.textContent = '✨ Upgrade to Pro';
+      btn.hidden = false;
       btn.disabled = false;
+      btn.textContent = '✨ Upgrade to Pro';
     }
     if (lbl) lbl.textContent = 'Free User';
   }
 }
-
 
 // Panggil saat load (elemen sudah ada di DOM)
 updateUpgradeUI();
@@ -6080,11 +6092,10 @@ updateUpgradeUI();
 // Sinkron saat status berubah (setPro(true/false) mem-broadcast event ini)
 window.addEventListener('cv:pro', updateUpgradeUI);
 
-
 // Update status teks Free/Pro saat setPro berubah
 window.addEventListener('cv:pro', e=>{
   const el=document.getElementById('cv_proStatus');
-  if (el) el.textContent = e.detail.isPro ? 'Pro User' : 'Free User';
+  if (el) el.textContent = e.detail.isPro ? 'Pro User ✨' : 'Free User';
 });
 
   // Escape untuk tutup
@@ -6092,6 +6103,7 @@ window.addEventListener('cv:pro', e=>{
     if(e.key === 'Escape') closeAll();
   });
 })();
+
 </script>
 <!-- === UPGRADE MODAL (FINAL – sama seperti screenshot) === -->
 <style>
