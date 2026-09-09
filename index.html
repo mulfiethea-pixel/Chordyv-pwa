@@ -3734,6 +3734,37 @@ body:has(#cv_backdrop.show) .libfab-wrap {
 #cv_drawerLeft button#cv_btnUpgrade:disabled {
   display: none !important;
 }
+/* ============================================================
+   PREMIUM USER TACTILE BADGE (DRAWER LEFT)
+   ============================================================ */
+#cv_proStatus {
+  transition: all 0.2s ease !important;
+}
+
+/* Tampilan khusus saat teksnya mengandung kata Premium */
+#cv_drawerLeft .drawer-sec:has(#cv_btnUpgrade[hidden]) #cv_proStatus,
+#cv_drawerLeft .drawer-sec:has(#cv_btnUpgrade:disabled) #cv_proStatus {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 42px !important;
+  border-radius: 999px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  box-sizing: border-box !important;
+
+  /* Efek Soft Inset Display ala Hardware */
+  background: linear-gradient(180deg, #091326 0%, #0f1f45 100%) !important;
+  color: #38bdf8 !important; /* Cyan menyala */
+  border: 1px solid #1e3a5f !important;
+  border-top: 2px solid #020617 !important;
+  box-shadow: 
+    inset 0 2px 5px rgba(0, 0, 0, 0.7),
+    0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.4) !important;
+}
 
 </style>
 
