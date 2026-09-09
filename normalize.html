@@ -744,6 +744,399 @@ body.premium-dark #sec-out .btn:not(.primary):hover{
   height: 22px;
   transform: translateY(-2px); /* naik/turun halus biar sejajar teks */
 }
+
+/* ============================================================
+   CHORDYV 3D HARDWARE SYNC (DUAL THEME: LIGHT & DARK)
+   ============================================================ */
+
+/* --- 1. HEADER UTAMA & KAPSUL (BERLAKU DI KEDUA TEMA) --- */
+.main-header {
+  background: linear-gradient(180deg, #102a5c 0%, #0d1e3d 100%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-bottom: 2px solid #070f1e !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+  padding: 14px 16px !important;
+  border-radius: 0 0 16px 16px !important;
+}
+
+.main-header h1 {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #060c18 !important;
+  border: 1px solid #1e3a5f !important;
+  border-top: 2px solid #020617 !important;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  color: #38bdf8 !important;
+  padding: 6px 18px !important;
+  border-radius: 20px !important;
+  font-size: 15px !important;
+  letter-spacing: 0.8px !important;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.3) !important;
+  margin: 0 0 6px 0 !important;
+}
+
+.main-header p {
+  color: #94a3b8 !important;
+  font-size: 12px !important;
+  margin: 0 !important;
+}
+
+.head-actions {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  margin: 12px 0 !important;
+}
+
+/* Header Seksi: Mixer Channel Bevel untuk kedua tema */
+.sec-h {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-bottom: 2px solid #075985 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.sec-title {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+}
+
+.sec-title .sec-icon {
+  stroke: #ffffff !important;
+}
+
+.btn.primary {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 50%, #0369a1 100%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.6) !important;
+  border-bottom: 3px solid #0c4a6e !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 12px rgba(2, 132, 199, 0.4) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+}
+
+/* ============================================================
+   2. KHUSUS MODE GELAP (DARK CONSOLE)
+   ============================================================ */
+body.premium-dark {
+  background: #0b1324 !important;
+  color: #f8fafc !important;
+}
+
+body.premium-dark .head-actions .btn {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+  border: 1px solid #334155 !important;
+  border-bottom: 2px solid #020617 !important;
+  color: #38bdf8 !important;
+  border-radius: 10px !important;
+  padding: 6px 14px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 5px rgba(0, 0, 0, 0.35) !important;
+}
+
+body.premium-dark .head-actions .btn .sec-icon {
+  stroke: #38bdf8 !important;
+}
+
+body.premium-dark .sec {
+  background: #0f172a !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+body.premium-dark .sec-b {
+  background: #090e1a !important;
+  padding: 14px !important;
+}
+
+body.premium-dark .sec-b textarea,
+body.premium-dark #sec-out pre#out {
+  background: #060c18 !important;
+  border: 1px solid #1e3a5f !important;
+  border-top: 2px solid #020617 !important;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+  border-radius: 10px !important;
+}
+
+body.premium-dark .btn:not(.primary) {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+  border: 1px solid #334155 !important;
+  border-bottom: 2px solid #020617 !important;
+  color: #94a3b8 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  border-radius: 8px !important;
+}
+
+body.premium-dark select.btn {
+  background: #060c18 !important;
+  border: 1px solid #1e3a5f !important;
+  color: #38bdf8 !important;
+}
+
+body.premium-dark .gridwrap {
+  background: #060c18 !important;
+  border: 1px solid #1e3a5f !important;
+  border-radius: 10px !important;
+}
+
+body.premium-dark .cell {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+body.premium-dark .cell.active {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%) !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+body.premium-dark .subh {
+  color: #38bdf8 !important;
+  border-bottom: 1px dashed #1e3a5f !important;
+}
+
+body.premium-dark .lyric {
+  background: #060c18 !important;
+  border: 1px dashed #1e3a5f !important;
+  color: #94a3b8 !important;
+}
+
+/* ============================================================
+   3. KHUSUS MODE TERANG (LIGHT STUDIO)
+   ============================================================ */
+body.premium-light {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+body.premium-light .head-actions .btn {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  color: #0369a1 !important;
+  border-radius: 10px !important;
+  padding: 6px 14px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+}
+
+body.premium-light .head-actions .btn .sec-icon {
+  stroke: #0284c7 !important;
+}
+
+body.premium-light .sec {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06) !important;
+}
+
+body.premium-light .sec-b {
+  background: #f8fafc !important;
+  padding: 14px !important;
+}
+
+body.premium-light .sec-b textarea,
+body.premium-light #sec-out pre#out {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-top: 2px solid #94a3b8 !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
+  border-radius: 10px !important;
+}
+
+body.premium-light .btn:not(.primary) {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  color: #334155 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 8px !important;
+}
+
+body.premium-light select.btn {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0369a1 !important;
+}
+
+body.premium-light .gridwrap {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+}
+
+body.premium-light .cell {
+  background: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+body.premium-light .cell.active {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%) !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35) !important;
+}
+
+body.premium-light .subh {
+  color: #0284c7 !important;
+  border-bottom: 1px dashed #cbd5e1 !important;
+}
+
+body.premium-light .lyric {
+  background: #ffffff !important;
+  border: 1px dashed #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+/* ============================================================
+   PASTIKAN DI MODE LIGHT MAUPUN DARK SEMUA TETAP PUTIH SOLID
+   ============================================================ */
+/* Tombol non-primary di baris header seksi (Load Sample, Clear, Send to Editor, dll.) */
+.sec-h .row .btn:not(.primary),
+body.premium-light .sec-h .row .btn:not(.primary),
+body.premium-dark .sec-h .row .btn:not(.primary) {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.35) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  font-weight: 700 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+.sec-h .row .btn:not(.primary):active,
+body.premium-light .sec-h .row .btn:not(.primary):active,
+body.premium-dark .sec-h .row .btn:not(.primary):active {
+  transform: translateY(1px) !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+}
+
+/* Label teks di header seksi (Quantize, Bars/row) */
+.sec-h .lbl,
+body.premium-light .sec-h .lbl,
+body.premium-dark .sec-h .lbl {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Dropdown select di header seksi (Quantize & Bars/row) */
+.sec-h select.btn,
+body.premium-light .sec-h select.btn,
+body.premium-dark .sec-h select.btn {
+  color: #ffffff !important;
+  background: #060c18 !important;
+  border: 1px solid #1e3a5f !important;
+  border-top: 2px solid #020617 !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+  font-weight: 700 !important;
+}
+/* ============================================================
+   FORCE OVERRIDE: LOAD SAMPLE, CLEAR, SEND TO EDITOR & SELECT
+   ============================================================ */
+
+/* 1. Tombol Load Sample & Clear di Section Input */
+#sec-input .sec-h .row #btnSample,
+#sec-input .sec-h .row #btnClear,
+body.premium-light #sec-input .sec-h .row .btn:not(.primary),
+body.premium-dark #sec-input .sec-h .row .btn:not(.primary) {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.35) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  font-weight: 700 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* 2. Tombol Send to Editor di Section Output */
+#sec-out #btnSend,
+body.premium-light #sec-out .btn:not(.primary),
+body.premium-dark #sec-out .btn:not(.primary) {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.35) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  font-weight: 700 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Efek saat diklik */
+#sec-input .sec-h .row #btnSample:active,
+#sec-input .sec-h .row #btnClear:active,
+#sec-out #btnSend:active {
+  transform: translateY(1px) !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+}
+
+/* 3. Angka Bar & Dropdown Select (Quantize & Bars/row) */
+#qGlobal,
+#normBarsPerRow,
+.sec-h select.btn,
+body.premium-light .sec-h select.btn,
+body.premium-dark .sec-h select.btn {
+  color: #ffffff !important;
+  background-color: #060c18 !important; /* Latar display gelap konsol */
+  border: 1px solid #1e3a5f !important;
+  border-top: 2px solid #020617 !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+  font-weight: 700 !important;
+}
+
+/* Pastikan angka opsi di dalam dropdown saat dibuka juga terbaca jelas */
+#qGlobal option,
+#normBarsPerRow option,
+.sec-h select.btn option {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+/* ============================================================
+   KAPSUL HEADER 3D HARDWARE BUTTON (TIMBUL & TACTILE)
+   ============================================================ */
+.main-header h1 {
+  /* Ubah display cekung jadi tombol fisik timbul */
+  background: linear-gradient(180deg, #1e3a5f 0%, #0f233d 50%, #081326 100%) !important;
+  color: #38bdf8 !important; /* Solid sky cyan */
+  
+  /* Bevel tombol 3D: kilau atas terang, pinggiran kuat, dasar gelap */
+  border: 1px solid #2d5a88 !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+  border-bottom: 3px solid #030811 !important;
+  
+  /* Efek menonjol: cahaya di permukaan + drop shadow tebal ke bodi */
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 4px 10px rgba(0, 0, 0, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.6) !important;
+  
+  border-radius: 999px !important;
+  padding: 8px 22px !important;
+  font-size: 14.5px !important;
+  letter-spacing: 0.8px !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7), 0 0 10px rgba(56, 189, 248, 0.4) !important;
+  
+  /* Biar interaktif serasa tombol beneran kalau disentuh */
+  cursor: default !important;
+  user-select: none !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+}
+
+.main-header h1:active {
+  transform: translateY(1.5px) !important;
+  border-bottom: 1.5px solid #030811 !important;
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.4) !important;
+}
 </style>
 </head>
 <body>

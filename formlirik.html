@@ -714,7 +714,343 @@ body.dark #lyricsEditor {
 .toast.toast--error {
   background: #dc2626; /* merah */
 }
-  </style>
+/* ============================================================
+   CHORDYV 3D HARDWARE SYNC (FORMLIRIK VIEW)
+   ============================================================ */
+
+/* --- 1. HEADER UTAMA & KAPSUL JUDUL TACTILE --- */
+.topbar {
+  background: linear-gradient(180deg, #102a5c 0%, #0d1e3d 100%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-bottom: 2px solid #070f1e !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+  padding: 14px 16px 12px !important;
+  border-radius: 0 0 16px 16px !important;
+  color: #fff !important;
+  font-size: 0 !important; /* Sembunyikan teks polos bawaan */
+}
+
+/* Kapsul Judul Timbul 3D Hardware (Tactile seperti normalize) */
+.topbar::before {
+  content: "ChordyV ◇ Lyrics Form" !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: linear-gradient(180deg, #1e3a5f 0%, #0f233d 50%, #081326 100%) !important;
+  color: #38bdf8 !important;
+  border: 1px solid #2d5a88 !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+  border-bottom: 3px solid #030811 !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 4px 10px rgba(0, 0, 0, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 999px !important;
+  padding: 7px 22px !important;
+  font-size: 14.5px !important;
+  letter-spacing: 0.8px !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7), 0 0 10px rgba(56, 189, 248, 0.4) !important;
+  margin-bottom: 6px !important;
+}
+
+.topbar small {
+  display: block !important;
+  color: #94a3b8 !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  margin-top: 4px !important;
+}
+
+/* --- 2. SUBBAR NAVIGASI (HOME & THEME) --- */
+.subbar {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  margin: 10px auto 4px !important;
+}
+
+.sub-btn {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+  border: 1px solid #334155 !important;
+  border-bottom: 2px solid #020617 !important;
+  color: #38bdf8 !important;
+  border-radius: 10px !important;
+  padding: 6px 14px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 5px rgba(0, 0, 0, 0.35) !important;
+  font-weight: 700 !important;
+}
+
+.sub-btn:active {
+  transform: translateY(1px) !important;
+  border-bottom: 1px solid #020617 !important;
+}
+
+.sub-btn .btn-icon {
+  stroke: #38bdf8 !important;
+}
+
+/* --- 3. PANEL SEKSI (MIXER STRIP BEVEL HEADER) --- */
+.section-box {
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  border: 1px solid #1e293b !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
+}
+
+.section-head {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-bottom: 2px solid #075985 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  padding: 9px 14px !important;
+}
+
+.section-head-title {
+  color: #ffffff !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+}
+
+.section-head-title .section-icon {
+  stroke: #ffffff !important;
+}
+
+/* ============================================================
+   4. SISTEM TOMBOL PERSIS NORMALIZE (PRIMARY & UTILITY SEMI-TRANSPARENT)
+   ============================================================ */
+
+/* A. Tombol Utama (Primary): Preview Mode & Add Section (Persis Normalize/Analyze) */
+.btn-primary,
+.section-add-btn,
+#confirmAddSection {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 50%, #0369a1 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.65) !important;
+  border-bottom: 3px solid #0c4a6e !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 4px 12px rgba(2, 132, 199, 0.4) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border-radius: 999px !important;
+  padding: 8px 18px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  transition: transform 0.08s ease, box-shadow 0.08s ease !important;
+}
+
+.btn-primary:active,
+.section-add-btn:active,
+#confirmAddSection:active {
+  transform: translateY(1.5px) !important;
+  border-bottom: 1.5px solid #0c4a6e !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ============================================================
+   B. TOMBOL ACTION UTILITY (NEW, CLEAR, SAVE DRAFT, CANCEL)
+   Kontras otomatis: Tajam di Mode Terang maupun Gelap
+   ============================================================ */
+
+/* 1. Kondisi Umum / Dark Mode */
+.btn-secondary,
+#cancelAddSection,
+.text-tool-btn,
+body.dark .btn-secondary,
+body.dark #cancelAddSection,
+body.dark .text-tool-btn {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+  border: 1px solid #334155 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-bottom: 2px solid #020617 !important;
+  color: #f8fafc !important; /* Teks putih tajam di tema gelap */
+  font-weight: 700 !important;
+  border-radius: 999px !important;
+  padding: 8px 16px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 3px 8px rgba(0, 0, 0, 0.35) !important;
+  transition: transform 0.08s ease, box-shadow 0.08s ease !important;
+}
+
+/* 2. Khusus Mode Terang (Light Mode) */
+body:not(.dark) .btn-secondary,
+body:not(.dark) #cancelAddSection,
+body:not(.dark) .text-tool-btn {
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-top: 1px solid #ffffff !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  color: #0f172a !important; /* Teks gelap pekat agar kontras di latar putih */
+  font-weight: 700 !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 5px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Efek saat ditekan (Klik / Touch) */
+.btn-secondary:active,
+#cancelAddSection:active,
+.text-tool-btn:active {
+  transform: translateY(1.5px) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+/* C. Tombol Khusus Delete Sections */
+.section-del-btn,
+body.dark .section-del-btn,
+body:not(.dark) .section-del-btn {
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-bottom: 2px solid #7f1d1d !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border-radius: 999px !important;
+  padding: 8px 16px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 6px rgba(220, 38, 38, 0.35) !important;
+}
+
+.section-del-btn:active {
+  transform: translateY(1px) !important;
+}
+
+/* D. Tool Text (B & I) Bulat Mungil */
+.text-tool-btn,
+body.dark .text-tool-btn,
+body:not(.dark) .text-tool-btn {
+  min-width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+}
+
+/* --- 5. SECTION CHIPS (VERSE, CHORUS, BRIDGE) --- */
+.section-chip {
+  background: #0f172a !important;
+  border: 1px solid #1e3a5f !important;
+  border-bottom: 2px solid #020617 !important;
+  color: #94a3b8 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+}
+
+.section-chip.active {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%) !important;
+  border-color: #38bdf8 !important;
+  border-bottom: 2px solid #075985 !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+/* ============================================================
+   6. KHUSUS MODE GELAP (DARK CONSOLE)
+   ============================================================ */
+body.dark {
+  background: #0b1324 !important;
+  color: #f8fafc !important;
+}
+
+body.dark .section-box {
+  background: #0f172a !important;
+  border-color: #1e2b57 !important;
+}
+
+body.dark .section-body {
+  background: #090e1a !important;
+}
+
+body.dark .text-input,
+body.dark #lyricsEditor {
+  background: #060c18 !important;
+  border: 1px solid #1e3a5f !important;
+  border-top: 2px solid #020617 !important;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+  border-radius: 10px !important;
+  padding: 10px !important;
+}
+
+/* ============================================================
+   7. KHUSUS MODE TERANG (LIGHT STUDIO)
+   ============================================================ */
+body:not(.dark) {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+body:not(.dark) .sub-btn {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  color: #0369a1 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+}
+
+body:not(.dark) .sub-btn .btn-icon {
+  stroke: #0284c7 !important;
+}
+
+body:not(.dark) .section-box {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06) !important;
+}
+
+body:not(.dark) .section-body {
+  background: #f8fafc !important;
+}
+
+body:not(.dark) .text-input,
+body:not(.dark) #lyricsEditor {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-top: 2px solid #94a3b8 !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
+  border-radius: 10px !important;
+  padding: 10px !important;
+}
+
+body:not(.dark) .section-chip {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  color: #334155 !important;
+}
+
+/* ============================================================
+   8. PREVIEW TOOLBAR 3D HARDWARE (STAGE VIEWER)
+   ============================================================ */
+#fsReader .fs-toolbar {
+  background: linear-gradient(180deg, #102a5c 0%, #0d1e3d 100%) !important;
+  border-bottom: 2px solid #070f1e !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45) !important;
+  padding: 8px 12px !important;
+}
+
+#fsReader .fs-btn {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+  border: 1px solid #334155 !important;
+  border-bottom: 2px solid #020617 !important;
+  color: #38bdf8 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+}
+
+#fsFontLabel {
+  background: #060c18 !important;
+  border: 1px solid #1e3a5f !important;
+  color: #38bdf8 !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+}  </style>
 </head>
 <body>
   <div class="topbar">
