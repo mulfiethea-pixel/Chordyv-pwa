@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>  
 <base href="/Chordyv-pwa/">  
   <meta name="viewport" content="width=device-width,initial-scale=1"/>  
-<meta name="cv-build" content="2025.09.20.50">
+<meta name="cv-build" content="2025.09.20.51">
 <meta name="theme-color" content="#0F172A">  
 <!-- Aktifkan mode web app di iOS -->  
 <meta name="apple-mobile-web-app-capable" content="yes">  
@@ -4293,10 +4293,12 @@ function insertAt(txt){
       // Tanpa chord: bar kosong penuh (n titik) + barline
       return ' ' + ('. '.repeat(Math.max(1, n)).trimEnd()) + ' | ';
     }
+    window.cv_makeBar = makeBar; // <-- tambahkan baris ini di sini
 
     document.getElementById('ed_btnBar').addEventListener('click',()=>insertAt(makeBar()));
     document.getElementById('ed_btnRest').addEventListener('click',()=>insertAt(' - '));
     document.getElementById('ed_btnRepeat').addEventListener('click',()=>insertAt(' % '));
+
     document.getElementById('ed_btnSharp').addEventListener('click',()=>insertAt('#'));
     document.getElementById('ed_btnFlat').addEventListener('click',()=>insertAt('♭'));
     document.getElementById('ed_btnSlash').addEventListener('click',()=>insertAt(' / '));
@@ -7500,7 +7502,8 @@ window.addEventListener("load", ()=>{
     <button>aug</button><button>alt</button> <button>|</button><button>.</button>
   </div>
 
-  <div class="vk-row">
+    <div class="vk-row">
+    <button data-act="bar">Bar</button>
     <button data-act="space">Space</button>
     <button data-act="enter">Enter</button>
     <button data-act="del" style="display: flex; align-items: center; justify-content: center;">
@@ -7578,7 +7581,7 @@ window.addEventListener("load", ()=>{
     border: 0.5px solid rgba(0,0,0,0.1) !important;
 }
 
-/* TOMBOL KONTROL (Space, Enter, Del, Close) */
+/* TOMBOL KONTROL (Bar, Space, Enter, Del, Close) */
 #cv_keyboard button[data-act] {
     background: #d1d5db;
     font-size: 13px;
@@ -7586,14 +7589,37 @@ window.addEventListener("load", ()=>{
     text-transform: uppercase;
 }
 
+/* Tombol Space dikecilkan agar muat 5 tombol sejajar */
 #cv_keyboard button[data-act="space"] {
-    max-width: 130px;
+    max-width: 90px;
 }
 
+/* Tombol Close tetap merah */
 #cv_keyboard button[data-act="close"] {
     background: #ff453a;
     color: #fff;
 }
+
+/* Tombol Bar dibuat kontras dengan gaya Cyan 3D Hardware */
+#cv_keyboard button[data-act="bar"] {
+    background: linear-gradient(180deg, #38bdf8 0%, #0284c7 50%, #0369a1 100%) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-top: 1.5px solid rgba(255, 255, 255, 0.7) !important;
+    border-bottom: 2.5px solid #075985 !important;
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      0 2px 4px rgba(2, 132, 199, 0.3) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
+}
+
+#cv_keyboard button[data-act="bar"]:active {
+    transform: translateY(1.5px) !important;
+    border-bottom: 1.5px solid #075985 !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
 
 /* WARNA KURSOR DI EDITOR */
 #ed_content {
@@ -7684,8 +7710,13 @@ window.addEventListener("load", ()=>{
       if (label) {
         insertAtCursor(editor, "[" + label + "]\n");
       } 
-      else if (action) {
-        if (action === "del") {
+            else if (action) {
+        if (action === "bar") {
+          const barText = typeof window.cv_makeBar === 'function'
+            ? window.cv_makeBar()
+            : ' | ';
+          insertAtCursor(editor, barText);
+        } else if (action === "del") {
           let start = editor.selectionStart;
           if (start > 0) {
             editor.value = editor.value.substring(0, start - 1) + editor.value.substring(start);
@@ -7706,6 +7737,7 @@ window.addEventListener("load", ()=>{
       editor.focus();
       return;
     }
+
 
     // 3. TUTUP OTOMATIS JIKA KLIK TOMBOL NAVIGASI EDITOR
     if (e.target.closest("#ed_btnLibrary, #ed_btnPerf")) {
